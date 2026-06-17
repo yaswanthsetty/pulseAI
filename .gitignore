@@ -1,0 +1,136 @@
+# ===== Virtual Environments =====
+.venv/
+venv/
+ENV/
+env/
+.env
+.env.local
+.env.*.local
+
+# ===== Python Cache & Build Files =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ===== Virtual Environment (pip) =====
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ===== Testing & Coverage =====
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# ===== IDE & Editor Files =====
+.vscode/
+.vscode-insiders/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+desktop.ini
+*.sublime-project
+*.sublime-workspace
+.atom/
+.project
+.pydevproject
+.settings/
+*.iml
+.classpath
+
+# ===== Database Files =====
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+
+# ===== Logs =====
+*.log
+logs/
+*.log.txt
+
+# ===== OS Files =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+$RECYCLE.BIN/
+
+# ===== Node (if using any frontend tools) =====
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ===== Docker (build artifacts, but keep docker-compose.yml) =====
+.dockerignore
+docker-compose.override.yml
+
+# ===== Alembic Migration Cache =====
+migrations/versions/__pycache__/
+alembic/versions/__pycache__/
+
+# ===== Mypy & Type Checking =====
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ===== Jupyter/IPython =====
+.ipynb_checkpoints
+.jupyter
+
+# ===== Environment Variables (secrets) =====
+.env.production
+.secrets
+secrets/
+*.pem
+*.key
+
+# ===== Poetry/Pipenv Lock Files (optional - comment out if you track them) =====
+# poetry.lock
+# Pipfile.lock
+
+# ===== Temporary Files =====
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# ===== UV Lock Files (optional) =====
+# uv.lock
