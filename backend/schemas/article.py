@@ -12,12 +12,6 @@ class ArticleBase(BaseModel):
     content: str = Field(..., min_length=1)
 
 
-class ArticleCreate(ArticleBase):
-    """Schema for creating an article."""
-
-    pass
-
-
 class ArticleUpdate(BaseModel):
     """Schema for updating an article."""
 
@@ -34,3 +28,18 @@ class Article(ArticleBase):
 
     class Config:
         from_attributes = True
+
+from pydantic import HttpUrl
+
+class SourceCreate(BaseModel):
+    name: str
+    base_url: str
+    feed_type: str
+    credibility_score: float
+
+class ArticleCreate(BaseModel):
+    title: str
+    url: str
+    author: Optional[str] = None
+    body_text: str
+    published_at: datetime

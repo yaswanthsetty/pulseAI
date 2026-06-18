@@ -6,3 +6,7 @@ pydantic
 pydantic-settings 
 alembic
 httpx
+feedparser 
+beautifulsoup4
+sentence-transformers 
+qdrant-client

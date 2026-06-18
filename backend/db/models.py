@@ -37,13 +37,13 @@ class Article(Base):
     __tablename__ = "articles"
 
     id = Column(Integer, primary_key=True, index=True)
-    source_id = Column(Integer, ForeignKey("sources.id"), nullable=False)
+    source_id = Column(Integer, ForeignKey("sources.id"), nullable=False, index=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=True)  # Populated in Phase 4
     title = Column(Text, nullable=False)
     url = Column(Text, unique=True, nullable=False)
     author = Column(String(255), nullable=True)
     body_text = Column(Text, nullable=False)
-    published_at = Column(DateTime(timezone=True), nullable=False)
+    published_at = Column(DateTime(timezone=True), nullable=False, index=True)
     ingested_at = Column(DateTime(timezone=True), server_default=func.now())
     qdrant_point_id = Column(UUID(as_uuid=True), nullable=True)  # Links to Vector DB
 
