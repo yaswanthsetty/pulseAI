@@ -39,6 +39,7 @@ jobs:
     env:
       POSTGRES_USER: pulse_admin
       POSTGRES_PASSWORD: pulse_password_123
+      POSTGRES_DB: pulseai_db
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5434"
       QDRANT_URL: http://localhost:6333
