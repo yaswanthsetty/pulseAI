@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: pulse_admin
+          POSTGRES_PASSWORD: pulse_password_123
+          POSTGRES_DB: pulseai_db
+        ports:
+          - "5434:5432"
+        options: >-
+          --health-cmd "pg_isready -U pulse_admin -d pulseai_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - "6379:6379"
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      qdrant:
+        image: qdrant/qdrant:latest
+        ports:
+          - "6333:6333"
+
+    env:
+      POSTGRES_USER: pulse_admin
+      POSTGRES_PASSWORD: pulse_password_123
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5434"
+      QDRANT_URL: http://localhost:6333
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Module boundaries (import-linter)
+        run: uv run lint-imports
+
+      - name: Migrations apply cleanly on a fresh database
+        run: uv run alembic upgrade head
+
+      - name: Test
+        run: uv run pytest --cov=backend --cov-report=term-missing

@@ -105,6 +105,9 @@ docker-compose.override.yml
 migrations/versions/__pycache__/
 alembic/versions/__pycache__/
 
+# ===== Import-linter graph cache =====
+.import_linter_cache/
+
 # ===== Mypy & Type Checking =====
 .mypy_cache/
 .dmypy.json
@@ -131,6 +134,9 @@ temp/
 *.tmp
 *.bak
 *.backup
+
+# ===== Local object storage (article bodies) =====
+storage/
 
 # ===== UV Lock Files (optional) =====
 # uv.lock

@@ -1,226 +1,158 @@
-import asyncio
-import httpx
+"""PulseAI FastAPI application entrypoint.
 
+Responsibilities:
+* lifespan — seed reference data (and dev sources when enabled);
+* routes    — health endpoints + the versioned ``/api/v1`` routers;
+* errors    — every response uses the spec §19 error envelope
+  ``{"error": {"code", "message", "request_id"}}``.
+
+Run with: ``uv run pulseai-api`` (or ``uv run uvicorn backend.main:app``).
+"""
+
+import logging
+import uuid
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy.sql import text
-from backend.core.embeddings import ensure_qdrant_collection, vectorize_new_articles
-from backend.db.database import get_db, SessionLocal
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 from backend.core.config import settings
-from backend.core.ingestion import (
-    seed_default_sources,
-    parse_rss_feed,
-)
-from backend.db.models import Source
+from backend.core.database import SessionLocal
+from backend.core.logging import setup_logging
+from backend.db.seed import seed_reference_data
+from backend.modules.api.health import router as health_router
+from backend.modules.api.router import api_router
+from backend.modules.ingestion.seeds import seed_default_sources
+
+logger = logging.getLogger(__name__)
+
+_STATUS_CODES: dict[int, str] = {
+    400: "BAD_REQUEST",
+    401: "UNAUTHORIZED",
+    403: "FORBIDDEN",
+    404: "NOT_FOUND",
+    409: "CONFLICT",
+    422: "VALIDATION_ERROR",
+    429: "RATE_LIMITED",
+    500: "INTERNAL_ERROR",
+    503: "SERVICE_UNAVAILABLE",
+}
 
 
-# ------------------------------------------------------------------
-# Infrastructure Validation
-# ------------------------------------------------------------------
+def _error_code(status_code: int) -> str:
+    return _STATUS_CODES.get(status_code, "ERROR")
 
-async def verify_infrastructure_connections():
-    """
-    Validate PostgreSQL and Qdrant before application startup completes.
-    """
 
-    print("\n=== Investigating System Infrastructure Dependencies ===")
+def _request_id(request: Request) -> str:
+    return request.headers.get("X-Request-ID") or uuid.uuid4().hex
 
-    # PostgreSQL Check
+
+# ---------------------------------------------------------------------------
+# Lifespan
+# ---------------------------------------------------------------------------
+
+
+async def _seed_data() -> None:
     db = SessionLocal()
     try:
-        db.execute(text("SELECT 1"))
-        print(" -> PostgreSQL Connection State: OPERATIONAL")
-    except Exception as e:
-        print(f" -> PostgreSQL Connection State: FAILED. Error details: {e}")
+        seed_reference_data(db)
+        if settings.seed_default_sources:
+            seed_default_sources(db)
     finally:
         db.close()
 
-    # Qdrant Check
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{settings.QDRANT_URL}/healthz",
-                timeout=3.0,
-            )
 
-            if response.status_code == 200:
-                print(" -> Qdrant Vector DB State: OPERATIONAL")
-            else:
-                print(
-                    f" -> Qdrant Vector DB State: "
-                    f"UNEXPECTED STATUS ({response.status_code})"
-                )
+# ---------------------------------------------------------------------------
+# Application
+# ---------------------------------------------------------------------------
 
-    except Exception as e:
-        print(
-            f" -> Qdrant Vector DB State: "
-            f"UNREACHABLE. Error details: {e}"
-        )
-
-    print("========================================================\n")
-
-# ------------------------------------------------------------------
-# Background RSS Ingestion & Vectorization Worker
-# ------------------------------------------------------------------
-
-async def background_ingestion_loop():
-    """
-    Continuous RSS synchronization and AI embedding worker.
-    """
-    try:
-        while True:
-            print(
-                "[Ingestion Engine] Beginning continuous news sync cycle..."
-            )
-
-            db = SessionLocal()
-
-            try:
-                # --- 1. DATA INGESTION ---
-                active_sources = (
-                    db.query(Source)
-                    .filter(Source.is_active == True)
-                    .all()
-                )
-
-                total_added = 0
-
-                for source in active_sources:
-                    try:
-                        added = await asyncio.to_thread(
-                            parse_rss_feed,
-                            source,
-                            db
-                        )
-                        total_added += added
-                        print(
-                            f" -> Synchronized '{source.name}': "
-                            f"Ingested {added} new articles."
-                        )
-                    except Exception as source_error:
-                        print(
-                            f" -> Failed syncing source "
-                            f"'{source.name}': {source_error}"
-                        )
-
-                print(
-                    "[Ingestion Engine] Cycle finalized. "
-                    f"Total rows committed: {total_added}"
-                )
-
-                # --- 2. AI VECTOR EMBEDDING ---
-                try:
-                    # Run blocking Qdrant setup and embedding generation in background threads
-                    await asyncio.to_thread(ensure_qdrant_collection)
-                    embedded_count = await asyncio.to_thread(vectorize_new_articles, db)
-                    
-                    if embedded_count > 0:
-                        print(
-                            f"[AI Engine] Successfully embedded and synced "
-                            f"{embedded_count} articles to Qdrant."
-                        )
-                except Exception as ai_error:
-                    print(
-                        f"[AI Engine Warning] Failed to embed batch: {ai_error}"
-                    )
-
-            except Exception as e:
-                print(
-                    "[Ingestion Engine Severe Warning] "
-                    f"Synchronization error encountered: {e}"
-                )
-
-            finally:
-                db.close()
-
-            # Poll every 5 minutes
-            await asyncio.sleep(300)
-
-    except asyncio.CancelledError:
-        print("[Worker] Shutdown signal received.")
-        raise
-
-# ------------------------------------------------------------------
-# Application Lifespan
-# ------------------------------------------------------------------
 
 @asynccontextmanager
-async def app_lifespan(app: FastAPI):
-
-    # Validate infrastructure
-    await verify_infrastructure_connections()
-
-    # Seed RSS sources
-    db = SessionLocal()
-
-    try:
-        seed_default_sources(db)
-        print("[Startup] RSS source seeding completed.")
-    finally:
-        db.close()
-
-    # Start background worker
-    ingestion_task = asyncio.create_task(
-        background_ingestion_loop()
+async def lifespan(app: FastAPI):
+    setup_logging()
+    await _seed_data()
+    logger.info(
+        "PulseAI started (environment=%s, storage=%s)",
+        settings.environment,
+        settings.storage_backend,
     )
+    yield
+    logger.info("PulseAI shutting down")
 
-    print("[Startup] Ingestion worker started.")
-
-    try:
-        yield
-
-    finally:
-        print("[Shutdown] Stopping ingestion worker...")
-
-        ingestion_task.cancel()
-
-        try:
-            await ingestion_task
-        except asyncio.CancelledError:
-            pass
-
-        print("[Shutdown] Ingestion worker stopped.")
-
-
-# ------------------------------------------------------------------
-# FastAPI Application
-# ------------------------------------------------------------------
 
 app = FastAPI(
     title="PulseAI — Real-Time News Intelligence Engine",
     description=(
-        "Production-grade asynchronous ingestion and "
-        "temporal retrieval API framework."
+        "Modular-monolith backend: ingestion, temporal retrieval, "
+        "event intelligence, and tiered AI reasoning (spec v2.0)."
     ),
     version="1.0.0",
-    lifespan=app_lifespan,
+    lifespan=lifespan,
 )
 
+app.include_router(health_router)
+app.include_router(api_router)
 
-# ------------------------------------------------------------------
-# Health Endpoint
-# ------------------------------------------------------------------
 
-@app.get("/health", status_code=status.HTTP_200_OK)
-def system_health_check(
-    db: Session = Depends(get_db)
-):
-    """
-    Operational endpoint for uptime and liveness monitoring.
-    """
+# ---------------------------------------------------------------------------
+# Error envelope (spec §19)
+# ---------------------------------------------------------------------------
 
-    try:
-        db.execute(text("SELECT 1"))
 
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "engine": "PulseAI Core Ready",
-        }
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": _error_code(exc.status_code),
+                "message": str(exc.detail),
+                "request_id": _request_id(request),
+            }
+        },
+        headers=exc.headers,
+    )
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database liveness check failed: {str(e)}",
-        )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request validation failed",
+                "request_id": _request_id(request),
+                "details": jsonable_encoder(exc.errors()),
+            }
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred",
+                "request_id": _request_id(request),
+            }
+        },
+    )
+
+
+def run() -> None:
+    """Console-script entrypoint (``pulseai-api``)."""
+    import uvicorn
+
+    uvicorn.run(
+        "backend.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.debug,
+    )

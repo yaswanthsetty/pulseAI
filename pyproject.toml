@@ -1,20 +1,71 @@
 [project]
 name = "pulseai"
 version = "0.1.0"
-description = "Add your description here"
+description = "PulseAI — real-time AI news intelligence platform (modular monolith backend)"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.18.4",
+    "asyncpg>=0.31.0",  # async driver option (POSTGRES_DRIVER=postgresql+asyncpg)
     "beautifulsoup4>=4.15.0",
     "fastapi>=0.137.1",
     "feedparser>=6.0.12",
     "httpx>=0.28.1",
+    "langdetect>=1.0.9",
     "psycopg2-binary>=2.9.12",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
     "qdrant-client>=1.18.0",
+    "redis>=8.1.0",
+    "rq>=2.10.0",
     "sentence-transformers>=5.6.0",
     "sqlalchemy>=2.0.51",
     "uvicorn>=0.49.0",
 ]
+
+[project.optional-dependencies]
+storage-s3 = [
+    "boto3>=1.43.67",
+]
+
+[project.scripts]
+pulseai-api = "backend.main:run"
+pulseai-worker = "backend.workers.worker:main"
+pulseai-scheduler = "backend.workers.scheduler:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend"]
+
+[dependency-groups]
+dev = [
+    "import-linter>=2.13",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["backend", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4"]
+ignore = ["SIM108", "SIM105"]
+
+# FastAPI dependencies and query params are conventionally declared as
+# defaults (``db: Session = Depends(get_db)``); B008 should not flag them.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.coverage.run]
+source = ["backend"]
+branch = true

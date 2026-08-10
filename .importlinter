@@ -1,0 +1,37 @@
+# Module-boundary enforcement (spec §8).
+#
+# Two rules keep the modular monolith honest:
+#   1. `modules/api` is the top layer — nothing else may import from it.
+#   2. Business modules are independent — no sibling imports. When a real
+#      cross-module service interface is needed (e.g. Phase 3 events calling
+#      retrieval), carve out an explicit contract instead of a blanket
+#      exception.
+
+[importlinter]
+root_package = backend
+
+[importlinter:contract:1]
+name = API is the top layer (nothing imports modules.api)
+type = forbidden
+source_modules =
+    backend.modules.retrieval
+    backend.modules.ranking
+    backend.modules.events
+    backend.modules.agents
+    backend.modules.auth
+    backend.modules.reports
+    backend.modules.ingestion
+forbidden_modules =
+    backend.modules.api
+
+[importlinter:contract:2]
+name = Business modules are independent (no sibling imports)
+type = independence
+modules =
+    backend.modules.retrieval
+    backend.modules.ranking
+    backend.modules.events
+    backend.modules.agents
+    backend.modules.auth
+    backend.modules.reports
+    backend.modules.ingestion

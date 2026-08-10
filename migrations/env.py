@@ -1,14 +1,11 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
 
 # Securely import your production settings
 from backend.core.config import settings
 from backend.db.models import Base
-import backend.db.models  # Forces Python to load the tables
+from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,6 +21,11 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+def _sync_url(url: str) -> str:
+    """Alembic runs with a sync driver; strip an asyncpg prefix if configured."""
+    return url.replace("postgresql+asyncpg", "postgresql")
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -32,8 +34,8 @@ def run_migrations_offline() -> None:
     here as well.
     """
     # Dynamic Override: Read database connection string from .env via Pydantic
-    url = settings.DATABASE_URL
-    
+    url = _sync_url(settings.database_url)
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -53,7 +55,7 @@ def run_migrations_online() -> None:
     """
     # Dynamic Override: Inject the .env database configuration into the ini section dictionary
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    configuration["sqlalchemy.url"] = _sync_url(settings.database_url)
 
     connectable = engine_from_config(
         configuration,
@@ -62,9 +64,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

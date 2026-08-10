@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Fixture Tech News</title>
+    <link>https://fixture.example.com</link>
+    <description>Test feed for PulseAI ingestion tests</description>
+    <language>en-us</language>
+
+    <item>
+      <title>AI Startup Raises $200 Million in Series C Round</title>
+      <link>https://fixture.example.com/articles/ai-startup-series-c?utm_source=rss&amp;utm_medium=feed</link>
+      <description><![CDATA[<p>The AI company announced a <b>$200 million</b> Series C led by top investors.</p>]]></description>
+      <author>Jane Reporter</author>
+      <pubDate>Mon, 10 Aug 2026 09:00:00 GMT</pubDate>
+      <media:content url="https://fixture.example.com/img/ai.jpg" medium="image"/>
+    </item>
+
+    <item>
+      <title>Election Results: Parliament Approves New Voting Law</title>
+      <link>https://fixture.example.com/articles/election-voting-law</link>
+      <description><![CDATA[<p>The parliament voted to reform the electoral system.</p>]]></description>
+      <author>John Correspondent</author>
+      <pubDate>Mon, 10 Aug 2026 08:30:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>AI Startup Raises $200 Million in Series C Round</title>
+      <link>https://fixture.example.com/articles/ai-startup-series-c-v2</link>
+      <description><![CDATA[<p>Republished copy of the same story with a different URL.</p>]]></description>
+      <author>Jane Reporter</author>
+      <pubDate>Mon, 10 Aug 2026 09:05:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

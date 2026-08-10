@@ -1,12 +1,18 @@
-fastapi
-uvicorn 
-sqlalchemy 
-psycopg2-binary 
-pydantic 
-pydantic-settings 
+# Plain-pip mirror of runtime dependencies.
+# The authoritative dependency list is pyproject.toml (uv-managed).
 alembic
-httpx
-feedparser 
+asyncpg  # async driver option (POSTGRES_DRIVER=postgresql+asyncpg)
 beautifulsoup4
-sentence-transformers 
+fastapi
+feedparser
+httpx
+langdetect
+psycopg2-binary
+pydantic
+pydantic-settings
 qdrant-client
+redis
+rq
+sentence-transformers
+sqlalchemy
+uvicorn
