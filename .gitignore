@@ -134,9 +134,12 @@ temp/
 *.tmp
 *.bak
 *.backup
+tempdocs/
+.freebuff/
 
 # ===== Local object storage (article bodies) =====
 storage/
 
 # ===== UV Lock Files (optional) =====
 # uv.lock
+

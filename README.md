@@ -15,7 +15,7 @@ temporal retrieval and event-centric intelligence (spec v2.0, Phase 1 complete).
  └─────────────┘    poll jobs       │  modules/ranking    (P4)     │
         ▲                           │  modules/events      (P3)    │
         │ retry markers (Redis)     │  modules/agents      (P5)    │
- ┌─────────────┐                    │  modules/auth        (1.5)   │
+ ┌─────────────┐                    │  modules/auth        ✔ 1.5   │
  │ RQ worker   │ ◄── ingest queue   │  modules/reports     (P5)    │
  └──────┬──────┘                    └────────────┬────────────────┘
         │                                        │
@@ -72,21 +72,57 @@ The API seeds three demo RSS sources on startup (`SEED_DEFAULT_SOURCES=true`);
 the scheduler polls them and the worker processes articles end to end
 (dedupe → clean → classify → store).
 
-## API surface (Phase 1)
+## API surface
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/healthz`, `/readyz`, `/health` | liveness / readiness / legacy alias |
-| GET | `/api/v1/sources` | list sources with health |
-| POST | `/api/v1/sources` | add source (feed validated first, FR-4) |
-| PATCH | `/api/v1/sources/{id}` | update credibility / interval / status |
-| POST | `/api/v1/sources/{id}/poll` | queue an immediate poll |
-| GET | `/api/v1/articles` | list/filter articles (date, source, category, …) |
-| GET | `/api/v1/articles/{id}` | article detail |
-| POST | `/api/v1/search` | semantic search over Qdrant (early Phase 2 surface; returns `[]` until vectors are populated) |
+| Method | Path | Purpose | Auth |
+|---|---|---|---|
+| GET | `/healthz`, `/readyz`, `/health` | liveness / readiness / legacy alias | open |
+| POST | `/api/v1/auth/register` | local account creation (role `user`) | open |
+| POST | `/api/v1/auth/login` | access token + rotating refresh cookie | open |
+| POST | `/api/v1/auth/session` | exchange a Clerk/Auth0 JWT for PulseAI tokens | open |
+| POST | `/api/v1/auth/refresh` | rotate refresh token (old one revoked) | cookie |
+| POST | `/api/v1/auth/logout` | revoke refresh token, clear cookies | cookie |
+| GET | `/api/v1/users/me` | current profile + role | user+ |
+| GET | `/api/v1/users` | list users (admin) | admin |
+| PATCH | `/api/v1/users/{id}/role` | change role (admin; audited) | admin |
+| GET | `/api/v1/api-keys` | list API keys (raw never returned) | user+ |
+| POST | `/api/v1/api-keys` | create API key (raw returned once) | user+ |
+| DELETE | `/api/v1/api-keys/{id}` | revoke API key | user+ |
+| GET | `/api/v1/sources` | list sources with health | user+ |
+| POST | `/api/v1/sources` | add source (feed validated first, FR-4) | admin |
+| PATCH | `/api/v1/sources/{id}` | update credibility / interval / status | admin |
+| POST | `/api/v1/sources/{id}/poll` | queue an immediate poll | admin |
+| GET | `/api/v1/articles` | list/filter articles (date, source, category, …) | open |
+| GET | `/api/v1/articles/{id}` | article detail | open |
+| POST | `/api/v1/search` | semantic search over Qdrant (early Phase 2 surface; returns `[]` until vectors are populated) | open (rate-limited) |
 
-All errors use the spec §19 envelope `{"error": {"code", "message", "request_id"}}`;
-all lists use `{items, page, page_size, total}`.
+Auth column = `require_role` minimum for the route per the §22 RBAC matrix
+(user < analyst < admin; guests are unauthenticated). All errors use the spec
+§19 envelope `{"error": {"code", "message", "request_id"}}`; all lists use
+`{items, page, page_size, total}`.
+
+## Authentication & RBAC (Phase 1.5)
+
+- **Managed provider or local:** `AUTH_PROVIDER=none` enables local
+  register/login (HS256 JWTs, bcrypt passwords). `AUTH_PROVIDER=clerk|auth0`
+  verifies the provider's RS256 JWT against its JWKS and syncs the identity
+  into the `users` table — provider JWTs work directly on any endpoint, and
+  `POST /auth/session` exchanges one for PulseAI tokens.
+- **Tokens:** access JWTs last 15 min (spec §20); refresh tokens last 30 days,
+  are stored hashed, rotate on every use (old token revoked), and travel only
+  as `HttpOnly; Secure; SameSite=Lax` cookies. Access tokens also work as
+  cookies for browser/server-component flows.
+- **API keys:** `pls_`-prefixed, scoped (`read`/`chat`/`reports`), hashed at
+  rest, revocable, and returned to the client exactly once.
+- **RBAC:** `require_role(min_role)` dependency enforces the §22 matrix per
+  route (source management = admin, source listing = user+, browsing/search =
+  guests) and is integration-tested for every endpoint × role.
+- **Security controls (§23):** Redis sliding-window rate limiting (30/min
+  anonymous per IP, 120/min authenticated; fail-open), double-submit CSRF
+  tokens for cookie-authenticated mutations, and audit-log events for every
+  auth action (`login`, `login_failed`, `refresh`, `logout`, `role_change`, …).
+  The auth module is carved out as shared infrastructure in import-linter
+  (business modules may import it; it never imports them).
 
 ## Quality gates
 
@@ -108,6 +144,11 @@ database.
   feed validation (FR-4), HTML→text + metadata extraction (FR-5), language
   detection (FR-6), taxonomy classification (FR-7), object storage, health
   endpoints, Docker, CI, tests.
+- **Phase 1.5 (auth & RBAC) — complete:** managed provider (Clerk/Auth0)
+  integration with user sync, local register/login fallback, 15-min access
+  JWTs + rotating 30-day refresh cookies, hashed API keys, `require_role`
+  enforcement of the §22 matrix, Redis sliding-window rate limiting, CSRF,
+  and audit-logged auth events.
 - **Early Phase 2 surface:** `POST /api/v1/search` (BGE-small dense vectors in
   Qdrant, cosine) is ported into `modules/retrieval`; the embedding pipeline that
   populates vectors lands with Phase 2. The model and Qdrant client load lazily,
@@ -115,5 +156,5 @@ database.
 - **Postgres driver:** sync `psycopg2` by default; set
   `POSTGRES_DRIVER=postgresql+asyncpg` for the async driver option (Phase 2
   async work). The sync engine and Alembic always strip the async prefix.
-- **Next:** Phase 1.5 authentication (Clerk/Auth0 + RBAC), then Phase 2
-  embeddings (BGE-M3 + chunking + Qdrant). See `PROJECT_STATUS_AND_ROADMAP.md`.
+- **Next:** Phase 2 embeddings (BGE-M3 + chunking + Qdrant). See
+  `PROJECT_STATUS_AND_ROADMAP.md`.

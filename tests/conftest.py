@@ -20,6 +20,13 @@ os.environ.setdefault("SEED_DEFAULT_SOURCES", "false")
 os.environ.setdefault("STORAGE_BACKEND", "local")
 _TEST_STORAGE_DIR = tempfile.mkdtemp(prefix="pulseai-test-storage-")
 os.environ["STORAGE_LOCAL_DIR"] = _TEST_STORAGE_DIR
+# --- Auth (Phase 1.5) test defaults -----------------------------------------
+# Local provider + known secret; rate limiting off globally so the suite is
+# deterministic (dedicated rate-limit tests enable it per-test).
+os.environ["AUTH_PROVIDER"] = "none"
+os.environ["JWT_SECRET"] = "test-secret-not-for-production-0123456789abcdef"
+os.environ["RATE_LIMIT_ENABLED"] = "false"
+os.environ["CSRF_ENABLED"] = "true"
 
 import psycopg2  # noqa: E402
 import pytest  # noqa: E402
@@ -106,3 +113,52 @@ def client(prepared_database):
 
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def make_user(client):
+    """Register + login a user (any role) and return bearer-auth headers.
+
+    Roles other than ``user`` are promoted directly in the DB (test setup
+    bypasses the admin-only role-change API on purpose).
+    """
+
+    def _make(email: str | None = None, role: str = "user", password: str = "Password!123"):
+        import uuid as _uuid
+
+        from backend.db.models import User as _User
+
+        email = email or f"user-{_uuid.uuid4().hex[:8]}@example.com"
+        reg = client.post(
+            "/api/v1/auth/register",
+            json={"email": email, "password": password, "display_name": "Test User"},
+        )
+        assert reg.status_code == 201, reg.text
+        if role != "user":
+            db = SessionLocal()
+            try:
+                user = db.query(_User).filter(_User.email == email).one()
+                user.role = role
+                db.commit()
+            finally:
+                db.close()
+        login = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+        assert login.status_code == 200, login.text
+        token = login.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+
+    return _make
+
+
+@pytest.fixture
+def csrf_headers(client):
+    """Return the current double-submit CSRF header matching the client's cookie."""
+
+    def _headers():
+        from backend.core.config import settings as _settings
+
+        value = client.cookies.get(_settings.csrf_cookie_name)
+        assert value, "no CSRF cookie present — log in first"
+        return {"X-CSRF-Token": value}
+
+    return _headers

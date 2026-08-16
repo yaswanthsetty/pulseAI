@@ -1,12 +1,13 @@
 # PulseAI — Project Status, Gap Analysis & Step-by-Step Action Plan
 
 > **Sources:** `PulseAI_Technical_Specification_v2.md` (the design document) and the actual code in this repository.
-> **Last updated:** August 11, 2026 — **Phase 1 is implemented and verified.**
+> **Last updated:** August 16, 2026 — **Phase 1 and Phase 1.5 are implemented and verified.**
 >
 > **Bottom line:**
 > - **Design (spec): ~100% complete** (design-complete, "ready for phased implementation").
-> - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested (72 tests green), and demonstrated live (41 articles ingested/classified/processed end-to-end).
-> - **Overall MVP (Phases 1–6): ≈ 18%** — 1 of 7 phases done; next up is Phase 1.5 (auth).
+> - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested (83 tests green), and demonstrated live (41 articles ingested/classified/processed end-to-end).
+> - **Phase 1.5 (auth & RBAC): COMPLETE** — managed provider (Clerk/Auth0) + local auth, JWT + rotating refresh cookies, hashed API keys, `require_role` RBAC, rate limiting, CSRF; 162 tests green total.
+> - **Overall MVP (Phases 1–6): ≈ 27%** — 2 of 8 phases done; next up is Phase 2 (embeddings).
 
 ---
 
@@ -16,14 +17,14 @@
 |---|---|---|
 | Specification / Design (v2.0) | Design-complete | **~100%** |
 | **Phase 1 — Infra, schema, ingestion (FR-1..FR-7)** | **Implemented & verified** | **✔ COMPLETE** |
-| Phase 1.5 — Auth / RBAC | Not started | **0%** |
+| **Phase 1.5 — Auth / RBAC (spec §21-23)** | **Implemented & verified** | **✔ COMPLETE** |
 | Phase 2 — Embeddings / chunking / Qdrant | Not started (queue wiring ready) | **0%** |
 | Phase 3 — Event detection | Not started (tables exist) | **0%** |
 | Phase 4 — Temporal RAG / ranking | Not started | **0%** |
 | Phase 5 — Chat & executive reports | Not started | **0%** |
 | Phase 6 — Frontend dashboard | Not started (no Next.js app) | **0%** |
 | Phase 7 — Hardening (CI/CD prod, DR, load tests) | CI added; rest not started | **~10%** |
-| **Overall MVP (Phases 1–6)** | Phase 1 complete | **≈ 18%** |
+| **Overall MVP (Phases 1–6)** | Phases 1 + 1.5 complete | **≈ 27%** |
 
 ---
 
@@ -50,16 +51,18 @@ pulseai/
 │   │   ├── api/                    # top layer: routers + health endpoints
 │   │   ├── ingestion/              # FR-1..FR-7: fetcher, parser, dedupe, classifier,
 │   │   │                           #   service, jobs, schemas, router, seeds
-│   │   ├── retrieval/  ranking/  events/  agents/  auth/  reports/   # Phase stubs
+│   │   ├── auth/                   # Phase 1.5: security, service, deps (require_role),
+│   │   │                           #   ratelimit, csrf, router (auth/users/api-keys)
+│   │   ├── retrieval/  ranking/  events/  agents/  reports/        # Phase stubs
 │   └── workers/
 │       ├── scheduler.py            # per-source polling + backoff retries (FR-1/FR-3)
 │       └── worker.py               # RQ worker (SimpleWorker on Windows)
 ├── migrations/                     # Alembic: full spec schema + author column
-├── tests/                          # 72 unit + integration tests
+├── tests/                          # 162 unit + integration tests (79 auth)
 ├── docker-compose.yml              # postgres, qdrant, redis, api, worker, scheduler
 ├── Dockerfile
 ├── .github/workflows/ci.yml        # ruff → format → import-linter → migrations → pytest
-├── .importlinter                   # module-boundary contracts (spec §8)
+├── .importlinter                   # module-boundary contracts (spec §8), incl. auth carve-out
 ├── pyproject.toml / uv.lock
 └── README.md / .env.example / PROJECT_STATUS_AND_ROADMAP.md
 ```
@@ -74,6 +77,10 @@ pulseai/
 - Backoff/degraded path exercised live (a dead seed feed → `consecutive_failures=1` → retry scheduled).
 - `/readyz` reports Postgres/Qdrant/Redis health; `/api/v1/sources`, `/api/v1/articles` serve
   paginated, enveloped responses; 404/422 responses use the spec §19 error envelope.
+- Auth flow verified live: register → login (HS256 JWT, 900s TTL) → `/users/me` (bearer **and**
+  httpOnly cookie), API-key create/use/revoke, refresh rotation (old token 401 after use),
+  CSRF (cookie POST without header → 403), RBAC (user POST /sources → 403), rate limiting
+  (anon quota → 429 → recovers after the 60s window slides).
 
 ---
 
@@ -103,14 +110,7 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 
 ## 4. What You Have to Work On (Next Phases)
 
-### Phase 1.5 — Authentication & RBAC (start here)
-1. Integrate managed auth (Clerk/Auth0), sync users into the `users` table (tables exist).
-2. `POST /api/v1/auth/register|login|refresh|logout`, `GET /users/me`; JWT 15 min + rotating refresh token (httpOnly cookie).
-3. API-key endpoints (`api_keys` table exists); hash at rest, return once.
-4. `require_role(min_role)` dependency + the full §22 RBAC matrix, integration-tested per endpoint.
-5. Security controls: SSRF is done; add rate limiting (Redis sliding window), CSRF, audit-log auth events.
-
-### Phase 2 — Embeddings, Chunking & Qdrant
+### Phase 2 — Embeddings, Chunking & Qdrant (start here)
 1. Sentence-aware chunker (FR-8) → `article_chunks`; short articles stay single-chunk.
 2. BGE-M3 dense+sparse (FR-9); create `pulseai_articles` collection with both vector spaces; sharding.
 3. Embed in the worker (`embed` queue), batch + retry; nightly reconciliation job (spec §11).
@@ -164,7 +164,13 @@ Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check 
 - [x] Docker (compose + Dockerfile) · CI (lint/format/boundaries/migrations/tests)
 - [x] 72 unit + integration tests
 
-**Phase 1.5 — Auth** — [ ] managed provider · [ ] auth endpoints + refresh rotation · [ ] API keys · [ ] `require_role` + RBAC matrix · [ ] rate limiting/CSRF
+**Phase 1.5 — Auth — ✔ COMPLETE**
+- [x] Managed provider (Clerk/Auth0): JWKS RS256 verification, user sync, `POST /auth/session`
+- [x] `POST /auth/register|login|refresh|logout`, `GET /users/me`; JWT 15 min + rotating refresh cookie (httpOnly)
+- [x] API keys: `pls_`-prefixed, hashed at rest, returned once, revocable, scoped
+- [x] `require_role(min_role)` dependency + §22 matrix integration-tested per endpoint (incl. admin user/role management)
+- [x] Rate limiting (Redis sliding window, 30/120 per min, fail-open) · double-submit CSRF · audit-log auth events
+- [x] import-linter carve-out: auth is shared infrastructure (business modules may import it; it never imports them)
 
 **Phase 2 — Embeddings** — [x] early semantic search surface (`POST /api/v1/search`, BGE-small dense → Qdrant, lazy model load, 503 fallback) · [ ] chunker (FR-8) · [ ] BGE-M3 dense+sparse (FR-9) · [ ] UUID-keyed Qdrant payloads (§11) · [ ] hybrid search + rerank (FR-11..13) · [ ] reconciliation job
 

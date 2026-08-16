@@ -13,6 +13,17 @@ x-app-env: &app-env
   STORAGE_LOCAL_DIR: /app/storage/objects
   SEED_DEFAULT_SOURCES: "true"
   ENVIRONMENT: development
+  # --- Auth (Phase 1.5) ---
+  AUTH_PROVIDER: ${AUTH_PROVIDER:-none}
+  JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me}
+  JWT_ISSUER: ${JWT_ISSUER:-pulseai}
+  JWT_AUDIENCE: ${JWT_AUDIENCE:-pulseai-api}
+  CLERK_DOMAIN: ${CLERK_DOMAIN:-}
+  AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+  AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  CSRF_ENABLED: ${CSRF_ENABLED:-true}
+  RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
 
 services:
   # --- Infrastructure ----------------------------------------------------

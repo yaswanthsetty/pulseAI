@@ -7,7 +7,9 @@ requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",  # async driver option (POSTGRES_DRIVER=postgresql+asyncpg)
+    "bcrypt>=5.0",
     "beautifulsoup4>=4.15.0",
+    "email-validator>=2.3.0",
     "fastapi>=0.137.1",
     "feedparser>=6.0.12",
     "httpx>=0.28.1",
@@ -15,6 +17,7 @@ dependencies = [
     "psycopg2-binary>=2.9.12",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
+    "pyjwt[crypto]>=2.10",
     "qdrant-client>=1.18.0",
     "redis>=8.1.0",
     "rq>=2.10.0",
@@ -64,7 +67,11 @@ ignore = ["SIM108", "SIM105"]
 # FastAPI dependencies and query params are conventionally declared as
 # defaults (``db: Session = Depends(get_db)``); B008 should not flag them.
 [tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "backend.modules.auth.deps.require_role",
+]
 
 [tool.coverage.run]
 source = ["backend"]

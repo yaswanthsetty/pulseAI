@@ -24,6 +24,7 @@ from backend.core.logging import setup_logging
 from backend.db.seed import seed_reference_data
 from backend.modules.api.health import router as health_router
 from backend.modules.api.router import api_router
+from backend.modules.auth.csrf import CSRFMiddleware
 from backend.modules.ingestion.seeds import seed_default_sources
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Double-submit CSRF protection for cookie-authenticated mutations (§23).
+app.add_middleware(CSRFMiddleware)
 
 app.include_router(health_router)
 app.include_router(api_router)

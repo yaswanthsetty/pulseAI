@@ -66,8 +66,32 @@ class Settings(BaseSettings):
     max_article_storage_chars: int = 50_000
     content_preview_chars: int = 500  # FR-5 / §31: preview length kept inline
 
-    # --- Auth (Phase 1.5 placeholder) ----------------------------------------
-    auth_provider: str = "none"  # none | clerk | auth0 (managed provider lands in 1.5)
+    # --- Auth (Phase 1.5) ------------------------------------------------------
+    # none (local register/login) | clerk | auth0 (managed identity provider, §21)
+    auth_provider: str = "none"
+    # Local-mode signing key. MUST be overridden with a strong secret in any
+    # deployment that exposes register/login (auth_provider=none).
+    jwt_secret: str = "dev-only-secret-change-me"
+    jwt_issuer: str = "pulseai"
+    jwt_audience: str = "pulseai-api"
+    jwt_access_ttl_minutes: int = 15
+    refresh_ttl_days: int = 30  # rotated on every use; httpOnly cookie (§21)
+    # Managed-provider domains (only read when auth_provider=clerk|auth0).
+    clerk_domain: str | None = None
+    auth0_domain: str | None = None
+    auth0_audience: str | None = None
+    # Cookies.
+    access_cookie_name: str = "pulseai_access"
+    refresh_cookie_name: str = "pulseai_refresh"
+    csrf_cookie_name: str = "pulseai_csrf"
+    cookie_secure: bool = False  # enable behind HTTPS (HSTS territory, §23)
+    # Rate limiting (spec §19/§23) — Redis sliding window.
+    rate_limit_enabled: bool = True
+    rate_limit_anon_per_minute: int = 30
+    rate_limit_auth_per_minute: int = 120
+    rate_limit_chat_per_minute: int = 10  # chat/reports endpoints (Phase 5)
+    # Double-submit CSRF token protection for cookie-authenticated requests (§23).
+    csrf_enabled: bool = True
 
     @property
     def database_url(self) -> str:

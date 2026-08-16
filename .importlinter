@@ -1,11 +1,11 @@
 # Module-boundary enforcement (spec §8).
 #
-# Two rules keep the modular monolith honest:
+# Three rules keep the modular monolith honest:
 #   1. `modules/api` is the top layer — nothing else may import from it.
-#   2. Business modules are independent — no sibling imports. When a real
-#      cross-module service interface is needed (e.g. Phase 3 events calling
-#      retrieval), carve out an explicit contract instead of a blanket
-#      exception.
+#   2. Business modules are independent — no sibling imports.
+#   3. `modules/auth` is shared cross-cutting infrastructure (its
+#      require_role/get_current_user/rate-limit dependencies are used by every
+#      route) — business modules MAY import it, but auth never imports them.
 
 [importlinter]
 root_package = backend
@@ -32,6 +32,33 @@ modules =
     backend.modules.ranking
     backend.modules.events
     backend.modules.agents
+    backend.modules.reports
+    backend.modules.ingestion
+
+[importlinter:contract:3]
+name = Auth is shared infrastructure (only API and business modules import it)
+type = protected
+protected_modules =
     backend.modules.auth
+allowed_importers =
+    backend.main
+    backend.modules.api
+    backend.modules.retrieval
+    backend.modules.ranking
+    backend.modules.events
+    backend.modules.agents
+    backend.modules.reports
+    backend.modules.ingestion
+
+[importlinter:contract:4]
+name = Auth never imports business modules
+type = forbidden
+source_modules =
+    backend.modules.auth
+forbidden_modules =
+    backend.modules.retrieval
+    backend.modules.ranking
+    backend.modules.events
+    backend.modules.agents
     backend.modules.reports
     backend.modules.ingestion

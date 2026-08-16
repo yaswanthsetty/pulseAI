@@ -1,8 +1,8 @@
 """Admin + read API for sources and articles.
 
-Endpoints mounted under ``/api/v1`` by the API router. Authentication/RBAC
-(``require_role``) is attached in Phase 1.5; the routes are structured so the
-dependency slots in without changes.
+Endpoints mounted under ``/api/v1`` by the API router. RBAC per spec §22:
+source *management* is Admin-only, source *listing* requires any authenticated
+user, and article browsing is open to guests.
 """
 
 import uuid
@@ -15,7 +15,8 @@ from sqlalchemy.orm import Session
 from backend.core import queue
 from backend.core.database import get_db
 from backend.core.pagination import Page, paginate
-from backend.db.models import Article, Source
+from backend.db.models import Article, Source, User
+from backend.modules.auth.deps import require_role
 from backend.modules.ingestion import service
 from backend.modules.ingestion.schemas import ArticleRead, SourceCreate, SourceRead, SourceUpdate
 
@@ -28,8 +29,9 @@ def list_sources(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("user")),
 ):
-    """List sources with their health/status (spec §20)."""
+    """List sources with their health/status (any authenticated user)."""
     statement = select(Source).order_by(Source.name)
     if status:
         statement = statement.where(Source.status == status)
@@ -37,7 +39,11 @@ def list_sources(
 
 
 @router.post("/sources", response_model=SourceRead, status_code=201)
-def create_source(payload: SourceCreate, db: Session = Depends(get_db)):
+def create_source(
+    payload: SourceCreate,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_role("admin")),
+):
     """Add a source; the feed is fetched and validated before activation (FR-4)."""
     try:
         # mode="json" coerces AnyHttpUrl fields to plain strings for the DB.
@@ -51,6 +57,7 @@ def update_source(
     source_id: uuid.UUID,
     payload: SourceUpdate,
     db: Session = Depends(get_db),
+    _admin: User = Depends(require_role("admin")),
 ):
     """Update credibility, poll interval, status, or feed URL."""
     try:
@@ -64,7 +71,11 @@ def update_source(
 
 
 @router.post("/sources/{source_id}/poll", status_code=202)
-def trigger_poll(source_id: uuid.UUID, db: Session = Depends(get_db)):
+def trigger_poll(
+    source_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_role("admin")),
+):
     """Manually queue an immediate poll of a source (ops/testing convenience)."""
     source = db.get(Source, source_id)
     if source is None:

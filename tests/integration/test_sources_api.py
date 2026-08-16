@@ -22,8 +22,9 @@ def no_enqueue(monkeypatch):
 
 class TestCreateSource:
     def test_creates_active_source_after_feed_validation(
-        self, client, feed_content, no_enqueue, monkeypatch
+        self, client, make_user, feed_content, no_enqueue, monkeypatch
     ):
+        admin = make_user(role="admin")
         monkeypatch.setattr(service, "fetch_url", lambda url, timeout=None: feed_content)
         resp = client.post(
             "/api/v1/sources",
@@ -33,6 +34,7 @@ class TestCreateSource:
                 "credibility_score": 0.9,
                 "poll_interval_minutes": 10,
             },
+            headers=admin,
         )
         assert resp.status_code == 201
         body = resp.json()
@@ -42,7 +44,9 @@ class TestCreateSource:
         assert body["poll_interval_minutes"] == 10
         assert body["consecutive_failures"] == 0
 
-    def test_rejects_invalid_feed(self, client, no_enqueue, monkeypatch):
+    def test_rejects_invalid_feed(self, client, make_user, no_enqueue, monkeypatch):
+        admin = make_user(role="admin")
+
         def boom(url, timeout=None):
             raise service.FetchError("unreachable host")
 
@@ -50,21 +54,25 @@ class TestCreateSource:
         resp = client.post(
             "/api/v1/sources",
             json={"name": "Bad Feed", "rss_url": "https://bad.example.com/feed"},
+            headers=admin,
         )
         assert resp.status_code == 422
         assert resp.json()["error"]["code"] == "VALIDATION_ERROR"
 
-    def test_rejects_malformed_payload(self, client):
+    def test_rejects_malformed_payload(self, client, make_user):
+        admin = make_user(role="admin")
         resp = client.post(
             "/api/v1/sources",
             json={"name": "", "rss_url": "not-a-url", "poll_interval_minutes": 2},
+            headers=admin,
         )
         assert resp.status_code == 422
         assert resp.json()["error"]["code"] == "VALIDATION_ERROR"
 
     def test_rejects_poll_interval_below_minimum(
-        self, client, feed_content, no_enqueue, monkeypatch
+        self, client, make_user, feed_content, no_enqueue, monkeypatch
     ):
+        admin = make_user(role="admin")
         monkeypatch.setattr(service, "fetch_url", lambda url, timeout=None: feed_content)
         resp = client.post(
             "/api/v1/sources",
@@ -73,55 +81,66 @@ class TestCreateSource:
                 "rss_url": "https://fixture.example.com/feed.xml",
                 "poll_interval_minutes": 2,
             },
+            headers=admin,
         )
         assert resp.status_code == 422
 
 
 class TestListAndUpdate:
-    def test_list_sources(self, client, feed_content, no_enqueue, monkeypatch):
+    def test_list_sources(self, client, make_user, feed_content, no_enqueue, monkeypatch):
+        admin = make_user(role="admin")
+        user = make_user()
         monkeypatch.setattr(service, "fetch_url", lambda url, timeout=None: feed_content)
         client.post(
             "/api/v1/sources",
             json={"name": "A Feed", "rss_url": "https://fixture.example.com/feed.xml"},
+            headers=admin,
         )
-        resp = client.get("/api/v1/sources")
+        resp = client.get("/api/v1/sources", headers=user)
         assert resp.status_code == 200
         body = resp.json()
         assert body["total"] == 1
         assert body["items"][0]["name"] == "A Feed"
         assert body["page"] == 1
 
-    def test_patch_updates_source(self, client, feed_content, no_enqueue, monkeypatch):
+    def test_patch_updates_source(self, client, make_user, feed_content, no_enqueue, monkeypatch):
+        admin = make_user(role="admin")
         monkeypatch.setattr(service, "fetch_url", lambda url, timeout=None: feed_content)
         created = client.post(
             "/api/v1/sources",
             json={"name": "A Feed", "rss_url": "https://fixture.example.com/feed.xml"},
+            headers=admin,
         ).json()
         resp = client.patch(
             f"/api/v1/sources/{created['id']}",
             json={"credibility_score": 0.42, "status": "disabled"},
+            headers=admin,
         )
         assert resp.status_code == 200
         body = resp.json()
         assert body["credibility_score"] == 0.42
         assert body["status"] == "disabled"
 
-    def test_patch_missing_source_returns_404_envelope(self, client):
+    def test_patch_missing_source_returns_404_envelope(self, client, make_user):
+        admin = make_user(role="admin")
         resp = client.patch(
             f"/api/v1/sources/{uuid.uuid4()}",
             json={"credibility_score": 0.5},
+            headers=admin,
         )
         assert resp.status_code == 404
         assert resp.json()["error"]["code"] == "NOT_FOUND"
         assert "request_id" in resp.json()["error"]
 
-    def test_manual_poll_queues_job(self, client, feed_content, no_enqueue, monkeypatch):
+    def test_manual_poll_queues_job(self, client, make_user, feed_content, no_enqueue, monkeypatch):
+        admin = make_user(role="admin")
         monkeypatch.setattr(service, "fetch_url", lambda url, timeout=None: feed_content)
         created = client.post(
             "/api/v1/sources",
             json={"name": "A Feed", "rss_url": "https://fixture.example.com/feed.xml"},
+            headers=admin,
         ).json()
-        resp = client.post(f"/api/v1/sources/{created['id']}/poll")
+        resp = client.post(f"/api/v1/sources/{created['id']}/poll", headers=admin)
         assert resp.status_code == 202
         assert resp.json()["status"] == "queued"
         assert resp.json()["job_id"].startswith("poll-")

@@ -1,8 +1,10 @@
 # Plain-pip mirror of runtime dependencies.
 # The authoritative dependency list is pyproject.toml (uv-managed).
 alembic
-asyncpg  # async driver option (POSTGRES_DRIVER=postgresql+asyncpg)
+asyncpg
+bcrypt
 beautifulsoup4
+email-validator
 fastapi
 feedparser
 httpx
@@ -10,6 +12,7 @@ langdetect
 psycopg2-binary
 pydantic
 pydantic-settings
+pyjwt[crypto]
 qdrant-client
 redis
 rq
