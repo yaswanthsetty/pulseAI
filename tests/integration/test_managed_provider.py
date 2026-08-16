@@ -128,6 +128,14 @@ class TestManagedSync:
         with pytest.raises(service.InvalidTokenError):
             security_sync(db, claims)
 
+    def test_sync_audits_only_when_user_changes(self, provider_env, db):
+        claims = security.decode_provider_token(provider_env(role="analyst"))
+        security_sync(db, claims)
+        security_sync(db, claims)  # unchanged user — no new audit row
+        assert db.query(AuditLog).filter(AuditLog.action == "user_synced").count() == 1
+        security_sync(db, security.decode_provider_token(provider_env(role="admin")))
+        assert db.query(AuditLog).filter(AuditLog.action == "user_synced").count() == 2
+
 
 class TestSessionEndpoint:
     def test_session_exchanges_provider_token_for_tokens(self, provider_env, client):
@@ -157,6 +165,11 @@ class TestDirectProviderAuth:
         assert resp.status_code == 200
         assert resp.json()["email"] == "prov@example.com"
         assert resp.json()["role"] == "user"
+
+    def test_provider_token_without_email_is_401_not_500(self, provider_env, client):
+        token = provider_env(email="")
+        resp = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 401
 
     def test_garbage_token_401(self, provider_env, client):
         resp = client.get("/api/v1/users/me", headers={"Authorization": "Bearer garbage"})

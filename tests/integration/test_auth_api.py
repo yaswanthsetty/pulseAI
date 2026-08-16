@@ -142,6 +142,17 @@ class TestRefreshRotation:
         resp = client.post("/api/v1/auth/refresh")
         assert resp.status_code == 401
 
+    def test_refresh_does_not_write_spurious_login_audit(self, client, db, csrf_headers):
+        _register(client)
+        _login(client)
+        logins_before = db.query(AuditLog).filter(AuditLog.action == "login").count()
+
+        assert client.post("/api/v1/auth/refresh", headers=csrf_headers()).status_code == 200
+
+        # Rotation is recorded as a refresh, and must not fabricate a login.
+        assert db.query(AuditLog).filter(AuditLog.action == "refresh").count() == 1
+        assert db.query(AuditLog).filter(AuditLog.action == "login").count() == logins_before
+
     def test_refresh_without_csrf_header_403(self, client):
         _register(client)
         _login(client)

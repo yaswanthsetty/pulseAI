@@ -123,8 +123,18 @@ def authenticate_user(
 # ---------------------------------------------------------------------------
 
 
-def issue_tokens(db: Session, user: User, *, ip_address: str | None = None) -> IssuedTokens:
-    """Create an access JWT and a new refresh-token row (hashed at rest)."""
+def issue_tokens(
+    db: Session,
+    user: User,
+    *,
+    ip_address: str | None = None,
+    audit_action: str = "login",
+) -> IssuedTokens:
+    """Create an access JWT and a new refresh-token row (hashed at rest).
+
+    The caller names the audit event (``login`` for login/session,
+    ``refresh`` for rotation) so the audit log records what actually happened.
+    """
     access_token, expires_in = security.create_access_token(
         user_id=user.id, email=user.email, role=user.role
     )
@@ -137,7 +147,7 @@ def issue_tokens(db: Session, user: User, *, ip_address: str | None = None) -> I
         )
     )
     db.commit()
-    write_audit(db, "login", user_id=str(user.id), ip_address=_client_ip(ip_address))
+    write_audit(db, audit_action, user_id=str(user.id), ip_address=_client_ip(ip_address))
     return IssuedTokens(
         access_token=access_token,
         refresh_token=raw_refresh,
@@ -160,9 +170,7 @@ def rotate_refresh_token(
     if user is None or not user.is_active:
         db.commit()
         raise InvalidTokenError("Account is disabled")
-    tokens = issue_tokens(db, user, ip_address=ip_address)
-    write_audit(db, "refresh", user_id=str(user.id), ip_address=_client_ip(ip_address))
-    return tokens
+    return issue_tokens(db, user, ip_address=ip_address, audit_action="refresh")
 
 
 def revoke_refresh_token(db: Session, raw_refresh: str, *, ip_address: str | None = None) -> bool:
@@ -204,6 +212,7 @@ def sync_managed_user(db: Session, claims: dict) -> User:
         db.commit()
         db.refresh(user)
         logger.info("managed user synced (new): %s", email)
+        write_audit(db, "user_synced", user_id=str(user.id), metadata={"email": email})
     else:
         changed = False
         if name and user.display_name != name:
@@ -215,7 +224,7 @@ def sync_managed_user(db: Session, claims: dict) -> User:
         if changed:
             db.commit()
             db.refresh(user)
-    write_audit(db, "user_synced", user_id=str(user.id), metadata={"email": email})
+            write_audit(db, "user_synced", user_id=str(user.id), metadata={"email": email})
     return user
 
 
@@ -260,7 +269,9 @@ def resolve_principal(db: Session, token: str) -> tuple[User | None, str, ApiKey
             user = sync_managed_user(db, claims)
             if user is not None:
                 return user, "provider", None
-        except security.TokenError:
+        except security.TokenError, InvalidTokenError:
+            # Bad signature/issuer, or a valid token whose claims cannot map to
+            # a user (e.g. no email) — treat as unauthenticated, never a 500.
             user = None
 
     if user is not None and not user.is_active:
