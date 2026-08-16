@@ -1,7 +1,8 @@
 """Default sources seeded in development (``SEED_DEFAULT_SOURCES=true``).
 
-These match the original skeleton's feeds. Production deployments should
-manage sources through the admin API instead.
+Four working technology feeds, verified end-to-end (fetch, parse, dedupe,
+ingest). Production deployments should manage sources through the admin
+API instead.
 """
 
 import logging
@@ -23,8 +24,15 @@ DEFAULT_SOURCES: list[dict] = [
         "category_code": "technology",
     },
     {
+        "name": "The Verge",
+        "rss_url": "https://www.theverge.com/rss/index.xml",
+        "website": "https://www.theverge.com",
+        "credibility_score": 0.9,
+        "category_code": "technology",
+    },
+    {
         "name": "The Guardian Technology",
-        "rss_url": "https://www.theguardian.com/world/technology/rss",
+        "rss_url": "https://www.theguardian.com/technology/rss",
         "website": "https://www.theguardian.com",
         "credibility_score": 0.95,
         "category_code": "technology",
