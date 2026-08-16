@@ -27,9 +27,21 @@ class ObjectStorage(Protocol):
     def exists(self, key: str) -> bool: ...
 
 
+def _normalize_key(key: str) -> str:
+    """Object-storage keys are always "/"-separated; map Windows separators."""
+    return key.replace("\\", "/")
+
+
 def _validate_key(key: str) -> None:
-    """Reject keys that could escape the storage root (path traversal)."""
-    if not key or key.startswith("/") or ".." in Path(key).parts:
+    """Reject keys that could escape the storage root (path traversal).
+
+    Backslashes are normalized to "/" first so the check behaves identically
+    on every OS — on POSIX a "\\" is a literal filename character and would
+    otherwise silently bypass traversal detection (GitHub Actions CI caught
+    this: ``get("..\\escape.txt")`` raised FileNotFoundError, not ValueError).
+    """
+    normalized = _normalize_key(key)
+    if not normalized or normalized.startswith("/") or ".." in Path(normalized).parts:
         raise ValueError(f"invalid storage key: {key!r}")
 
 
@@ -42,7 +54,9 @@ class LocalObjectStorage:
 
     def _resolve(self, key: str) -> Path:
         _validate_key(key)
-        return self.root / key
+        # Join with the normalized form so a key is resolved identically on
+        # every platform (e.g. "articles\\a.txt" == "articles/a.txt").
+        return self.root / _normalize_key(key)
 
     def put(self, key: str, data: bytes) -> str:
         path = self._resolve(key)
