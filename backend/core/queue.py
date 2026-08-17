@@ -10,6 +10,8 @@ The ``embed``/``cluster`` queues are declared now so the worker can bind to
 them and later phases plug in without changing process topology.
 """
 
+import time
+
 import redis
 from rq import Queue, Retry
 
@@ -163,3 +165,19 @@ def acquire_cluster_slow_path(interval_seconds: int) -> bool:
     ``interval_seconds`` window wins the run.
     """
     return bool(get_redis().set("cluster:slow_path", "1", nx=True, ex=interval_seconds))
+
+
+def record_cluster_slow_path_run() -> None:
+    """Record the time of the last successful slow-path clustering pass.
+
+    The periodic reconcile (``reconcile_events``) widens its bounded window
+    to cover the gap since this timestamp, so articles are never stranded
+    outside the window by scheduler downtime or a failed pass.
+    """
+    get_redis().set("cluster:slow_path:last_run", str(time.time()))
+
+
+def last_cluster_slow_path_run() -> float | None:
+    """Unix timestamp of the last successful slow-path pass, or None."""
+    value = get_redis().get("cluster:slow_path:last_run")
+    return float(value) if value is not None else None

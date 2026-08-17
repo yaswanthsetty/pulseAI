@@ -309,14 +309,22 @@ def _event_from_cluster(
         confidence=float(np.clip(np.mean(sims), 0.0, 1.0)),
         status="open",
         article_count=len(members),
+        last_updated=datetime.now(UTC),
     )
     db.add(event)
     db.flush()
+    # Write the centroid BEFORE committing: if Qdrant fails, the whole
+    # transaction rolls back — no half-created event (Postgres row without a
+    # centroid point) can survive. The fast path already orders it this way.
+    try:
+        _upsert_centroid(client, event, centroid)
+    except Exception:
+        db.rollback()
+        raise
     for article, _vec in members:
         db.add(EventArticle(event_id=event.id, article_id=article.id))
         article.event_id = event.id
     db.commit()
-    _upsert_centroid(client, event, centroid)
     logger.info(
         "slow-path: new event %s (%d articles, confidence=%.3f)",
         event.id,

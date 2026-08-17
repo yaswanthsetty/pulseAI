@@ -154,11 +154,15 @@ def get_event_timeline(event_id: uuid.UUID, db: Session = Depends(get_db)):
             )
         )
 
+    # total_articles derives from the rows actually returned: the stored
+    # event.article_count counter can drift (e.g. a failed centroid write, a
+    # manual edit), and the response must be internally consistent.
+    total = sum(len(by_day[day]) for day in sorted(by_day))
     return EventTimelineResponse(
         id=event.id,
         title=event.title,
         status=event.status,
-        total_articles=event.article_count,
+        total_articles=total,
         first_day=days[0].date if days else None,
         last_day=days[-1].date if days else None,
         days=days,

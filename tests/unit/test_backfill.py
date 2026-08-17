@@ -1,9 +1,11 @@
 """Unit tests for the embeddings backfill (Phase 2 CLI)."""
 
+import time
 import types
 import uuid
 from datetime import UTC, datetime
 
+from backend.core.config import settings
 from backend.db.models import Article, ArticleChunk, Source
 from backend.modules.ingestion.dedupe import url_hash
 from backend.workers import backfill
@@ -164,10 +166,79 @@ class TestReconcileEvents:
             backfill.events_service, "close_stale_events", lambda db_, client=None: 2
         )
         monkeypatch.setattr(backfill.events_service, "get_qdrant_client", lambda: object())
+        monkeypatch.setattr(backfill, "last_cluster_slow_path_run", lambda: None)
+        monkeypatch.setattr(backfill, "record_cluster_slow_path_run", lambda: None)
 
         result = backfill.reconcile_events(interval_minutes=30)
 
         assert result == {"created": 1, "closed": 2, "skipped": False}
+
+    def test_widens_window_after_downtime_gap(self, db, monkeypatch):
+        """A gap longer than the configured window must widen the window so
+        older unmatched articles are not stranded outside it permanently."""
+        captured: dict = {}
+        monkeypatch.setattr(backfill, "acquire_cluster_slow_path", lambda seconds: True)
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+
+        def _cluster(db_, client=None, hours=None):
+            captured["hours"] = hours
+            return []
+
+        monkeypatch.setattr(backfill.events_service, "cluster_unmatched_articles", _cluster)
+        monkeypatch.setattr(
+            backfill.events_service, "close_stale_events", lambda db_, client=None: 0
+        )
+        monkeypatch.setattr(backfill.events_service, "get_qdrant_client", lambda: object())
+        monkeypatch.setattr(backfill, "last_cluster_slow_path_run", lambda: time.time() - 20 * 3600)
+        recorded = []
+        monkeypatch.setattr(backfill, "record_cluster_slow_path_run", lambda: recorded.append(1))
+
+        backfill.reconcile_events(interval_minutes=30)
+
+        assert captured["hours"] > 6  # widened beyond the configured window
+        assert recorded == [1]  # anchor refreshed after the widened pass
+
+    def test_keeps_window_when_recent_run(self, db, monkeypatch):
+        captured: dict = {}
+        monkeypatch.setattr(backfill, "acquire_cluster_slow_path", lambda seconds: True)
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+
+        def _cluster(db_, client=None, hours=None):
+            captured["hours"] = hours
+            return []
+
+        monkeypatch.setattr(backfill.events_service, "cluster_unmatched_articles", _cluster)
+        monkeypatch.setattr(
+            backfill.events_service, "close_stale_events", lambda db_, client=None: 0
+        )
+        monkeypatch.setattr(backfill.events_service, "get_qdrant_client", lambda: object())
+        monkeypatch.setattr(backfill, "last_cluster_slow_path_run", lambda: time.time() - 600)
+        monkeypatch.setattr(backfill, "record_cluster_slow_path_run", lambda: None)
+
+        backfill.reconcile_events(interval_minutes=30)
+
+        assert captured["hours"] == settings.event_slow_path_window_hours
+
+    def test_first_run_uses_configured_window(self, db, monkeypatch):
+        captured: dict = {}
+        monkeypatch.setattr(backfill, "acquire_cluster_slow_path", lambda seconds: True)
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+
+        def _cluster(db_, client=None, hours=None):
+            captured["hours"] = hours
+            return []
+
+        monkeypatch.setattr(backfill.events_service, "cluster_unmatched_articles", _cluster)
+        monkeypatch.setattr(
+            backfill.events_service, "close_stale_events", lambda db_, client=None: 0
+        )
+        monkeypatch.setattr(backfill.events_service, "get_qdrant_client", lambda: object())
+        monkeypatch.setattr(backfill, "last_cluster_slow_path_run", lambda: None)
+        monkeypatch.setattr(backfill, "record_cluster_slow_path_run", lambda: None)
+
+        backfill.reconcile_events(interval_minutes=30)
+
+        assert captured["hours"] == settings.event_slow_path_window_hours
 
 
 class TestSyncQdrantPoints:

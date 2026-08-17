@@ -23,6 +23,7 @@ stale events (FR-17) — the one-shot twin of the scheduler's periodic
 
 import argparse
 import logging
+from datetime import UTC, datetime
 
 from qdrant_client.http.models import PointIdsList
 from sqlalchemy import select
@@ -34,6 +35,8 @@ from backend.core.queue import (
     acquire_cluster_slow_path,
     acquire_embedding_reconcile,
     enqueue_embed_article,
+    last_cluster_slow_path_run,
+    record_cluster_slow_path_run,
 )
 from backend.db.models import Article, ArticleChunk
 from backend.modules.events import service as events_service
@@ -179,11 +182,16 @@ def reconcile_events(
     """Periodic twin of the one-shot cluster backfill (spec §14 slow path).
 
     Runs at most once per ``interval_minutes`` (Redis TTL marker armed by
-    ``acquire_cluster_slow_path``): clusters unmatched embedded articles from a
-    bounded recent window (``event_slow_path_window_hours``) into new events
-    (FR-16) and closes events idle for ``event_close_hours`` (FR-17). Returns
-    ``{"created", "closed", "skipped"}``. Called from the scheduler process;
-    ``client``/``db`` are injectable for tests.
+    ``acquire_cluster_slow_path``): clusters unmatched embedded articles into
+    new events (FR-16) and closes events idle for ``event_close_hours``
+    (FR-17). Returns ``{"created", "closed", "skipped"}``. Called from the
+    scheduler process; ``client``/``db`` are injectable for tests.
+
+    The clustering window is self-healing: the bounded recent window
+    (``event_slow_path_window_hours``) bounds steady-state cost, but after any
+    downtime or failed pass the effective window widens to cover the gap since
+    the last successful run (Redis ``cluster:slow_path:last_run``) — so older
+    unmatched articles are never stranded outside the window permanently.
     """
     interval = interval_minutes or settings.event_slow_path_interval_minutes
     if not acquire_cluster_slow_path(interval * 60):
@@ -194,10 +202,16 @@ def reconcile_events(
         db = SessionLocal()
     try:
         qdrant = client or events_service.get_qdrant_client()
-        created = events_service.cluster_unmatched_articles(
-            db, client=qdrant, hours=settings.event_slow_path_window_hours
-        )
+        hours = settings.event_slow_path_window_hours
+        last_run = last_cluster_slow_path_run()
+        if last_run is not None:
+            elapsed = datetime.now(UTC) - datetime.fromtimestamp(last_run, tz=UTC)
+            gap_hours = elapsed.total_seconds() / 3600
+            if gap_hours > hours:
+                hours = int(gap_hours) + 1  # cover the whole gap
+        created = events_service.cluster_unmatched_articles(db, client=qdrant, hours=hours)
         closed = events_service.close_stale_events(db, client=qdrant)
+        record_cluster_slow_path_run()
         return {"created": len(created), "closed": closed, "skipped": False}
     finally:
         if owns_db:
@@ -271,6 +285,9 @@ def main_clusters(argv: list[str] | None = None) -> int:
         client = events_service.get_qdrant_client()
         created = events_service.cluster_unmatched_articles(db, client=client, hours=None)
         closed = events_service.close_stale_events(db, client=client)
+        # A whole-corpus pass covers everything; reset the periodic window
+        # anchor so the scheduler does not immediately widen for a stale gap.
+        record_cluster_slow_path_run()
         logger.info(
             "cluster backfill complete: created %d event(s), closed %d stale",
             len(created),
