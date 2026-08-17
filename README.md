@@ -177,8 +177,10 @@ database.
   new events, each with a generated title, extractive summary, and confidence
   score (FR-17); events idle for `EVENT_CLOSE_HOURS` (default 72h) are closed
   and dropped from the centroid collection. `GET /api/v1/events` (paginated,
-  with date/category/min-confidence filters) and `GET /api/v1/events/{id}`
-  (detail + article timeline) implement the spec §20 contract.
+  with date/category/min-confidence filters), `GET /api/v1/events/{id}`
+  (detail + article timeline), and `GET /api/v1/events/{id}/timeline`
+  (articles grouped by day, with a per-day headline + distinctive keywords)
+  implement the spec §20 contract.
   `uv run pulseai-backfill-clusters` runs the slow path over the whole corpus
   in one shot.
 - **Postgres driver:** sync `psycopg2` by default; set

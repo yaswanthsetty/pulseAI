@@ -134,7 +134,7 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 3. ✅ **Slow path (FR-16)**: `reconcile_events` in the scheduler runs UMAP+HDBSCAN over a bounded recent window (`EVENT_SLOW_PATH_WINDOW_HOURS`, default 6) every `EVENT_SLOW_PATH_INTERVAL_MINUTES` (default 30), gated by a Redis marker; `uv run pulseai-backfill-clusters` runs it over the whole corpus.
 4. ✅ **Event model (FR-17)**: title + extractive summary from the most-central article, confidence = mean member similarity to centroid; timeline = `event_articles.added_at`. Abstractive summaries need an LLM (Phase 5).
 5. ✅ **Closure (FR-17/§14)**: events idle for `EVENT_CLOSE_HOURS` (default 72h) → `status='closed'`, centroid point deleted from the fast-path collection.
-6. ✅ **Events API (§20)**: `GET /api/v1/events` (paginated; date/category/min-confidence filters), `GET /api/v1/events/{id}` (detail + article timeline). Verified live: 113 articles → 9 events, 92 articles matched.
+6. ✅ **Events API (§20)**: `GET /api/v1/events` (paginated; date/category/min-confidence filters), `GET /api/v1/events/{id}` (detail + article timeline), `GET /api/v1/events/{id}/timeline` (day-grouped evolving summary: per-day headline, distinctive keywords, titles — the FR-23 Event Explorer timeline view). Verified live: 113 articles → 9 events, 92 articles matched, 8-day evolving timeline served.
 
 ### Phase 4 — Temporal RAG
 Intent detection → weights from `ranking_configs`; `freshness = e^(−hours/24)`; credibility methodology (§13).

@@ -2,10 +2,14 @@
 
 ``GET /api/v1/events`` — paginated list with date/category/min-confidence
 filters; ``GET /api/v1/events/{id}`` — event detail including the article
-timeline. Open (browse) endpoints; the API-level rate limiter applies.
+timeline; ``GET /api/v1/events/{id}/timeline`` — the same articles grouped by
+day, with a per-day headline and distinctive keywords, so the event's
+coverage can be read as an evolving story. Open (browse) endpoints; the
+API-level rate limiter applies.
 """
 
 import uuid
+from collections import Counter, defaultdict
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,10 +19,12 @@ from sqlalchemy.orm import Session
 from backend.core.database import get_db
 from backend.db.models import Article, Event, EventArticle, Source
 from backend.modules.events.schemas import (
+    EventDayEntry,
     EventDetail,
     EventListItem,
     EventListResponse,
     EventTimelineEntry,
+    EventTimelineResponse,
 )
 
 router = APIRouter(tags=["events"])
@@ -105,6 +111,176 @@ def get_event(event_id: uuid.UUID, db: Session = Depends(get_db)):
         last_updated=event.last_updated,
         timeline=timeline,
     )
+
+
+@router.get("/events/{event_id}/timeline", response_model=EventTimelineResponse)
+def get_event_timeline(event_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Evolving timeline: the event's articles grouped by day (oldest first).
+
+    Each day carries its article count, a headline (the day's most
+    representative title — the one closest to the event centroid or the
+    first published), the distinctive keywords that mark what changed that
+    day, and the day's titles in publication order.
+    """
+    event = db.get(Event, event_id)
+    if event is None:
+        raise HTTPException(status_code=404, detail="event not found")
+
+    rows = db.execute(
+        select(Article, EventArticle, Source)
+        .join(EventArticle, EventArticle.article_id == Article.id)
+        .outerjoin(Source, Source.id == Article.source_id)
+        .where(EventArticle.event_id == event.id)
+        .order_by(Article.published_at, EventArticle.added_at)
+    ).all()
+
+    by_day: dict[object, list] = defaultdict(list)
+    for article, ea, _source in rows:
+        day = _article_day(article)
+        if day is not None:
+            by_day[day].append((article, ea))
+
+    days: list[EventDayEntry] = []
+    for day in sorted(by_day):
+        articles = by_day[day]
+        titles = [a.title for a, _ in by_day[day]]
+        days.append(
+            EventDayEntry(
+                date=day,
+                article_count=len(articles),
+                headline=_day_headline(articles),
+                keywords=_day_keywords(articles),
+                titles=titles,
+            )
+        )
+
+    return EventTimelineResponse(
+        id=event.id,
+        title=event.title,
+        status=event.status,
+        total_articles=event.article_count,
+        first_day=days[0].date if days else None,
+        last_day=days[-1].date if days else None,
+        days=days,
+    )
+
+
+_STOPWORDS = {
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "but",
+    "for",
+    "of",
+    "on",
+    "in",
+    "to",
+    "at",
+    "with",
+    "from",
+    "by",
+    "as",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "it",
+    "its",
+    "this",
+    "that",
+    "these",
+    "those",
+    "his",
+    "her",
+    "their",
+    "they",
+    "he",
+    "she",
+    "we",
+    "you",
+    "i",
+    "after",
+    "before",
+    "over",
+    "under",
+    "about",
+    "up",
+    "down",
+    "out",
+    "off",
+    "not",
+    "no",
+    "yes",
+    "has",
+    "have",
+    "had",
+    "will",
+    "would",
+    "could",
+    "should",
+    "can",
+    "may",
+    "might",
+    "must",
+    "does",
+    "did",
+    "do",
+    "than",
+    "then",
+    "so",
+    "if",
+    "while",
+    "during",
+    "against",
+    "between",
+    "into",
+    "through",
+    "via",
+    "per",
+    "new",
+    "say",
+    "says",
+    "said",
+    "report",
+    "reports",
+}
+
+
+def _article_day(article: Article):
+    """The calendar day an article belongs to (published_at, else added_at)."""
+    ts = article.published_at or article.created_at
+    return ts.date() if ts is not None else None
+
+
+def _day_headline(articles: list) -> str | None:
+    """Most representative title: prefer the one closest to the event centroid
+    (highest ``similarity_at_match``), else the first published."""
+    scored = [pair for pair in articles if pair[1].similarity_at_match is not None]
+    if scored:
+        best = max(scored, key=lambda pair: pair[1].similarity_at_match or 0)
+        return best[0].title
+    return articles[0][0].title if articles else None
+
+
+def _day_keywords(articles: list, limit: int = 5) -> list[str]:
+    """Distinctive terms across the day's titles (extractive summary signal)."""
+    counts: Counter[str] = Counter()
+    for article, _ea in articles:
+        for token in _tokens(article.title):
+            counts[token] += 1
+    return [word for word, _count in counts.most_common(limit)]
+
+
+def _tokens(text: str) -> list[str]:
+    """Lowercased alphabetic words, minus stopwords and tiny fragments."""
+    import re
+
+    return [w for w in re.findall(r"[a-z][a-z'-]{2,}", text.lower()) if w not in _STOPWORDS]
 
 
 def _to_list_item(event: Event) -> EventListItem:
