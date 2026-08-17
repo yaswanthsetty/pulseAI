@@ -12,10 +12,12 @@ from backend.modules.retrieval.service import EmbeddingError
 
 
 class FakeEmbedder:
-    """Deterministic per-text vectors; distinct text → distinct direction."""
+    """BGE-M3-shaped fake: returns dense vectors + sparse lexical weights."""
 
     def encode(self, texts, **kwargs):
-        return np.array([[0.1 + i * 0.001] * service.EMBEDDING_SIZE for i in range(len(texts))])
+        dense = np.array([[0.1 + i * 0.001] * service.EMBEDDING_SIZE for i in range(len(texts))])
+        sparse = [{581: 0.2 + i * 0.001, 63773: 0.15} for i in range(len(texts))]
+        return {"dense_vecs": dense, "lexical_weights": sparse}
 
 
 class _CollectionRef:
@@ -146,13 +148,23 @@ class TestEmbedArticle:
         assert len(points) == len(chunks)
         payload = points[0].payload
         assert payload["article_id"] == str(article.id)
+        assert payload["chunk_id"] == str(chunks[0].id)
         assert payload["source_id"] == str(article.source_id)
         assert payload["title"] == article.title
         assert payload["chunk_number"] == 0
         assert "fusion" in payload["chunk_text"].lower()
-        # Point id is the chunk id (FK-by-convention into Qdrant).
+        # Full §11 metadata payload.
+        assert payload["source_name"].startswith("Pipeline Source")
+        assert payload["credibility_score"] == 0.5
+        assert payload["published_at"] == article.published_at.isoformat()
+        assert payload["category_code"] is None
+        assert payload["language_code"] is None
+        assert payload["event_id"] is None
+        # Point id is the chunk id (FK-by-convention into Qdrant); the vector
+        # carries the named dense (BGE-M3, 1024d) + sparse components (FR-9).
         assert points[0].id == str(chunks[0].id)
-        assert len(points[0].vector) == service.EMBEDDING_SIZE
+        assert len(points[0].vector["dense"]) == service.EMBEDDING_SIZE
+        assert set(points[0].vector["sparse"].indices) == {581, 63773}
 
     def test_long_article_produces_numbered_chunks(self, db, make_article):
         body = " ".join(

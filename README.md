@@ -94,7 +94,7 @@ the scheduler polls them and the worker processes articles end to end
 | POST | `/api/v1/sources/{id}/poll` | queue an immediate poll | admin |
 | GET | `/api/v1/articles` | list/filter articles (date, source, category, …) | open |
 | GET | `/api/v1/articles/{id}` | article detail | open |
-| POST | `/api/v1/search` | semantic search over Qdrant (BGE-small dense, chunk-level vectors, deduped by article) | open (rate-limited) |
+| POST | `/api/v1/search` | semantic/keyword/hybrid search over Qdrant (BGE-M3 dense+sparse, §20 `top_k`/`mode`/`filters`, deduped by article) | open (rate-limited) |
 
 Auth column = `require_role` minimum for the route per the §22 RBAC matrix
 (user < analyst < admin; guests are unauthenticated). All errors use the spec
@@ -149,20 +149,25 @@ database.
   JWTs + rotating 30-day refresh cookies, hashed API keys, `require_role`
   enforcement of the §22 matrix, Redis sliding-window rate limiting, CSRF,
   and audit-logged auth events.
-- **Phase 2 (embeddings) — core pipeline done:** sentence-aware token-bounded
-  chunking (FR-8) → `article_chunks`; BGE-small dense embeddings (FR-9) upserted
-  into the `pulseai_articles` Qdrant collection as UUID-keyed chunk points with
-  article payloads (§11); async `embed` queue consumed by the worker (FR-10).
-  `POST /api/v1/search` returns real, deduplicated results. New articles are
-  embedded automatically after processing, and the scheduler's periodic
-  reconcile (default every 60 min, spec §11) re-enqueues embed jobs for any
-  article still missing embedded chunks — no manual steps needed.
-  `uv run pulseai-backfill-embeddings --recreate` remains for one-shot
-  rebuilds of the collection. Hybrid dense+sparse (BGE-M3) and reranking are
-  Phase 4. The model and Qdrant client load lazily, so API startup never
-  downloads a model.
+- **Phase 2 (embeddings) — spec-complete:** sentence-aware token-bounded
+  chunking (FR-8/§15: 256-token target, 40-token overlap, <300-token single
+  chunk) → `article_chunks`; BGE-M3 dense+sparse embeddings (FR-9) upserted
+  into the sharded `pulseai_articles` Qdrant collection (2 shards, named
+  dense+sparse vectors) as UUID-keyed chunk points carrying the full §11
+  payload; async `embed` queue consumed by the worker (FR-10).
+  `POST /api/v1/search` implements the spec §20 contract — `top_k`, `mode`
+  (`semantic` | `keyword` | `hybrid`, FR-11) and FR-12 filters (date range,
+  source, category, country, language, event) — returning deduplicated,
+  ranked results. New articles are embedded automatically after processing,
+  and the scheduler's periodic reconcile (default every 60 min, spec §11)
+  re-enqueues missing chunks **and** syncs Postgres↔Qdrant point sets
+  (orphan purge + drift alert). `uv run pulseai-backfill-embeddings
+  --recreate` rebuilds collection + chunks in one shot. Cross-encoder rerank
+  (FR-13) and temporal ranking are Phase 4 per the spec roadmap §32. The
+  model and Qdrant client load lazily, so API startup never downloads a
+  model.
 - **Postgres driver:** sync `psycopg2` by default; set
   `POSTGRES_DRIVER=postgresql+asyncpg` for the async driver option (Phase 2
   async work). The sync engine and Alembic always strip the async prefix.
-- **Next:** Phase 2 remaining (hybrid dense+sparse + rerank) → Phase 3 events.
+- **Next:** Phase 2 remaining (cross-encoder rerank, FR-13) → Phase 3 events.
   See `PROJECT_STATUS_AND_ROADMAP.md`.

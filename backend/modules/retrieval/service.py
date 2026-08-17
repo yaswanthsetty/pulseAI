@@ -1,47 +1,63 @@
-"""Semantic search + embedding pipeline (Phase 2).
+"""Semantic search + embedding pipeline (Phase 2, spec-complete).
 
 Search surface
 --------------
-``POST /api/v1/search`` (BGE-small dense vectors, Qdrant cosine). The model
-and Qdrant client load lazily so importing the API never triggers a model
-download; the stack degrades to a clean 503 when unavailable.
+``POST /api/v1/search`` supports the spec §20 contract: ``query``, ``top_k``,
+``mode`` (``semantic`` | ``keyword`` | ``hybrid`` — FR-11) and ``filters``
+(date range, source, category, country, language, event — FR-12). The BGE-M3
+model and Qdrant client load lazily, so importing the API never triggers a
+model download; the stack degrades to a clean 503 when unavailable.
 
 Embedding pipeline (FR-8..FR-10)
 --------------------------------
-``embed_article`` chunks a stored article into sentence-aligned, token-bounded
-pieces (``article_chunks``), embeds them with the *same* model the search
-endpoint uses (they must match or queries and documents live in different
-vector spaces), and upserts chunk points into the ``pulseai_articles``
-collection. RQ jobs on the ``embed`` queue run this in the worker process,
-decoupled from ingestion (FR-10).
-
-Full hybrid retrieval (dense+sparse), cross-encoder reranking, and temporal
-ranking land in Phase 4 (FR-11..FR-13).
+``embed_article`` chunks a stored article per spec §15 (256-token target,
+40-token overlap, <300-token single chunk), embeds it with BGE-M3 — dense +
+sparse vectors in one pass (FR-9) — and upserts points carrying the full §11
+payload into the sharded ``pulseai_articles`` collection. RQ jobs on the
+``embed`` queue run this in the worker process, decoupled from ingestion
+(FR-10). Cross-encoder rerank (FR-13) and temporal ranking (FR-14/15) are
+Phase 4 per the spec roadmap §32.
 """
 
 import logging
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from typing import Any
 
 from pydantic import ValidationError
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, PointStruct, VectorParams
-from sentence_transformers import SentenceTransformer
+from qdrant_client.http.models import (
+    DatetimeRange,
+    Distance,
+    FieldCondition,
+    Filter,
+    Fusion,
+    FusionQuery,
+    MatchValue,
+    PointStruct,
+    Prefetch,
+    SparseVector,
+    SparseVectorParams,
+    VectorParams,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.core.config import settings
 from backend.core.storage import get_storage
-from backend.db.models import Article, ArticleChunk
+from backend.db.models import Article, ArticleChunk, Source
 from backend.modules.retrieval.chunker import chunk_text, estimate_tokens
-from backend.modules.retrieval.schemas import SearchResult
+from backend.modules.retrieval.schemas import SearchFilters, SearchResult
 
 logger = logging.getLogger(__name__)
 
 COLLECTION_NAME = "pulseai_articles"
-EMBEDDING_SIZE = settings.embedding_size  # BAAI/bge-small-en-v1.5 output dimension
+EMBEDDING_SIZE = settings.embedding_size  # BGE-M3 dense output dimension
+
+DENSE_VECTOR_NAME = "dense"
+SPARSE_VECTOR_NAME = "sparse"
 
 
 class SearchUnavailableError(RuntimeError):
@@ -62,10 +78,12 @@ class EmbedOutcome:
 
 
 @lru_cache(maxsize=1)
-def get_embedder() -> SentenceTransformer:
-    """Lazily load the embedding model (cached; no download at import time)."""
+def get_embedder() -> Any:
+    """Lazily load BGE-M3 (dense + sparse in one pass; cached per process)."""
+    from FlagEmbedding import BGEM3FlagModel  # deferred: heavy import, no download at startup
+
     logger.info("Loading %s into memory...", settings.embedding_model)
-    return SentenceTransformer(settings.embedding_model)
+    return BGEM3FlagModel(settings.embedding_model, use_fp16=False)
 
 
 @lru_cache(maxsize=1)
@@ -75,15 +93,52 @@ def get_qdrant_client() -> QdrantClient:
 
 
 def ensure_collection(client: QdrantClient | None = None) -> None:
-    """Create the vector collection if it does not exist yet."""
+    """Create the vector collection if it does not exist yet (dense+sparse, sharded)."""
     qdrant = client or get_qdrant_client()
     collections = qdrant.get_collections().collections
     if not any(c.name == COLLECTION_NAME for c in collections):
-        logger.info("Creating Qdrant collection %s", COLLECTION_NAME)
+        logger.info(
+            "Creating Qdrant collection %s (dense %d + sparse, %d shards)",
+            COLLECTION_NAME,
+            EMBEDDING_SIZE,
+            settings.qdrant_shards,
+        )
         qdrant.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(size=EMBEDDING_SIZE, distance=Distance.COSINE),
+            vectors_config={
+                DENSE_VECTOR_NAME: VectorParams(size=EMBEDDING_SIZE, distance=Distance.COSINE),
+            },
+            sparse_vectors_config={SPARSE_VECTOR_NAME: SparseVectorParams()},
+            shard_number=settings.qdrant_shards,
         )
+
+
+# ---------------------------------------------------------------------------
+# Encoding helpers (BGE-M3)
+# ---------------------------------------------------------------------------
+
+
+def _encode_batch(model, texts: list[str]) -> tuple[list[list[float]], list[dict[int, float]]]:
+    """One-pass BGE-M3 encode → (dense vectors, sparse ``{token_id: weight}``)."""
+    output = model.encode(
+        texts,
+        return_dense=True,
+        return_sparse=True,
+        return_colbert_vecs=False,
+        batch_size=settings.embedding_batch_size,
+    )
+    dense = output["dense_vecs"].tolist()
+    sparse = [
+        {int(token_id): float(weight) for token_id, weight in weights.items()}
+        for weights in output["lexical_weights"]
+    ]
+    return dense, sparse
+
+
+def _sparse_vector(weights: dict[int, float]) -> SparseVector:
+    """Order BGE-M3 lexical weights into a Qdrant SparseVector."""
+    items = sorted(weights.items())
+    return SparseVector(indices=[i for i, _ in items], values=[v for _, v in items])
 
 
 # ---------------------------------------------------------------------------
@@ -106,14 +161,33 @@ def _article_text(article: Article) -> str:
     return f"{article.title}\n\n{content}".strip()
 
 
+def _chunk_payload(article: Article, source: Source | None, chunk: ArticleChunk) -> dict:
+    """Full spec §11 payload for a chunk point."""
+    return {
+        "article_id": str(article.id),
+        "chunk_id": str(chunk.id),
+        "title": article.title,
+        "source_id": str(article.source_id),
+        "source_name": source.name if source else None,
+        "credibility_score": source.credibility_score if source else None,
+        "published_at": article.published_at.isoformat() if article.published_at else None,
+        "category_code": article.category_code,
+        "country_code": article.country_code,
+        "language_code": article.language_code,
+        "event_id": str(article.event_id) if article.event_id else None,
+        "chunk_number": chunk.chunk_number,
+        "chunk_text": chunk.chunk_text,
+    }
+
+
 def embed_article(
     db: Session,
     article_id,
     *,
-    embedder: SentenceTransformer | None = None,
+    embedder: Any = None,
     qdrant: QdrantClient | None = None,
 ) -> EmbedOutcome:
-    """Chunk + embed one article and upsert its vectors into Qdrant.
+    """Chunk + embed one article (BGE-M3 dense+sparse) and upsert into Qdrant.
 
     Idempotent: re-running on an already-embedded article is a no-op, and a
     re-run after a partial failure re-embeds only the non-embedded chunks.
@@ -137,7 +211,12 @@ def embed_article(
 
     if not chunks:
         text = _article_text(article)
-        pieces = chunk_text(text, max_tokens=settings.chunk_max_tokens)
+        pieces = chunk_text(
+            text,
+            target_tokens=settings.chunk_target_tokens,
+            overlap_tokens=settings.chunk_overlap_tokens,
+            single_chunk_max_tokens=settings.single_chunk_max_tokens,
+        )
         if not pieces:
             return EmbedOutcome(status="skipped", detail="no embeddable content")
         chunks = [
@@ -160,25 +239,19 @@ def embed_article(
     model = embedder or get_embedder()
     client = qdrant or get_qdrant_client()
     ensure_collection(client)
+    source = db.get(Source, article.source_id)
     try:
-        vectors = model.encode(
-            [c.chunk_text for c in pending],
-            normalize_embeddings=True,
-            batch_size=settings.embedding_batch_size,
-        ).tolist()
+        dense, sparse = _encode_batch(model, [c.chunk_text for c in pending])
         points = [
             PointStruct(
                 id=str(chunk.id),
-                vector=vector,
-                payload={
-                    "article_id": str(article.id),
-                    "source_id": str(article.source_id),
-                    "title": article.title,
-                    "chunk_number": chunk.chunk_number,
-                    "chunk_text": chunk.chunk_text,
+                vector={
+                    DENSE_VECTOR_NAME: dense[i],
+                    SPARSE_VECTOR_NAME: _sparse_vector(sparse[i]),
                 },
+                payload=_chunk_payload(article, source, chunk),
             )
-            for chunk, vector in zip(pending, vectors, strict=True)
+            for i, chunk in enumerate(pending)
         ]
         client.upsert(collection_name=COLLECTION_NAME, points=points)
     except Exception as exc:  # noqa: BLE001 - model/qdrant failures are surfaced to RQ
@@ -196,21 +269,55 @@ def embed_article(
 
 
 # ---------------------------------------------------------------------------
-# Search (FR-11 early dense surface)
+# Search (FR-11, FR-12 — semantic / keyword / hybrid + filters)
 # ---------------------------------------------------------------------------
+
+
+def _query_filter(filters: SearchFilters | None) -> Filter | None:
+    """Translate FR-12 search filters into a Qdrant payload filter."""
+    if filters is None:
+        return None
+    must: list[Any] = []
+    if filters.source_id:
+        must.append(FieldCondition(key="source_id", match=MatchValue(value=str(filters.source_id))))
+    if filters.category_code:
+        must.append(
+            FieldCondition(key="category_code", match=MatchValue(value=filters.category_code))
+        )
+    if filters.country_code:
+        must.append(
+            FieldCondition(key="country_code", match=MatchValue(value=filters.country_code))
+        )
+    if filters.language_code:
+        must.append(
+            FieldCondition(key="language_code", match=MatchValue(value=filters.language_code))
+        )
+    if filters.event_id:
+        must.append(FieldCondition(key="event_id", match=MatchValue(value=str(filters.event_id))))
+    if filters.date_from or filters.date_to:
+        bounds: dict[str, datetime] = {}
+        if filters.date_from:
+            bounds["gte"] = filters.date_from
+        if filters.date_to:
+            bounds["lte"] = filters.date_to
+        must.append(FieldCondition(key="published_at", range=DatetimeRange(**bounds)))
+    return Filter(must=must) if must else None
 
 
 def search(
     query: str,
-    limit: int = 5,
-    embedder: SentenceTransformer | None = None,
+    limit: int = 10,
+    mode: str = "semantic",
+    filters: SearchFilters | None = None,
+    embedder: Any = None,
     qdrant: QdrantClient | None = None,
 ) -> list[SearchResult]:
-    """Embed the query and return the nearest article vectors from Qdrant.
+    """Retrieve the nearest article vectors for ``query`` (FR-11/FR-12).
 
     Vectors are stored per chunk, so the collection is over-fetched and the
     results deduplicated by article (keeping each article's best score) to
-    present ``limit`` distinct articles.
+    present ``limit`` distinct articles. ``mode`` selects the dense
+    (``semantic``), sparse (``keyword``), or fused (``hybrid``) query path.
 
     ``embedder``/``qdrant`` are injectable for tests; defaults resolve lazily.
     """
@@ -219,14 +326,46 @@ def search(
         client = qdrant or get_qdrant_client()
         ensure_collection(client)
 
-        query_vector = model.encode(query).tolist()
-        # Over-fetch: several chunks of one article may rank highly; dedupe
-        # below collapses them to the article's single best hit.
-        response = client.query_points(
-            collection_name=COLLECTION_NAME,
-            query=query_vector,
-            limit=limit * 4,
-        )
+        query_filter = _query_filter(filters)
+        fetch_limit = limit * 4
+        dense, sparse = _encode_batch(model, [query])
+
+        if mode == "keyword":
+            response = client.query_points(
+                collection_name=COLLECTION_NAME,
+                query=_sparse_vector(sparse[0]),
+                using=SPARSE_VECTOR_NAME,
+                query_filter=query_filter,
+                limit=fetch_limit,
+            )
+        elif mode == "hybrid":
+            response = client.query_points(
+                collection_name=COLLECTION_NAME,
+                prefetch=[
+                    Prefetch(
+                        query=dense[0],
+                        using=DENSE_VECTOR_NAME,
+                        filter=query_filter,
+                        limit=fetch_limit,
+                    ),
+                    Prefetch(
+                        query=_sparse_vector(sparse[0]),
+                        using=SPARSE_VECTOR_NAME,
+                        filter=query_filter,
+                        limit=fetch_limit,
+                    ),
+                ],
+                query=FusionQuery(fusion=Fusion.RRF),
+                limit=fetch_limit,
+            )
+        else:  # semantic (default)
+            response = client.query_points(
+                collection_name=COLLECTION_NAME,
+                query=dense[0],
+                using=DENSE_VECTOR_NAME,
+                query_filter=query_filter,
+                limit=fetch_limit,
+            )
     except SearchUnavailableError:
         raise
     except Exception as exc:  # model download failure, Qdrant down, network error
@@ -241,12 +380,19 @@ def search(
         if article_id is None:
             logger.warning("search hit has no article_id payload; skipping")
             continue
+        published_at = payload.get("published_at")
+        try:
+            published_at = datetime.fromisoformat(published_at) if published_at else None
+        except TypeError, ValueError:
+            published_at = None
         try:
             result = SearchResult(
                 article_id=article_id,
                 source_id=payload.get("source_id"),
                 title=payload.get("title") or "",
                 similarity_score=hit.score,
+                published_at=published_at,
+                chunk_id=payload.get("chunk_id"),
             )
         except ValidationError:
             # e.g. legacy integer IDs from a previous schema generation that

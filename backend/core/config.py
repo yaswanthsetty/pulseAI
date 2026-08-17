@@ -40,16 +40,22 @@ class Settings(BaseSettings):
 
     # --- Embeddings (Phase 2) ------------------------------------------------
     # The embedding pipeline and the search endpoint MUST use the same model
-    # (query and document vectors must live in one space). BGE-M3 dense+sparse
-    # hybrid lands in Phase 4; switching models is a config change here plus
-    # a collection rebuild.
-    embedding_model: str = "BAAI/bge-small-en-v1.5"
-    embedding_size: int = 384  # must match the model's output dimension
-    embedding_batch_size: int = 32
-    chunk_max_tokens: int = 512  # FR-8 sentence-aware token-bounded chunking
+    # (query and document vectors must live in one space). BGE-M3 (FR-9)
+    # produces dense + sparse vectors in one pass; both are stored in Qdrant.
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_size: int = 1024  # BGE-M3 dense output dimension
+    embedding_batch_size: int = 16  # CPU-friendly batch for the embed worker
+    # FR-8 / spec §15 chunking parameters.
+    chunk_target_tokens: int = 256  # target tokens per chunk
+    chunk_overlap_tokens: int = 40  # sentence-aligned overlap between chunks
+    single_chunk_max_tokens: int = 300  # shorter articles stay a single chunk
+    qdrant_shards: int = 2  # spec §11: sharding enabled from day one
     # How often the scheduler's periodic reconcile may re-enqueue embed jobs for
     # articles still missing embedded chunks (spec §11 nightly reconciliation).
     embedding_reconcile_interval_minutes: int = 60
+    # Reconcile logs an alert when Postgres/Qdrant drift exceeds this many
+    # points (orphans either direction) — indicates a sync bug (spec §11).
+    reconcile_drift_alert_threshold: int = 10
 
     # --- Redis --------------------------------------------------------------
     redis_url: str = "redis://localhost:6379/0"

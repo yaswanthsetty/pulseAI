@@ -75,10 +75,16 @@ def main() -> None:
                 logger.info("tick enqueued %d source poll(s)", count)
 
             # Phase 2 (spec §11): re-enqueue embed jobs for articles still
-            # missing embedded chunks, at most once per reconcile interval.
-            embedded = reconcile_embeddings()
-            if embedded:
-                logger.info("reconcile enqueued %d embed job(s)", embedded)
+            # missing embedded chunks and sync Postgres/Qdrant point sets,
+            # at most once per reconcile interval.
+            result = reconcile_embeddings()
+            if any(result.values()):
+                logger.info(
+                    "reconcile: enqueued %d, purged %d orphan points, re-marked %d missing chunks",
+                    result["enqueued"],
+                    result["orphans_purged"],
+                    result["missing_remarked"],
+                )
         except Exception:  # noqa: BLE001 - keep the scheduler alive across transient failures
             logger.exception("scheduler tick failed")
         time.sleep(settings.scheduler_tick_seconds)

@@ -34,7 +34,11 @@ class TestGuest:
         assert client.get("/api/v1/articles").status_code == 200
 
     def test_search_allowed(self, client, monkeypatch):
-        monkeypatch.setattr(retrieval_service, "search", lambda query, limit: [])
+        monkeypatch.setattr(
+            retrieval_service,
+            "search",
+            lambda query, limit, mode="semantic", filters=None: [],
+        )
         assert client.post("/api/v1/search", json={"query": "anything"}).status_code == 200
 
     def test_source_listing_requires_auth(self, client):

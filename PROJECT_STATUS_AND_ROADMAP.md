@@ -7,8 +7,8 @@
 > - **Design (spec): ~100% complete** (design-complete, "ready for phased implementation").
 > - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested, and demonstrated live (articles ingested/classified/processed end-to-end).
 > - **Phase 1.5 (auth & RBAC): COMPLETE** — managed provider (Clerk/Auth0) + local auth, JWT + rotating refresh cookies, hashed API keys, `require_role` RBAC, rate limiting, CSRF.
-> - **Phase 2 (embeddings): CORE PIPELINE COMPLETE** — 113 stored articles chunked into 185 `article_chunks`, embedded (BGE-small dense), and served by `POST /api/v1/search`; 189 tests green total.
-> - **Overall MVP (Phases 1–6): ≈ 32%** — 2.5 of 8 phases done; Phase 2 remaining is hybrid search (Phase 4) + automated reconciliation.
+> - **Phase 2 (embeddings): SPEC-COMPLETE** — §15 chunking (256/40/300), BGE-M3 dense+sparse, modes + filters, full Postgres↔Qdrant reconciliation; 208 tests green total.
+> - **Overall MVP (Phases 1–6): ≈ 33%** — 2.5 of 8 phases done; Phase 2 remaining is cross-encoder rerank (FR-13, Phase 4).
 
 ---
 
@@ -19,13 +19,13 @@
 | Specification / Design (v2.0) | Design-complete | **~100%** |
 | **Phase 1 — Infra, schema, ingestion (FR-1..FR-7)** | **Implemented & verified** | **✔ COMPLETE** |
 | **Phase 1.5 — Auth / RBAC (spec §21-23)** | **Implemented & verified** | **✔ COMPLETE** |
-| Phase 2 — Embeddings / chunking / Qdrant | Core pipeline done (chunker, BGE dense, backfill, auto-reconcile); hybrid remains | **≈ 70%** |
+| Phase 2 — Embeddings / chunking / Qdrant | Spec-complete: BGE-M3 dense+sparse, §15 chunking, modes + filters, full reconcile; rerank is Phase 4 | **≈ 90%** |
 | Phase 3 — Event detection | Not started (tables exist) | **0%** |
 | Phase 4 — Temporal RAG / ranking | Not started | **0%** |
 | Phase 5 — Chat & executive reports | Not started | **0%** |
 | Phase 6 — Frontend dashboard | Not started (no Next.js app) | **0%** |
 | Phase 7 — Hardening (CI/CD prod, DR, load tests) | CI added; rest not started | **~10%** |
-| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, + core Phase 2 complete | **≈ 32%** |
+| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, + Phase 2 complete (rerank in Phase 4) | **≈ 33%** |
 
 ---
 
@@ -103,10 +103,12 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 | FR-5 | HTML→text + canonical metadata (title, author, date, image, lang) | ✅ | + author column added to schema |
 | FR-6 | Language detection per article | ✅ | `langdetect`, FK-safe, stored; non-supported excluded downstream |
 | FR-7 | Category classification vs fixed taxonomy | ✅ | deterministic keyword scorer, 9 categories, testable |
-| FR-8 | Sentence-aware token-bounded chunking | ✅ | chunker + `article_chunks` populated (185 chunks / 113 articles) |
-| FR-9 | BGE-M3 dense+sparse embeddings in Qdrant | 🟡 | BGE-small dense embeddings live in `pulseai_articles`; M3 dense+sparse hybrid is Phase 4 |
+| FR-8 | Sentence-aware token-bounded chunking | ✅ | spec §15 exact: 256-token target, 40-token sentence-aligned overlap, <300-token single chunk |
+| FR-9 | BGE-M3 dense+sparse embeddings in Qdrant | ✅ | `BAAI/bge-m3` one-pass dense (1024d) + sparse vectors; sharded collection (2 shards), full §11 payload |
 | FR-10 | Async embedding worker decoupled from ingestion | ✅ | worker consumes `embed` queue; ingestion enqueues after processing (backfill CLI for existing) |
-| FR-11..13 | Search: hybrid modes, filters, rerank | ◑ | Early `POST /api/v1/search` (BGE-small dense, cosine) ported into `modules/retrieval`; hybrid + rerank are Phase 4 |
+| FR-11 | Search modes: semantic / keyword / hybrid | ✅ | `mode` param → dense, sparse (BGE-M3), or RRF-fused hybrid; rerank (FR-13) is Phase 4 |
+| FR-12 | Search filters | ✅ | date range, source, category, country, language, event (Qdrant payload filter) |
+| FR-13 | Cross-encoder rerank (top-K → top-N) | ❌ | Phase 4 per spec roadmap §32 |
 | FR-14..15 | Intent-aware temporal ranking + freshness decay | ❌ | Phase 4 (`ranking_configs` seeded) |
 | FR-16..18 | Incremental event clustering | ❌ | Phase 3 (`events`/`event_articles` tables ready) |
 | FR-19..22 | Chat fast path + report deep path + evidence score | ❌ | Phase 5 |
@@ -116,11 +118,12 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 
 ## 4. What You Have to Work On (Next Phases)
 
-### Phase 2 — Embeddings, Chunking & Qdrant (core done)
-1. ✅ Sentence-aware chunker (FR-8) → `article_chunks`; short articles stay single-chunk; long ones split on sentence boundaries within a 512-token budget.
-2. ✅ BGE-small dense embeddings (FR-9) upserted into the `pulseai_articles` collection (384-dim cosine) as UUID-keyed chunk points with article payloads (§11); 113 articles → 185 chunks, search verified live.
-3. ✅ Async embedding in the worker (`embed` queue, FR-10), batch + RQ retry; the scheduler's periodic reconcile (spec §11, default 60 min) auto-re-enqueues articles still missing embedded chunks (verified live: a failed chunk healed itself without manual action); `uv run pulseai-backfill-embeddings --recreate` rebuilds the collection.
-4. ⬜ BGE-M3 dense+sparse + hybrid search + filters + cross-encoder rerank (FR-9/FR-11..13, Phase 4), `/api/v1/search` with score breakdown.
+### Phase 2 — Embeddings, Chunking & Qdrant (spec-complete)
+1. ✅ Sentence-aware chunker (FR-8/§15) → `article_chunks`: 256-token target, 40-token sentence-aligned overlap, <300-token single chunk.
+2. ✅ BGE-M3 dense+sparse embeddings (FR-9) via FlagEmbedding; sharded `pulseai_articles` collection (2 shards, named dense 1024d + sparse vectors) with the full §11 payload; 113 articles re-embedded, search verified live.
+3. ✅ Async embedding in the worker (`embed` queue, FR-10), batch + RQ retry; the scheduler's periodic reconcile (spec §11, default 60 min) auto-re-enqueues missing chunks and syncs Postgres↔Qdrant point sets (purges Qdrant orphans, re-marks chunks whose points vanished, alerts on drift); `uv run pulseai-backfill-embeddings --recreate` rebuilds collection + chunks.
+4. ✅ `/api/v1/search` per spec §20: `top_k`, `mode` (semantic | keyword | hybrid, FR-11), FR-12 filters (date/source/category/country/language/event), deduplicated ranked results.
+5. ⬜ Cross-encoder rerank (FR-13) + temporal score breakdown (FR-14/15) — Phase 4 per spec roadmap §32.
 
 ### Phase 3 — Events
 Centroid collection + fast-path matching (FR-18), slow-path UMAP+HDBSCAN over a bounded window (FR-16), closure after 72h (FR-17).
@@ -153,7 +156,7 @@ uv run pulseai-worker &                       # job execution (SimpleWorker on W
 ```
 
 Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check .` ·
-`uv run lint-imports` · `uv run pytest` (189 tests, needs infra up).
+`uv run lint-imports` · `uv run pytest` (208 tests, needs infra up).
 
 ---
 
@@ -180,7 +183,7 @@ Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check 
 - [x] Rate limiting (Redis sliding window, 30/120 per min, fail-open) · double-submit CSRF · audit-log auth events
 - [x] import-linter carve-out: auth is shared infrastructure (business modules may import it; it never imports them)
 
-**Phase 2 — Embeddings** — [x] early semantic search surface (`POST /api/v1/search`, BGE-small dense → Qdrant, lazy model load, 503 fallback) · [x] sentence-aware chunker (FR-8) + `article_chunks` populated · [x] BGE-small dense embeddings + UUID-keyed chunk payloads (§11) · [x] async `embed` queue wired into ingestion (FR-10) · [x] `pulseai-backfill-embeddings` backfill CLI (`--recreate` rebuilds the collection) · [x] automated periodic reconciliation (scheduler, spec §11; default 60 min, verified live: failed chunk auto-re-embedded) · [ ] BGE-M3 dense+sparse + hybrid search + rerank (FR-9/FR-11..13, Phase 4)
+**Phase 2 — Embeddings** — [x] `POST /api/v1/search` per spec §20 (lazy model load, 503 fallback) · [x] sentence-aware chunker (FR-8/§15: 256 tokens, 40 overlap, <300 single) · [x] BGE-M3 dense+sparse (FR-9) + sharded collection (2 shards) + full §11 payload · [x] async `embed` queue (FR-10) · [x] search modes semantic/keyword/hybrid (FR-11) + filters (FR-12) · [x] `pulseai-backfill-embeddings --recreate` (rebuilds collection + chunks) · [x] periodic reconcile with Postgres↔Qdrant sync, orphan purge + drift alert (§11) · [ ] cross-encoder rerank (FR-13) — Phase 4
 
 > Driver note: `POSTGRES_DRIVER=postgresql+asyncpg` is available as the async
 > driver option (asyncpg pinned in deps); the sync engine and Alembic always

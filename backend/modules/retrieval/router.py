@@ -12,11 +12,17 @@ router = APIRouter(tags=["retrieval"])
 def semantic_search(payload: SearchQuery):
     """Convert a natural-language query into a vector and retrieve nearest neighbors.
 
-    ``def`` (not ``async``) so FastAPI runs the blocking embed/Qdrant work in a
-    threadpool. Vectors are populated by the Phase 2 embedding pipeline; until
-    then an empty list is returned once the collection exists.
+    Supports the spec §20 contract: ``top_k`` (``limit`` kept as a deprecated
+    alias), ``mode`` (semantic | keyword | hybrid, FR-11) and ``filters``
+    (FR-12). ``def`` (not ``async``) so FastAPI runs the blocking
+    embed/Qdrant work in a threadpool.
     """
     try:
-        return service.search(query=payload.query, limit=payload.limit)
+        return service.search(
+            query=payload.query,
+            limit=payload.top_k or payload.limit or 10,
+            mode=payload.mode,
+            filters=payload.filters,
+        )
     except service.SearchUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

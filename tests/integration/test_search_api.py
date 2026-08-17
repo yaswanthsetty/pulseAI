@@ -18,9 +18,23 @@ class TestSearchApi:
                 similarity_score=0.93,
             )
         ]
-        monkeypatch.setattr(service, "search", lambda query, limit: fake_results)
+        seen: dict = {}
 
-        resp = client.post("/api/v1/search", json={"query": "fusion energy", "limit": 5})
+        def _fake_search(query, limit, mode="semantic", filters=None):
+            seen.update(query=query, limit=limit, mode=mode, filters=filters)
+            return fake_results
+
+        monkeypatch.setattr(service, "search", _fake_search)
+
+        resp = client.post(
+            "/api/v1/search",
+            json={
+                "query": "fusion energy",
+                "top_k": 5,
+                "mode": "hybrid",
+                "filters": {"category_code": "technology"},
+            },
+        )
 
         assert resp.status_code == 200
         body = resp.json()
@@ -29,9 +43,29 @@ class TestSearchApi:
         assert body[0]["source_id"] == str(source_id)
         assert body[0]["title"] == "Breakthrough in fusion energy"
         assert body[0]["similarity_score"] == 0.93
+        # §20 contract passes through top_k / mode / filters.
+        assert seen["limit"] == 5
+        assert seen["mode"] == "hybrid"
+        assert seen["filters"].category_code == "technology"
+
+    def test_search_accepts_deprecated_limit_alias(self, client, monkeypatch):
+        seen: dict = {}
+
+        def _fake_search(query, limit, mode="semantic", filters=None):
+            seen.update(query=query, limit=limit, mode=mode, filters=filters)
+            return []
+
+        monkeypatch.setattr(service, "search", _fake_search)
+
+        resp = client.post("/api/v1/search", json={"query": "anything", "limit": 3})
+
+        assert resp.status_code == 200
+        assert seen["limit"] == 3
 
     def test_search_empty_until_vectors_populated(self, client, monkeypatch):
-        monkeypatch.setattr(service, "search", lambda query, limit: [])
+        monkeypatch.setattr(
+            service, "search", lambda query, limit, mode="semantic", filters=None: []
+        )
 
         resp = client.post("/api/v1/search", json={"query": "anything"})
 
@@ -39,7 +73,7 @@ class TestSearchApi:
         assert resp.json() == []
 
     def test_search_unavailable_returns_503_envelope(self, client, monkeypatch):
-        def _boom(query, limit):
+        def _boom(query, limit, mode="semantic", filters=None):
             raise service.SearchUnavailableError("Semantic search is temporarily unavailable")
 
         monkeypatch.setattr(service, "search", _boom)
