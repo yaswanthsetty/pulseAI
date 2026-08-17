@@ -5,9 +5,16 @@ on:
     branches: [main, develop]
   pull_request:
 
+# Cancel stale runs: a new push to the same branch supersedes the in-flight one
+# (the Phase 2 pipeline is re-gated on every push, so only the latest matters).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:15-alpine
@@ -31,8 +38,10 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
+      # Pinned to the version the project develops against (dense + sparse
+      # named vectors need 1.13+; 1.18 matches the local dev stack).
       qdrant:
-        image: qdrant/qdrant:latest
+        image: qdrant/qdrant:v1.18.2
         ports:
           - "6333:6333"
 
@@ -68,5 +77,5 @@ jobs:
       - name: Migrations apply cleanly on a fresh database
         run: uv run alembic upgrade head
 
-      - name: Test
-        run: uv run pytest --cov=backend --cov-report=term-missing
+      - name: Test (pytest + coverage gate)
+        run: uv run pytest --cov=backend --cov-report=term-missing --cov-fail-under=80
