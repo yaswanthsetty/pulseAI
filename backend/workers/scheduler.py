@@ -18,6 +18,7 @@ from backend.core.database import SessionLocal
 from backend.core.logging import setup_logging
 from backend.core.queue import enqueue_poll, has_pending_retry
 from backend.modules.ingestion.service import list_backoff_sources, list_due_sources
+from backend.workers.backfill import reconcile_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,12 @@ def main() -> None:
             count = scheduler_tick()
             if count:
                 logger.info("tick enqueued %d source poll(s)", count)
+
+            # Phase 2 (spec §11): re-enqueue embed jobs for articles still
+            # missing embedded chunks, at most once per reconcile interval.
+            embedded = reconcile_embeddings()
+            if embedded:
+                logger.info("reconcile enqueued %d embed job(s)", embedded)
         except Exception:  # noqa: BLE001 - keep the scheduler alive across transient failures
             logger.exception("scheduler tick failed")
         time.sleep(settings.scheduler_tick_seconds)

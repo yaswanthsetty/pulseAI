@@ -94,7 +94,7 @@ the scheduler polls them and the worker processes articles end to end
 | POST | `/api/v1/sources/{id}/poll` | queue an immediate poll | admin |
 | GET | `/api/v1/articles` | list/filter articles (date, source, category, …) | open |
 | GET | `/api/v1/articles/{id}` | article detail | open |
-| POST | `/api/v1/search` | semantic search over Qdrant (early Phase 2 surface; returns `[]` until vectors are populated) | open (rate-limited) |
+| POST | `/api/v1/search` | semantic search over Qdrant (BGE-small dense, chunk-level vectors, deduped by article) | open (rate-limited) |
 
 Auth column = `require_role` minimum for the route per the §22 RBAC matrix
 (user < analyst < admin; guests are unauthenticated). All errors use the spec
@@ -149,12 +149,20 @@ database.
   JWTs + rotating 30-day refresh cookies, hashed API keys, `require_role`
   enforcement of the §22 matrix, Redis sliding-window rate limiting, CSRF,
   and audit-logged auth events.
-- **Early Phase 2 surface:** `POST /api/v1/search` (BGE-small dense vectors in
-  Qdrant, cosine) is ported into `modules/retrieval`; the embedding pipeline that
-  populates vectors lands with Phase 2. The model and Qdrant client load lazily,
-  so API startup never downloads a model.
+- **Phase 2 (embeddings) — core pipeline done:** sentence-aware token-bounded
+  chunking (FR-8) → `article_chunks`; BGE-small dense embeddings (FR-9) upserted
+  into the `pulseai_articles` Qdrant collection as UUID-keyed chunk points with
+  article payloads (§11); async `embed` queue consumed by the worker (FR-10).
+  `POST /api/v1/search` returns real, deduplicated results. New articles are
+  embedded automatically after processing, and the scheduler's periodic
+  reconcile (default every 60 min, spec §11) re-enqueues embed jobs for any
+  article still missing embedded chunks — no manual steps needed.
+  `uv run pulseai-backfill-embeddings --recreate` remains for one-shot
+  rebuilds of the collection. Hybrid dense+sparse (BGE-M3) and reranking are
+  Phase 4. The model and Qdrant client load lazily, so API startup never
+  downloads a model.
 - **Postgres driver:** sync `psycopg2` by default; set
   `POSTGRES_DRIVER=postgresql+asyncpg` for the async driver option (Phase 2
   async work). The sync engine and Alembic always strip the async prefix.
-- **Next:** Phase 2 embeddings (BGE-M3 + chunking + Qdrant). See
-  `PROJECT_STATUS_AND_ROADMAP.md`.
+- **Next:** Phase 2 remaining (hybrid dense+sparse + rerank) → Phase 3 events.
+  See `PROJECT_STATUS_AND_ROADMAP.md`.

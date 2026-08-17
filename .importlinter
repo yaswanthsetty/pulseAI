@@ -34,6 +34,12 @@ modules =
     backend.modules.agents
     backend.modules.reports
     backend.modules.ingestion
+ignore_imports =
+    # ``backend.core.queue`` is the RQ wiring hub (spec §12): it registers each
+    # phase's jobs via deferred imports so business modules never import each
+    # other — ingestion triggers the Phase 2 ``embed`` job only through this hub.
+    backend.core.queue -> backend.modules.ingestion.jobs
+    backend.core.queue -> backend.modules.retrieval.jobs
 
 [importlinter:contract:3]
 name = Auth is shared infrastructure (only API and business modules import it)

@@ -1,13 +1,14 @@
 # PulseAI — Project Status, Gap Analysis & Step-by-Step Action Plan
 
 > **Sources:** `PulseAI_Technical_Specification_v2.md` (the design document) and the actual code in this repository.
-> **Last updated:** August 16, 2026 — **Phase 1 and Phase 1.5 are implemented and verified.**
+> **Last updated:** August 17, 2026 — **Phases 1, 1.5, and the Phase 2 core embedding pipeline are implemented and verified.**
 >
 > **Bottom line:**
 > - **Design (spec): ~100% complete** (design-complete, "ready for phased implementation").
-> - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested (83 tests green), and demonstrated live (41 articles ingested/classified/processed end-to-end).
-> - **Phase 1.5 (auth & RBAC): COMPLETE** — managed provider (Clerk/Auth0) + local auth, JWT + rotating refresh cookies, hashed API keys, `require_role` RBAC, rate limiting, CSRF; 162 tests green total.
-> - **Overall MVP (Phases 1–6): ≈ 27%** — 2 of 8 phases done; next up is Phase 2 (embeddings).
+> - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested, and demonstrated live (articles ingested/classified/processed end-to-end).
+> - **Phase 1.5 (auth & RBAC): COMPLETE** — managed provider (Clerk/Auth0) + local auth, JWT + rotating refresh cookies, hashed API keys, `require_role` RBAC, rate limiting, CSRF.
+> - **Phase 2 (embeddings): CORE PIPELINE COMPLETE** — 113 stored articles chunked into 185 `article_chunks`, embedded (BGE-small dense), and served by `POST /api/v1/search`; 189 tests green total.
+> - **Overall MVP (Phases 1–6): ≈ 32%** — 2.5 of 8 phases done; Phase 2 remaining is hybrid search (Phase 4) + automated reconciliation.
 
 ---
 
@@ -18,13 +19,13 @@
 | Specification / Design (v2.0) | Design-complete | **~100%** |
 | **Phase 1 — Infra, schema, ingestion (FR-1..FR-7)** | **Implemented & verified** | **✔ COMPLETE** |
 | **Phase 1.5 — Auth / RBAC (spec §21-23)** | **Implemented & verified** | **✔ COMPLETE** |
-| Phase 2 — Embeddings / chunking / Qdrant | Not started (queue wiring ready) | **0%** |
+| Phase 2 — Embeddings / chunking / Qdrant | Core pipeline done (chunker, BGE dense, backfill, auto-reconcile); hybrid remains | **≈ 70%** |
 | Phase 3 — Event detection | Not started (tables exist) | **0%** |
 | Phase 4 — Temporal RAG / ranking | Not started | **0%** |
 | Phase 5 — Chat & executive reports | Not started | **0%** |
 | Phase 6 — Frontend dashboard | Not started (no Next.js app) | **0%** |
 | Phase 7 — Hardening (CI/CD prod, DR, load tests) | CI added; rest not started | **~10%** |
-| **Overall MVP (Phases 1–6)** | Phases 1 + 1.5 complete | **≈ 27%** |
+| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, + core Phase 2 complete | **≈ 32%** |
 
 ---
 
@@ -81,6 +82,11 @@ pulseai/
   httpOnly cookie), API-key create/use/revoke, refresh rotation (old token 401 after use),
   CSRF (cookie POST without header → 403), RBAC (user POST /sources → 403), rate limiting
   (anon quota → 429 → recovers after the 60s window slides).
+- **Phase 2 verified live:** all 113 stored articles chunked (185 `article_chunks`),
+  embedded (BGE-small dense), and upserted into the `pulseai_articles` Qdrant collection;
+  `POST /api/v1/search` returns real, deduplicated, relevant hits (e.g. "artificial
+  intelligence startup raises funding" → AI/funding articles at ~0.68–0.74 cosine).
+  Embedding runs on the worker's `embed` queue (FR-10), decoupled from ingestion.
 
 ---
 
@@ -97,9 +103,9 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 | FR-5 | HTML→text + canonical metadata (title, author, date, image, lang) | ✅ | + author column added to schema |
 | FR-6 | Language detection per article | ✅ | `langdetect`, FK-safe, stored; non-supported excluded downstream |
 | FR-7 | Category classification vs fixed taxonomy | ✅ | deterministic keyword scorer, 9 categories, testable |
-| FR-8 | Sentence-aware token-bounded chunking | ❌ | Phase 2 (chunker + `article_chunks` table ready) |
-| FR-9 | BGE-M3 dense+sparse embeddings in Qdrant | ❌ | Phase 2 (queue `embed` wired, collection to be created) |
-| FR-10 | Async embedding worker decoupled from ingestion | ❌ | Phase 2 (worker binds `embed` queue already) |
+| FR-8 | Sentence-aware token-bounded chunking | ✅ | chunker + `article_chunks` populated (185 chunks / 113 articles) |
+| FR-9 | BGE-M3 dense+sparse embeddings in Qdrant | 🟡 | BGE-small dense embeddings live in `pulseai_articles`; M3 dense+sparse hybrid is Phase 4 |
+| FR-10 | Async embedding worker decoupled from ingestion | ✅ | worker consumes `embed` queue; ingestion enqueues after processing (backfill CLI for existing) |
 | FR-11..13 | Search: hybrid modes, filters, rerank | ◑ | Early `POST /api/v1/search` (BGE-small dense, cosine) ported into `modules/retrieval`; hybrid + rerank are Phase 4 |
 | FR-14..15 | Intent-aware temporal ranking + freshness decay | ❌ | Phase 4 (`ranking_configs` seeded) |
 | FR-16..18 | Incremental event clustering | ❌ | Phase 3 (`events`/`event_articles` tables ready) |
@@ -110,11 +116,11 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 
 ## 4. What You Have to Work On (Next Phases)
 
-### Phase 2 — Embeddings, Chunking & Qdrant (start here)
-1. Sentence-aware chunker (FR-8) → `article_chunks`; short articles stay single-chunk.
-2. BGE-M3 dense+sparse (FR-9); create `pulseai_articles` collection with both vector spaces; sharding.
-3. Embed in the worker (`embed` queue), batch + retry; nightly reconciliation job (spec §11).
-4. Hybrid search + filters + cross-encoder rerank (FR-11..13), `/api/v1/search` with score breakdown.
+### Phase 2 — Embeddings, Chunking & Qdrant (core done)
+1. ✅ Sentence-aware chunker (FR-8) → `article_chunks`; short articles stay single-chunk; long ones split on sentence boundaries within a 512-token budget.
+2. ✅ BGE-small dense embeddings (FR-9) upserted into the `pulseai_articles` collection (384-dim cosine) as UUID-keyed chunk points with article payloads (§11); 113 articles → 185 chunks, search verified live.
+3. ✅ Async embedding in the worker (`embed` queue, FR-10), batch + RQ retry; the scheduler's periodic reconcile (spec §11, default 60 min) auto-re-enqueues articles still missing embedded chunks (verified live: a failed chunk healed itself without manual action); `uv run pulseai-backfill-embeddings --recreate` rebuilds the collection.
+4. ⬜ BGE-M3 dense+sparse + hybrid search + filters + cross-encoder rerank (FR-9/FR-11..13, Phase 4), `/api/v1/search` with score breakdown.
 
 ### Phase 3 — Events
 Centroid collection + fast-path matching (FR-18), slow-path UMAP+HDBSCAN over a bounded window (FR-16), closure after 72h (FR-17).
@@ -142,10 +148,12 @@ uv sync && uv run alembic upgrade head
 uv run pulseai-api &                          # http://localhost:8000/docs
 uv run pulseai-scheduler &                    # per-source polling
 uv run pulseai-worker &                       # job execution (SimpleWorker on Windows)
+# One-time backfill of existing articles into Qdrant (Phase 2):
+#   uv run pulseai-backfill-embeddings [--recreate]   then the worker embeds them
 ```
 
 Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check .` ·
-`uv run lint-imports` · `uv run pytest` (72 tests, needs infra up).
+`uv run lint-imports` · `uv run pytest` (189 tests, needs infra up).
 
 ---
 
@@ -172,7 +180,7 @@ Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check 
 - [x] Rate limiting (Redis sliding window, 30/120 per min, fail-open) · double-submit CSRF · audit-log auth events
 - [x] import-linter carve-out: auth is shared infrastructure (business modules may import it; it never imports them)
 
-**Phase 2 — Embeddings** — [x] early semantic search surface (`POST /api/v1/search`, BGE-small dense → Qdrant, lazy model load, 503 fallback) · [ ] chunker (FR-8) · [ ] BGE-M3 dense+sparse (FR-9) · [ ] UUID-keyed Qdrant payloads (§11) · [ ] hybrid search + rerank (FR-11..13) · [ ] reconciliation job
+**Phase 2 — Embeddings** — [x] early semantic search surface (`POST /api/v1/search`, BGE-small dense → Qdrant, lazy model load, 503 fallback) · [x] sentence-aware chunker (FR-8) + `article_chunks` populated · [x] BGE-small dense embeddings + UUID-keyed chunk payloads (§11) · [x] async `embed` queue wired into ingestion (FR-10) · [x] `pulseai-backfill-embeddings` backfill CLI (`--recreate` rebuilds the collection) · [x] automated periodic reconciliation (scheduler, spec §11; default 60 min, verified live: failed chunk auto-re-embedded) · [ ] BGE-M3 dense+sparse + hybrid search + rerank (FR-9/FR-11..13, Phase 4)
 
 > Driver note: `POSTGRES_DRIVER=postgresql+asyncpg` is available as the async
 > driver option (asyncpg pinned in deps); the sync engine and Alembic always

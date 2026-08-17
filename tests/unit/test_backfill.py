@@ -1,0 +1,193 @@
+"""Unit tests for the embeddings backfill (Phase 2 CLI)."""
+
+import uuid
+from datetime import UTC, datetime
+
+from backend.db.models import Article, ArticleChunk, Source
+from backend.modules.ingestion.dedupe import url_hash
+from backend.workers import backfill
+
+
+def _article(db, *, title="Backfill Story", processed=True, chunks_embedded=0):
+    source = Source(
+        name=f"Backfill Source {uuid.uuid4().hex[:6]}",
+        rss_url="https://fixture.example.com/feed.xml",
+        status="active",
+        poll_interval_minutes=15,
+    )
+    db.add(source)
+    db.flush()
+    article = Article(
+        source_id=source.id,
+        title=title,
+        description="A short article body for embedding.",
+        url=f"https://fixture.example.com/articles/{uuid.uuid4().hex}",
+        url_hash=url_hash(f"https://fixture.example.com/articles/{uuid.uuid4().hex}"),
+        published_at=datetime.now(UTC),
+        processed_at=datetime.now(UTC) if processed else None,
+    )
+    db.add(article)
+    db.flush()
+    for number in range(chunks_embedded):
+        db.add(
+            ArticleChunk(
+                article_id=article.id,
+                chunk_number=number,
+                chunk_text=f"Chunk {number} of the article.",
+                token_count=6,
+                embedding_status="embedded",
+                qdrant_point_id=uuid.uuid4(),
+            )
+        )
+    db.commit()
+    return article
+
+
+class TestListArticlesNeedingEmbedding:
+    def test_selects_processed_articles_without_embedded_chunks(self, db):
+        needs_embedding = _article(db, title="Needs Embedding")
+        _article(db, title="Already Embedded", chunks_embedded=2)
+        not_processed = _article(db, title="Not Processed", processed=False)
+
+        selected = backfill.list_articles_needing_embedding(db)
+
+        ids = {a.id for a in selected}
+        assert needs_embedding.id in ids
+        assert not_processed.id not in ids
+
+    def test_includes_articles_with_failed_chunks(self, db):
+        article = _article(db, title="Failed Chunks")
+        db.add(
+            ArticleChunk(
+                article_id=article.id,
+                chunk_number=0,
+                chunk_text="Broken chunk.",
+                token_count=3,
+                embedding_status="failed",
+            )
+        )
+        db.commit()
+
+        selected = backfill.list_articles_needing_embedding(db)
+
+        assert article.id in {a.id for a in selected}
+
+    def test_includes_articles_with_pending_chunks(self, db):
+        # Pending chunks may be orphans of a crashed embed run (rows created but
+        # never embedded, no job queued) — re-enqueue so they get embedded.
+        article = _article(db, title="Pending Chunks")
+        db.add(
+            ArticleChunk(
+                article_id=article.id,
+                chunk_number=0,
+                chunk_text="Pending chunk.",
+                token_count=3,
+                embedding_status="pending",
+            )
+        )
+        db.commit()
+
+        selected = backfill.list_articles_needing_embedding(db)
+
+        assert article.id in {a.id for a in selected}
+
+
+class TestReconcile:
+    """Periodic reconciliation (spec §11) — the scheduler's embed-queue sweep."""
+
+    def test_skips_when_interval_not_elapsed(self, db, monkeypatch):
+        article = _article(db, title="Needs Embedding")
+        enqueued: list[str] = []
+        monkeypatch.setattr(backfill, "acquire_embedding_reconcile", lambda seconds: False)
+        monkeypatch.setattr(backfill, "enqueue_embed_article", lambda aid: enqueued.append(aid))
+
+        assert backfill.reconcile_embeddings() == 0
+        assert enqueued == []
+        assert article.id  # (article untouched — nothing enqueued)
+
+    def test_enqueues_when_due(self, db, monkeypatch):
+        needs_embedding = _article(db, title="Needs Embedding")
+        done = _article(db, title="Done", chunks_embedded=1)
+        # Capture ids up front: reconcile_embeddings() closes the session.
+        needed_id, done_id = str(needs_embedding.id), str(done.id)
+
+        enqueued: list[str] = []
+        monkeypatch.setattr(backfill, "acquire_embedding_reconcile", lambda seconds: True)
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+        monkeypatch.setattr(backfill, "enqueue_embed_article", lambda aid: enqueued.append(aid))
+
+        assert backfill.reconcile_embeddings(interval_minutes=60) == 1
+        assert enqueued == [needed_id]
+        assert done_id not in enqueued
+
+    def test_returns_enqueued_count(self, db, monkeypatch):
+        _article(db, title="One")
+        _article(db, title="Two")
+        _article(db, title="Three", chunks_embedded=1)
+        enqueued: list[str] = []
+        monkeypatch.setattr(backfill, "acquire_embedding_reconcile", lambda seconds: True)
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+        monkeypatch.setattr(backfill, "enqueue_embed_article", lambda aid: enqueued.append(aid))
+
+        assert backfill.reconcile_embeddings() == 2
+        assert len(enqueued) == 2
+
+
+class TestAcquireEmbeddingReconcile:
+    """The Redis due-marker: exactly one caller per window wins the run."""
+
+    KEY = "reconcile:embeddings"
+
+    def test_marker_gates_runs(self):
+        from backend.core.queue import acquire_embedding_reconcile, get_redis
+
+        get_redis().delete(self.KEY)
+        try:
+            assert acquire_embedding_reconcile(600) is True  # arms the window
+            assert acquire_embedding_reconcile(600) is False  # inside the window
+            get_redis().delete(self.KEY)
+            assert acquire_embedding_reconcile(600) is True  # new window
+        finally:
+            get_redis().delete(self.KEY)  # never leave the marker armed
+
+
+class TestMain:
+    def test_enqueues_embed_jobs_for_needed_articles(self, db, monkeypatch):
+        needs_embedding = _article(db, title="Needs Embedding")
+        done = _article(db, title="Done", chunks_embedded=1)
+        # Capture ids up front: backfill.main() closes the session it is given.
+        needed_id, done_id = str(needs_embedding.id), str(done.id)
+
+        enqueued: list[str] = []
+        monkeypatch.setattr(backfill, "enqueue_embed_article", lambda aid: enqueued.append(aid))
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+        monkeypatch.setattr(backfill.service, "get_qdrant_client", lambda: FakeClient())
+        monkeypatch.setattr(backfill.service, "ensure_collection", lambda client: None)
+
+        assert backfill.main([]) == 0
+
+        assert set(enqueued) == {needed_id}
+        assert done_id not in enqueued
+
+    def test_recreate_flag_deletes_collection(self, db, monkeypatch):
+        calls: list[str] = []
+
+        class Client:
+            def delete_collection(self, name):
+                calls.append(name)
+
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+        monkeypatch.setattr(backfill.service, "get_qdrant_client", lambda: Client())
+        monkeypatch.setattr(backfill.service, "ensure_collection", lambda client: None)
+        monkeypatch.setattr(backfill, "enqueue_embed_article", lambda aid: None)
+
+        backfill.main(["--recreate"])
+
+        assert calls == [backfill.service.COLLECTION_NAME]
+
+
+class FakeClient:
+    """Minimal stand-in for the Qdrant client used by the backfill CLI."""
+
+    def delete_collection(self, name):
+        pass

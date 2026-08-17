@@ -11,7 +11,7 @@ them and later phases plug in without changing process topology.
 """
 
 import redis
-from rq import Queue
+from rq import Queue, Retry
 
 from backend.core.config import settings
 
@@ -101,5 +101,36 @@ def enqueue_process_article(article_id: str) -> str:
         job_id=f"process-{article_id}",
         job_timeout=90,
         result_ttl=300,
+    )
+    return job.id
+
+
+def acquire_embedding_reconcile(interval_seconds: int) -> bool:
+    """Atomically arm the periodic embedding-reconcile marker (spec §11).
+
+    Returns True for exactly one caller per ``interval_seconds`` window (the
+    one that sets the key); every other caller within the window gets False
+    and skips its run. Same Redis-TTL pattern as the FR-3 retry markers, so it
+    works on Windows too (no RQ delayed-job scheduler needed).
+    """
+    return bool(get_redis().set("reconcile:embeddings", "1", nx=True, ex=interval_seconds))
+
+
+def enqueue_embed_article(article_id: str) -> str:
+    """Enqueue the Phase 2 embed job (chunk + embed + upsert to Qdrant).
+
+    Uses the stable ``embed-{article_id}`` job id so a job already queued is
+    not enqueued twice; the job itself is idempotent (skips embedded chunks).
+    """
+    queue = get_embed_queue()
+    from backend.modules.retrieval.jobs import embed_article_job  # deferred import
+
+    job = queue.enqueue(
+        embed_article_job,
+        article_id,
+        job_id=f"embed-{article_id}",
+        job_timeout=600,  # first run may download the model
+        result_ttl=300,
+        retry=Retry(max=3, interval=[60, 300]),
     )
     return job.id

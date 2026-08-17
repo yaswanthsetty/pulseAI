@@ -38,6 +38,19 @@ class Settings(BaseSettings):
     # --- Qdrant ------------------------------------------------------------
     qdrant_url: str = "http://localhost:6333"
 
+    # --- Embeddings (Phase 2) ------------------------------------------------
+    # The embedding pipeline and the search endpoint MUST use the same model
+    # (query and document vectors must live in one space). BGE-M3 dense+sparse
+    # hybrid lands in Phase 4; switching models is a config change here plus
+    # a collection rebuild.
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    embedding_size: int = 384  # must match the model's output dimension
+    embedding_batch_size: int = 32
+    chunk_max_tokens: int = 512  # FR-8 sentence-aware token-bounded chunking
+    # How often the scheduler's periodic reconcile may re-enqueue embed jobs for
+    # articles still missing embedded chunks (spec §11 nightly reconciliation).
+    embedding_reconcile_interval_minutes: int = 60
+
     # --- Redis --------------------------------------------------------------
     redis_url: str = "redis://localhost:6379/0"
 

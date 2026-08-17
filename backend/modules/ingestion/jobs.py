@@ -9,7 +9,11 @@ run concurrently.
 import logging
 
 from backend.core.database import SessionLocal
-from backend.core.queue import acquire_poll_lock, release_poll_lock
+from backend.core.queue import (
+    acquire_poll_lock,
+    enqueue_embed_article,
+    release_poll_lock,
+)
 from backend.modules.ingestion.service import poll_source, process_article
 
 logger = logging.getLogger(__name__)
@@ -37,10 +41,18 @@ def poll_source_job(source_id: str) -> dict:
 
 
 def process_article_job(article_id: str) -> dict:
-    """RQ job: fetch + classify + store one article body."""
+    """RQ job: fetch + classify + store one article body, then queue its embedding.
+
+    Phase 2 pipeline (FR-10): ingestion ends here and hands off to the
+    ``embed`` queue so chunking/embedding runs in the worker, decoupled from
+    the fetch/classify work. The embed job is idempotent, so re-enqueueing an
+    already-embedded article is a no-op.
+    """
     db = SessionLocal()
     try:
         content_ref = process_article(db, article_id)
+        if content_ref:
+            enqueue_embed_article(article_id)
         return {"status": "ok", "content_ref": content_ref}
     finally:
         db.close()
