@@ -41,6 +41,10 @@ class TestGuest:
         )
         assert client.post("/api/v1/search", json={"query": "anything"}).status_code == 200
 
+    def test_events_browsing_allowed(self, client):
+        # Phase 3 (spec §20): events are browse-level, like articles/search.
+        assert client.get("/api/v1/events").status_code == 200
+
     def test_source_listing_requires_auth(self, client):
         assert client.get("/api/v1/sources").status_code == 401
 

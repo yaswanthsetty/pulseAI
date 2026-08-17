@@ -11,6 +11,19 @@ from backend.modules.retrieval.schemas import SearchFilters, SearchResult
 from qdrant_client.http.models import Fusion, FusionQuery
 
 
+class FakeReranker:
+    """FR-13 cross-encoder-shaped fake: prefers hits whose chunk text contains
+    the query token, deterministically (mirrors CrossEncoder.predict)."""
+
+    def predict(self, pairs):
+        scores = []
+        for query, passage in pairs:
+            token = query.split()[0].lower()
+            boost = 0.3 if token in passage.lower() else 0.0
+            scores.append(0.5 + boost + len(passage) * 1e-5)
+        return scores
+
+
 class FakeEmbedder:
     """BGE-M3-shaped fake: deterministic dense + sparse outputs."""
 
@@ -196,3 +209,103 @@ class TestSearch:
 
         with pytest.raises(service.SearchUnavailableError):
             service.search("x", embedder=FakeEmbedder(), qdrant=qdrant)
+
+
+class TestRerank:
+    """FR-13: cross-encoder reranks the top-K candidates to the final top-N."""
+
+    def _points(self, titles_and_text):
+        points = []
+        for i, (title, text) in enumerate(titles_and_text):
+            points.append(
+                _hit(
+                    str(uuid.uuid4()),
+                    source_id=str(uuid.uuid4()),
+                    score=1.0 - i * 0.01,
+                    title=title,
+                )
+            )
+            points[-1].payload["chunk_text"] = text
+        return points
+
+    def test_reranker_reorders_candidates(self):
+        # Retrieval order prefers A, but the reranker prefers the AI story.
+        qdrant = FakeQdrant(
+            collections=[service.COLLECTION_NAME],
+            points=self._points(
+                [
+                    ("Weather report", "It will rain tomorrow."),
+                    ("AI startup raises funding", "The AI startup raised a new round."),
+                    ("Sports results", "The team won the match."),
+                ]
+            ),
+        )
+
+        results = service.search(
+            "AI startup",
+            limit=2,
+            embedder=FakeEmbedder(),
+            qdrant=qdrant,
+            reranker=FakeReranker(),
+        )
+
+        assert len(results) == 2
+        assert results[0].title == "AI startup raises funding"
+        assert results[0].similarity_score > results[1].similarity_score
+
+    def test_rerank_returns_at_most_limit(self):
+        qdrant = FakeQdrant(
+            collections=[service.COLLECTION_NAME],
+            points=self._points([(f"Story {i}", f"Plain text number {i}") for i in range(6)]),
+        )
+
+        results = service.search(
+            "story",
+            limit=3,
+            embedder=FakeEmbedder(),
+            qdrant=qdrant,
+            reranker=FakeReranker(),
+        )
+
+        assert len(results) == 3
+
+    def test_no_reranker_keeps_retrieval_order(self):
+        # RERANK_ENABLED=false in the test env: without an injected reranker
+        # the service must not load the real model, and returns retrieval order.
+        qdrant = FakeQdrant(
+            collections=[service.COLLECTION_NAME],
+            points=self._points(
+                [
+                    ("Weather report", "It will rain tomorrow."),
+                    ("AI startup raises funding", "The AI startup raised a new round."),
+                ]
+            ),
+        )
+
+        results = service.search("AI startup", embedder=FakeEmbedder(), qdrant=qdrant)
+
+        assert [r.title for r in results] == ["Weather report", "AI startup raises funding"]
+
+    def test_reranker_failure_degrades_to_retrieval_order(self):
+        class _BoomReranker:
+            def predict(self, pairs):
+                raise RuntimeError("model offline")
+
+        qdrant = FakeQdrant(
+            collections=[service.COLLECTION_NAME],
+            points=self._points(
+                [
+                    ("Weather report", "It will rain tomorrow."),
+                    ("AI startup raises funding", "The AI startup raised a new round."),
+                ]
+            ),
+        )
+
+        results = service.search(
+            "AI startup",
+            embedder=FakeEmbedder(),
+            qdrant=qdrant,
+            reranker=_BoomReranker(),
+        )
+
+        assert [r.title for r in results] == ["Weather report", "AI startup raises funding"]

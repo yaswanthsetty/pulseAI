@@ -122,6 +122,53 @@ class TestIngestionHandoff:
         assert enqueued == []
 
 
+class TestEmbedToClusterHandoff:
+    """FR-18 wiring: a successful embed enqueues the Phase 3 cluster job."""
+
+    class _DummySession:
+        def close(self):
+            pass
+
+    def test_embed_job_enqueues_cluster_on_success(self, monkeypatch):
+        from backend.modules.retrieval import jobs as retrieval_jobs
+        from backend.modules.retrieval.service import EmbedOutcome
+
+        clustered: list[str] = []
+        monkeypatch.setattr(
+            retrieval_jobs,
+            "embed_article",
+            lambda db, aid: EmbedOutcome(status="ok", chunk_count=1),
+        )
+        monkeypatch.setattr(
+            retrieval_jobs, "enqueue_cluster_article", lambda aid: clustered.append(aid)
+        )
+        monkeypatch.setattr(retrieval_jobs, "SessionLocal", self._DummySession)
+
+        result = retrieval_jobs.embed_article_job("abc-123")
+
+        assert result["status"] == "ok"
+        assert clustered == ["abc-123"]
+
+    def test_embed_job_skips_cluster_on_failure(self, monkeypatch):
+        from backend.modules.retrieval import jobs as retrieval_jobs
+        from backend.modules.retrieval.service import EmbedOutcome
+
+        clustered: list[str] = []
+        monkeypatch.setattr(
+            retrieval_jobs,
+            "embed_article",
+            lambda db, aid: EmbedOutcome(status="skipped", detail="no content"),
+        )
+        monkeypatch.setattr(
+            retrieval_jobs, "enqueue_cluster_article", lambda aid: clustered.append(aid)
+        )
+        monkeypatch.setattr(retrieval_jobs, "SessionLocal", self._DummySession)
+
+        retrieval_jobs.embed_article_job("abc-123")
+
+        assert clustered == []
+
+
 class TestEmbedArticle:
     def test_chunks_and_embeds_article(self, db, make_article):
         article = make_article()

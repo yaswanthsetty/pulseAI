@@ -27,6 +27,9 @@ os.environ["AUTH_PROVIDER"] = "none"
 os.environ["JWT_SECRET"] = "test-secret-not-for-production-0123456789abcdef"
 os.environ["RATE_LIMIT_ENABLED"] = "false"
 os.environ["CSRF_ENABLED"] = "true"
+# Rerank (FR-13) off by default in tests: unit tests inject a fake reranker,
+# and the API integration tests exercise the degraded (retrieval-order) path.
+os.environ["RERANK_ENABLED"] = "false"
 
 import psycopg2  # noqa: E402
 import pytest  # noqa: E402

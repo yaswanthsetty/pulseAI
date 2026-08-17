@@ -134,3 +134,32 @@ def enqueue_embed_article(article_id: str) -> str:
         retry=Retry(max=3, interval=[60, 300]),
     )
     return job.id
+
+
+def enqueue_cluster_article(article_id: str) -> str:
+    """Enqueue the Phase 3 fast-path cluster job for a freshly-embedded article.
+
+    Uses the stable ``cluster-{article_id}`` job id so a job already queued is
+    not enqueued twice; the job itself is idempotent (an article already in an
+    event is a no-op).
+    """
+    queue = get_cluster_queue()
+    from backend.modules.events.jobs import cluster_article_job  # deferred import
+
+    job = queue.enqueue(
+        cluster_article_job,
+        article_id,
+        job_id=f"cluster-{article_id}",
+        job_timeout=120,
+        result_ttl=300,
+    )
+    return job.id
+
+
+def acquire_cluster_slow_path(interval_seconds: int) -> bool:
+    """Atomically arm the periodic slow-path clustering marker (spec §14).
+
+    Same Redis-TTL pattern as the embedding reconcile: exactly one caller per
+    ``interval_seconds`` window wins the run.
+    """
+    return bool(get_redis().set("cluster:slow_path", "1", nx=True, ex=interval_seconds))

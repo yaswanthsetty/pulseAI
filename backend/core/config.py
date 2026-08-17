@@ -57,6 +57,37 @@ class Settings(BaseSettings):
     # points (orphans either direction) — indicates a sync bug (spec §11).
     reconcile_drift_alert_threshold: int = 10
 
+    # --- Rerank (FR-13, Phase 2 completion) ------------------------------------
+    # Cross-encoder that reranks the top-K retrieved candidates to the final
+    # top-N before display (spec §6.4 / §16 fast path). Lazy-loaded; search
+    # degrades gracefully (no rerank) if the model cannot load.
+    reranker_model: str = "BAAI/bge-reranker-base"
+    rerank_enabled: bool = True
+    rerank_top_k: int = 50  # candidates fetched from retrieval for reranking
+    rerank_top_n: int = 10  # final results after the cross-encoder pass
+
+    # --- Events / clustering (Phase 3, spec §14) ---------------------------------
+    # Qdrant collections: articles holds chunk vectors (Phase 2); event
+    # centroids holds one point per OPEN event (running average of member
+    # article vectors) used by the fast-path match (FR-18).
+    qdrant_articles_collection: str = "pulseai_articles"
+    qdrant_event_centroids_collection: str = "pulseai_event_centroids"
+    # Fast path: attach an article to an event when cosine similarity to the
+    # event centroid meets this threshold. Spec §14 suggests ≥ 0.82, but on
+    # BGE-M3 centroids (means over many articles) that yields only ~40%
+    # recall; 0.72 measures ~80% recall with ~1 false positive per 85 on the
+    # live corpus. Configurable — tune per deployment.
+    event_match_threshold: float = 0.72
+    # Slow path (FR-16): bounded recent window of unmatched articles clustered
+    # by UMAP+HDBSCAN; run at most once per interval via the scheduler.
+    event_slow_path_window_hours: int = 6
+    event_slow_path_interval_minutes: int = 30
+    event_min_cluster_size: int = 3
+    # Closure (spec §14): events with no new article for this long are closed
+    # and dropped from the fast-path centroid collection.
+    event_close_hours: int = 72
+    event_umap_components: int = 5
+
     # --- Redis --------------------------------------------------------------
     redis_url: str = "redis://localhost:6379/0"
 

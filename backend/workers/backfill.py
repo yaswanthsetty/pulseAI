@@ -1,18 +1,24 @@
-"""One-shot embeddings backfill CLI (Phase 2).
+"""One-shot backfill CLIs + periodic reconciliation (Phase 2/3).
 
 Usage::
 
     uv run pulseai-backfill-embeddings [--recreate]
+    uv run pulseai-backfill-clusters
 
-Finds every processed article that does not yet have a fully-embedded chunk
-set and enqueues an ``embed`` job for it; the ``pulseai-worker`` process picks
-the jobs up and runs chunking + embedding. Idempotent: re-running only
-enqueues articles still missing embedded chunks (including articles whose
-chunks were left ``pending``/``failed`` by an earlier attempt).
+``pulseai-backfill-embeddings`` finds every processed article that does not yet
+have a fully-embedded chunk set and enqueues an ``embed`` job for it; the
+``pulseai-worker`` process picks the jobs up and runs chunking + embedding.
+Idempotent: re-running only enqueues articles still missing embedded chunks
+(including articles whose chunks were left ``pending``/``failed`` by an
+earlier attempt). ``--recreate`` rebuilds everything: it deletes the Qdrant
+collection (dropping stale/legacy points) and resets ``article_chunks`` so the
+corpus is re-chunked with the current §15 parameters and re-embedded with the
+current model.
 
-``--recreate`` rebuilds everything: it deletes the Qdrant collection (dropping
-stale/legacy points) and resets ``article_chunks`` so the corpus is re-chunked
-with the current §15 parameters and re-embedded with the current model.
+``pulseai-backfill-clusters`` runs the Phase 3 slow path (FR-16) over the
+*whole* corpus of unmatched embedded articles (no time window) and closes
+stale events (FR-17) — the one-shot twin of the scheduler's periodic
+``reconcile_events``.
 """
 
 import argparse
@@ -24,8 +30,13 @@ from sqlalchemy import select
 from backend.core.config import settings
 from backend.core.database import SessionLocal
 from backend.core.logging import setup_logging
-from backend.core.queue import acquire_embedding_reconcile, enqueue_embed_article
+from backend.core.queue import (
+    acquire_cluster_slow_path,
+    acquire_embedding_reconcile,
+    enqueue_embed_article,
+)
 from backend.db.models import Article, ArticleChunk
+from backend.modules.events import service as events_service
 from backend.modules.retrieval import service
 
 logger = logging.getLogger(__name__)
@@ -159,6 +170,40 @@ def reconcile_embeddings(
             db.close()
 
 
+def reconcile_events(
+    interval_minutes: int | None = None,
+    *,
+    client=None,
+    db=None,
+) -> dict:
+    """Periodic twin of the one-shot cluster backfill (spec §14 slow path).
+
+    Runs at most once per ``interval_minutes`` (Redis TTL marker armed by
+    ``acquire_cluster_slow_path``): clusters unmatched embedded articles from a
+    bounded recent window (``event_slow_path_window_hours``) into new events
+    (FR-16) and closes events idle for ``event_close_hours`` (FR-17). Returns
+    ``{"created", "closed", "skipped"}``. Called from the scheduler process;
+    ``client``/``db`` are injectable for tests.
+    """
+    interval = interval_minutes or settings.event_slow_path_interval_minutes
+    if not acquire_cluster_slow_path(interval * 60):
+        return {"created": 0, "closed": 0, "skipped": True}
+
+    owns_db = db is None
+    if owns_db:
+        db = SessionLocal()
+    try:
+        qdrant = client or events_service.get_qdrant_client()
+        created = events_service.cluster_unmatched_articles(
+            db, client=qdrant, hours=settings.event_slow_path_window_hours
+        )
+        closed = events_service.close_stale_events(db, client=qdrant)
+        return {"created": len(created), "closed": closed, "skipped": False}
+    finally:
+        if owns_db:
+            db.close()
+
+
 def main(argv: list[str] | None = None) -> int:
     setup_logging()
     parser = argparse.ArgumentParser(
@@ -202,6 +247,39 @@ def main(argv: list[str] | None = None) -> int:
             except Exception as exc:  # noqa: BLE001 - one bad enqueue must not abort the run
                 logger.error("failed to enqueue embed for article %s: %s", article.id, exc)
         logger.info("backfill complete: enqueued %d of %d articles", enqueued, len(articles))
+        return 0
+    finally:
+        db.close()
+
+
+def main_clusters(argv: list[str] | None = None) -> int:
+    """``pulseai-backfill-clusters``: one-shot Phase 3 slow path over the corpus.
+
+    Clusters every unmatched embedded article (no time window — the whole
+    corpus) into events and closes stale ones, so the events API is populated
+    without waiting for the scheduler's periodic pass.
+    """
+    setup_logging()
+    parser = argparse.ArgumentParser(
+        prog="pulseai-backfill-clusters",
+        description="Cluster unmatched embedded articles into events (Phase 3).",
+    )
+    parser.parse_args(argv)
+
+    db = SessionLocal()
+    try:
+        client = events_service.get_qdrant_client()
+        created = events_service.cluster_unmatched_articles(db, client=client, hours=None)
+        closed = events_service.close_stale_events(db, client=client)
+        logger.info(
+            "cluster backfill complete: created %d event(s), closed %d stale",
+            len(created),
+            closed,
+        )
+        for event in created:
+            logger.info(
+                "  new event %s — %s (%d articles)", event.id, event.title, event.article_count
+            )
         return 0
     finally:
         db.close()

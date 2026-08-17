@@ -8,6 +8,13 @@ Search surface
 model and Qdrant client load lazily, so importing the API never triggers a
 model download; the stack degrades to a clean 503 when unavailable.
 
+Reranking (FR-13)
+-----------------
+The top-K retrieved candidates (default 50, ``rerank_top_k``) are reranked by
+a cross-encoder (BGE-reranker) to the final top-N (default 10, ``rerank_top_n``)
+before display. The reranker loads lazily and search degrades gracefully to
+retrieval order if it cannot load — a rerank failure never 503s the API.
+
 Embedding pipeline (FR-8..FR-10)
 --------------------------------
 ``embed_article`` chunks a stored article per spec §15 (256-token target,
@@ -15,8 +22,8 @@ Embedding pipeline (FR-8..FR-10)
 sparse vectors in one pass (FR-9) — and upserts points carrying the full §11
 payload into the sharded ``pulseai_articles`` collection. RQ jobs on the
 ``embed`` queue run this in the worker process, decoupled from ingestion
-(FR-10). Cross-encoder rerank (FR-13) and temporal ranking (FR-14/15) are
-Phase 4 per the spec roadmap §32.
+(FR-10), and hand off to the Phase 3 fast-path ``cluster`` job. Temporal
+ranking (FR-14/15) is Phase 4 per the spec roadmap §32.
 """
 
 import logging
@@ -90,6 +97,20 @@ def get_embedder() -> Any:
 def get_qdrant_client() -> QdrantClient:
     """Lazily create the Qdrant client (cached)."""
     return QdrantClient(url=settings.qdrant_url)
+
+
+@lru_cache(maxsize=1)
+def get_reranker() -> Any:
+    """Lazily load the FR-13 cross-encoder reranker (cached per process).
+
+    Uses sentence-transformers' ``CrossEncoder`` (already a direct dependency)
+    rather than FlagEmbedding's ``FlagReranker``: the latter still calls
+    ``tokenizer.prepare_for_model``, which transformers 5.x removed.
+    """
+    from sentence_transformers import CrossEncoder  # deferred: heavy import
+
+    logger.info("Loading reranker %s into memory...", settings.reranker_model)
+    return CrossEncoder(settings.reranker_model, max_length=512)
 
 
 def ensure_collection(client: QdrantClient | None = None) -> None:
@@ -311,23 +332,38 @@ def search(
     filters: SearchFilters | None = None,
     embedder: Any = None,
     qdrant: QdrantClient | None = None,
+    reranker: Any = None,
 ) -> list[SearchResult]:
-    """Retrieve the nearest article vectors for ``query`` (FR-11/FR-12).
+    """Retrieve the nearest article vectors for ``query`` (FR-11/FR-12, FR-13).
 
     Vectors are stored per chunk, so the collection is over-fetched and the
-    results deduplicated by article (keeping each article's best score) to
-    present ``limit`` distinct articles. ``mode`` selects the dense
+    results deduplicated by article (keeping each article's best score). When
+    reranking is enabled, the top-K candidates (``rerank_top_k``, default 50)
+    are re-scored by the FR-13 cross-encoder and the top ``limit`` are
+    returned; otherwise retrieval order is used. ``mode`` selects the dense
     (``semantic``), sparse (``keyword``), or fused (``hybrid``) query path.
 
-    ``embedder``/``qdrant`` are injectable for tests; defaults resolve lazily.
+    ``embedder``/``qdrant``/``reranker`` are injectable for tests; defaults
+    resolve lazily. A reranker load failure degrades to retrieval order — it
+    never 503s the API.
     """
     try:
         model = embedder or get_embedder()
         client = qdrant or get_qdrant_client()
         ensure_collection(client)
 
+        # Rerank needs a real candidate pool (top-K, default 50), not just the
+        # requested result count.
+        rerank_model = reranker
+        if rerank_model is None and settings.rerank_enabled:
+            try:
+                rerank_model = get_reranker()
+            except Exception as exc:  # noqa: BLE001 - degrade gracefully to retrieval order
+                logger.warning("reranker unavailable; skipping rerank: %s", exc)
+                rerank_model = None
+
         query_filter = _query_filter(filters)
-        fetch_limit = limit * 4
+        fetch_limit = max(limit, settings.rerank_top_k) if rerank_model is not None else limit * 4
         dense, sparse = _encode_batch(model, [query])
 
         if mode == "keyword":
@@ -372,7 +408,9 @@ def search(
         logger.warning("semantic search unavailable: %s", exc)
         raise SearchUnavailableError("Semantic search is temporarily unavailable") from exc
 
-    results: list[SearchResult] = []
+    # Build the deduplicated candidate set (one hit per article — the chunk
+    # with the best retrieval score) with its payload for reranking.
+    candidates: list[tuple[SearchResult, dict[str, Any]]] = []
     seen: set[uuid.UUID] = set()
     for hit in response.points:
         payload: dict[str, Any] = hit.payload or {}
@@ -402,7 +440,25 @@ def search(
         if result.article_id in seen:
             continue  # chunk-level dedupe: keep each article's best (first) hit
         seen.add(result.article_id)
-        results.append(result)
-        if len(results) >= limit:
+        candidates.append((result, payload))
+        if rerank_model is None and len(candidates) >= limit:
             break
-    return results
+
+    # FR-13: cross-encoder rerank of the top-K candidates → final top-N.
+    if rerank_model is not None and candidates:
+        pairs = [
+            [query, payload.get("chunk_text") or payload.get("title") or ""]
+            for _result, payload in candidates
+        ]
+        try:
+            scores = list(rerank_model.predict(pairs))
+            ranked = sorted(zip(candidates, scores, strict=False), key=lambda t: t[1], reverse=True)
+            results: list[SearchResult] = []
+            for (result, _payload), score in ranked[:limit]:
+                result.similarity_score = float(score)
+                results.append(result)
+            return results
+        except Exception as exc:  # noqa: BLE001 - rerank failure degrades, never 503s
+            logger.warning("rerank failed; returning retrieval order: %s", exc)
+
+    return [result for result, _payload in candidates[:limit]]

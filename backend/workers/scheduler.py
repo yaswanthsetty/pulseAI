@@ -18,7 +18,7 @@ from backend.core.database import SessionLocal
 from backend.core.logging import setup_logging
 from backend.core.queue import enqueue_poll, has_pending_retry
 from backend.modules.ingestion.service import list_backoff_sources, list_due_sources
-from backend.workers.backfill import reconcile_embeddings
+from backend.workers.backfill import reconcile_embeddings, reconcile_events
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,16 @@ def main() -> None:
                     result["enqueued"],
                     result["orphans_purged"],
                     result["missing_remarked"],
+                )
+
+            # Phase 3 (spec §14): slow-path clustering of unmatched articles
+            # into new events, plus event closure, at most once per interval.
+            events = reconcile_events()
+            if events.get("created") or events.get("closed"):
+                logger.info(
+                    "cluster reconcile: created %d event(s), closed %d stale",
+                    events["created"],
+                    events["closed"],
                 )
         except Exception:  # noqa: BLE001 - keep the scheduler alive across transient failures
             logger.exception("scheduler tick failed")

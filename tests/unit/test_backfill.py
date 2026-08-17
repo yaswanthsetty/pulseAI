@@ -142,6 +142,34 @@ class TestReconcile:
         assert len(enqueued) == 2
 
 
+class TestReconcileEvents:
+    """Phase 3 (spec §14): the scheduler's slow-path clustering sweep."""
+
+    def test_skips_when_interval_not_elapsed(self, db, monkeypatch):
+        monkeypatch.setattr(backfill, "acquire_cluster_slow_path", lambda seconds: False)
+
+        result = backfill.reconcile_events()
+
+        assert result == {"created": 0, "closed": 0, "skipped": True}
+
+    def test_runs_slow_path_and_closure_when_due(self, db, monkeypatch):
+        monkeypatch.setattr(backfill, "acquire_cluster_slow_path", lambda seconds: True)
+        monkeypatch.setattr(backfill, "SessionLocal", lambda: db)
+        monkeypatch.setattr(
+            backfill.events_service,
+            "cluster_unmatched_articles",
+            lambda db_, client=None, hours=None: [types.SimpleNamespace(id=uuid.uuid4())],
+        )
+        monkeypatch.setattr(
+            backfill.events_service, "close_stale_events", lambda db_, client=None: 2
+        )
+        monkeypatch.setattr(backfill.events_service, "get_qdrant_client", lambda: object())
+
+        result = backfill.reconcile_events(interval_minutes=30)
+
+        assert result == {"created": 1, "closed": 2, "skipped": False}
+
+
 class TestSyncQdrantPoints:
     """§11: Postgres article_chunks ↔ Qdrant point reconciliation."""
 
@@ -233,6 +261,24 @@ class TestAcquireEmbeddingReconcile:
             assert acquire_embedding_reconcile(600) is False  # inside the window
             get_redis().delete(self.KEY)
             assert acquire_embedding_reconcile(600) is True  # new window
+        finally:
+            get_redis().delete(self.KEY)  # never leave the marker armed
+
+
+class TestAcquireClusterSlowPath:
+    """The Phase 3 slow-path due-marker (spec §14): one caller per window."""
+
+    KEY = "cluster:slow_path"
+
+    def test_marker_gates_runs(self):
+        from backend.core.queue import acquire_cluster_slow_path, get_redis
+
+        get_redis().delete(self.KEY)
+        try:
+            assert acquire_cluster_slow_path(600) is True  # arms the window
+            assert acquire_cluster_slow_path(600) is False  # inside the window
+            get_redis().delete(self.KEY)
+            assert acquire_cluster_slow_path(600) is True  # new window
         finally:
             get_redis().delete(self.KEY)  # never leave the marker armed
 
