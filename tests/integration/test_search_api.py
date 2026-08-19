@@ -20,7 +20,7 @@ class TestSearchApi:
         ]
         seen: dict = {}
 
-        def _fake_search(query, limit, mode="semantic", filters=None):
+        def _fake_search(query, limit, mode="semantic", intent=None, filters=None):
             seen.update(query=query, limit=limit, mode=mode, filters=filters)
             return fake_results
 
@@ -51,7 +51,7 @@ class TestSearchApi:
     def test_search_accepts_deprecated_limit_alias(self, client, monkeypatch):
         seen: dict = {}
 
-        def _fake_search(query, limit, mode="semantic", filters=None):
+        def _fake_search(query, limit, mode="semantic", intent=None, filters=None):
             seen.update(query=query, limit=limit, mode=mode, filters=filters)
             return []
 
@@ -64,7 +64,7 @@ class TestSearchApi:
 
     def test_search_empty_until_vectors_populated(self, client, monkeypatch):
         monkeypatch.setattr(
-            service, "search", lambda query, limit, mode="semantic", filters=None: []
+            service, "search", lambda query, limit, mode="semantic", intent=None, filters=None: []
         )
 
         resp = client.post("/api/v1/search", json={"query": "anything"})
@@ -73,7 +73,7 @@ class TestSearchApi:
         assert resp.json() == []
 
     def test_search_unavailable_returns_503_envelope(self, client, monkeypatch):
-        def _boom(query, limit, mode="semantic", filters=None):
+        def _boom(query, limit, mode="semantic", intent=None, filters=None):
             raise service.SearchUnavailableError("Semantic search is temporarily unavailable")
 
         monkeypatch.setattr(service, "search", _boom)

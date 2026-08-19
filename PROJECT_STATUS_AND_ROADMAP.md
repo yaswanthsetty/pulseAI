@@ -23,10 +23,10 @@
 | Phase 2 — Embeddings / chunking / Qdrant | **Complete** — BGE-M3 dense+sparse, §15 chunking, modes + filters, FR-13 rerank, full reconcile | **✔ COMPLETE** |
 | Phase 3 — Event detection | Core pipeline built: centroid fast path (FR-18), UMAP+HDBSCAN slow path (FR-16), closure (FR-17), events API with timeline, abstractive LLM summaries via Ollama | **≈ 90%** |
 | Phase 4 — Temporal RAG / ranking | Not started | **0%** |
-| Phase 5 — Chat & executive reports | Not started | **0%** |
+| Phase 5 — Chat & executive reports | Fast-path chat and evidence attribution complete (FR-19, FR-20). Deep-path reports (FR-21, FR-22) stubbed. | **≈ 40%** |
 | Phase 6 — Frontend dashboard | Not started (no Next.js app) | **0%** |
 | Phase 7 — Hardening (CI/CD prod, DR, load tests) | CI added; rest not started | **~10%** |
-| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, 2 complete + Phase 3 nearly complete | **≈ 48%** |
+| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, 2 complete + Phase 3 nearly complete + Phase 5 partly complete | **≈ 52%** |
 
 ---
 
@@ -201,7 +201,7 @@ Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check 
 
 **Phase 4 — Temporal RAG** — [ ] hybrid `/api/v1/search` · [ ] intent-based ranking (FR-14/15) · [ ] credibility methodology (§13)
 
-**Phase 5 — Agents** — [ ] fast-path chat (FR-19/20) · [ ] LangGraph deep path (FR-21) · [ ] evidence agreement (FR-22) · [ ] SSE progress · [ ] tracing/cost instrumentation
+**Phase 5 — Agents** — [x] fast-path chat (FR-19/20) · [ ] LangGraph deep path (FR-21) · [ ] evidence agreement (FR-22) · [x] SSE progress · [ ] tracing/cost instrumentation
 
 **Phase 6 — Frontend** — [ ] Next.js scaffold · [ ] feed/search/chat/events/reports · [ ] analytics/settings/admin · [ ] FR-23 surfaces
 

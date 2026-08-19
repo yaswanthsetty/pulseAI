@@ -42,7 +42,14 @@ ignore_imports =
     backend.core.queue -> backend.modules.ingestion.jobs
     backend.core.queue -> backend.modules.retrieval.jobs
     backend.core.queue -> backend.modules.events.jobs
+    
+    # agents router acts as an integration layer across modules
+    backend.modules.agents.router -> backend.modules.retrieval.service
+    backend.modules.agents.service -> backend.modules.retrieval.schemas
 
+    # ranking integrations
+    backend.modules.retrieval.service -> backend.modules.ranking.service
+    backend.modules.ranking.service -> backend.modules.retrieval.schemas
 [importlinter:contract:3]
 name = Auth is shared infrastructure (only API and business modules import it)
 type = protected

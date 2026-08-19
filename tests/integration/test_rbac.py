@@ -37,7 +37,7 @@ class TestGuest:
         monkeypatch.setattr(
             retrieval_service,
             "search",
-            lambda query, limit, mode="semantic", filters=None: [],
+            lambda query, limit, mode="semantic", intent=None, filters=None: [],
         )
         assert client.post("/api/v1/search", json={"query": "anything"}).status_code == 200
 
