@@ -50,8 +50,9 @@ What exists today:
   article, a scheduled UMAP + HDBSCAN slow path for new stories, automatic
   closure of stale events, and an events API with an evolving timeline view.
 
-The `ranking`, `agents`, and `reports` packages are placeholders reserved for
-planned features (intent-based ranking; AI chat and executive reports).
+- **Chat & Reports (Phase 5)** — `POST /api/v1/chat` SSE streaming with fast-path
+  (single retrieve→generate→cite) and deep-path (planner→retriever×N→reasoner×N→synthesizer)
+  auto-routing; evidence agreement scoring; executive report generation; LLM usage tracking.
 
 The product specification lives in `tempdocs/PulseAI_Technical_Specification_v2.md`;
 its section numbers are referenced throughout the code.
@@ -165,12 +166,14 @@ backend/
     ingestion/            # service, jobs, parser, fetcher, classifier, dedupe, router, schemas, seeds
     retrieval/            # service (embed + search + rerank), chunker, jobs, router, schemas
     events/               # service (fast path, slow path, closure), jobs, router, schemas
-    ranking/  agents/  reports/   # placeholders for planned features
+    ranking/              # Phase 4 intent-aware scoring (blend_scores, detect_intent)
+    agents/               # Phase 5: schemas, service (fast/deep path, agreement), router
+    reports/              # Phase 5 placeholder (reports served via agents router)
   workers/
     worker.py             # RQ worker (SimpleWorker on Windows — no fork)
     scheduler.py          # poll scheduling + periodic reconciles
     backfill.py           # one-shot CLIs + periodic reconcile twins
-migrations/               # Alembic env + versions/ (3 revisions)
+migrations/               # Alembic env + versions/ (5 revisions)
 tests/
   conftest.py             # dedicated pulseai_test DB, per-test truncation, fixtures
   unit/                   # chunker, dedupe, parser, classifier, retrieval, embedding
@@ -242,12 +245,13 @@ the groups:
 | Rerank | `RERANKER_MODEL` (BAAI/bge-reranker-base), `RERANK_ENABLED` (true), `RERANK_TOP_K` (50), `RERANK_TOP_N` (10) | top-K candidates → cross-encoder → top-N |
 | Events | `QDRANT_ARTICLES_COLLECTION` (pulseai_articles), `QDRANT_EVENT_CENTROIDS_COLLECTION` (pulseai_event_centroids), `EVENT_MATCH_THRESHOLD` (0.72 — tuned against the live corpus; the spec's suggested 0.82 measures ~40% recall on BGE-M3 centroids), `EVENT_SLOW_PATH_WINDOW_HOURS` (6), `EVENT_SLOW_PATH_INTERVAL_MINUTES` (30), `EVENT_MIN_CLUSTER_SIZE` (3), `EVENT_CLOSE_HOURS` (72), `EVENT_UMAP_COMPONENTS` (5) | fast path / slow path / closure |
 | LLM Summary | `SUMMARY_PROVIDER` (ollama), `SUMMARY_MODEL` (qwen3.5:9b), `OLLAMA_URL` (http://localhost:11434), `SUMMARY_MAX_TOKENS` (300), `SUMMARY_TIMEOUT_SECONDS` (120) | abstractive event summaries via Ollama; set `SUMMARY_PROVIDER=none` to disable |
+| **Chat (Phase 5)** | `CHAT_PROVIDER` (ollama), `CHAT_MODEL` (qwen3.5:9b), `CHAT_MAX_TOKENS` (500), `CHAT_TIMEOUT_SECONDS` (120) | fast/deep-path chat; same Ollama endpoint as summaries |
 | Ingestion | `SEED_DEFAULT_SOURCES` (true), `SCHEDULER_TICK_SECONDS` (30), `MIN_POLL_INTERVAL_MINUTES` (5), `DEFAULT_POLL_INTERVAL_MINUTES` (15), `FEED_FETCH_TIMEOUT_SECONDS` (15), `ARTICLE_FETCH_TIMEOUT_SECONDS` (10), `RETRY_BACKOFF_MINUTES` ([1,5,30]), `FUZZY_DUPLICATE_THRESHOLD` (0.92), `FUZZY_DUPLICATE_WINDOW_HOURS` (6), `SUPPORTED_LANGUAGES` ([en]), `HTTP_USER_AGENT`, `MAX_ARTICLE_STORAGE_CHARS` (50000), `CONTENT_PREVIEW_CHARS` (500) | polling, dedupe, fetching knobs |
 
 ## 7. Database
 
-17 tables in `backend/db/models.py`; migrations live in `migrations/versions/`
-(3 revisions). Groups:
+22 tables in `backend/db/models.py`; migrations live in `migrations/versions/`
+(5 revisions). Groups:
 
 | Group | Tables |
 |---|---|
@@ -257,6 +261,9 @@ the groups:
 | Identity | `users`, `api_keys`, `refresh_tokens` |
 | User content | `saved_reports`, `saved_searches`, `bookmarks`, `notification_rules` |
 | Ops | `audit_log` |
+| **Chat (Phase 5)** | `conversations`, `conversation_messages` (with `evidence_agreement` float) |
+| **Reports (Phase 5)** | `reports` |
+| **Usage tracking (Phase 5)** | `llm_usage` |
 
 Design points:
 

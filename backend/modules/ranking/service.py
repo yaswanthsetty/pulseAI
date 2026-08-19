@@ -147,7 +147,7 @@ def blend_scores(
     w_cred /= total
     w_event /= total
 
-    scored: list[tuple[SearchResult, float]] = []
+    scored: list[tuple[SearchResult, dict, float]] = []
     for result, payload in candidates:
         sim = result.similarity_score  # raw cosine or reranker score [0, 1]
         fresh = compute_freshness_score(result.published_at, now=now, half_life_days=half_life_days)
@@ -155,12 +155,12 @@ def blend_scores(
         evt = compute_event_signal(payload.get("event_id"))
 
         blended = w_sim * sim + w_fresh * fresh + w_cred * cred + w_event * evt
-        scored.append((result, blended))
+        scored.append((result, payload, blended))
 
-    scored.sort(key=lambda t: t[1], reverse=True)
+    scored.sort(key=lambda t: t[2], reverse=True)
 
-    results: list[SearchResult] = []
-    for result, score in scored:
+    results: list[tuple[SearchResult, dict]] = []
+    for result, payload, score in scored:
         result.similarity_score = round(score, 4)
-        results.append(result)
+        results.append((result, payload))
     return results

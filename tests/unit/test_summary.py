@@ -62,7 +62,7 @@ class TestGenerateSummary:
         assert result == "A concise summary."
         assert mock_post.called
         call_json = mock_post.call_args[1]["json"]
-        assert call_json["model"] == "qwen3.5:9b"
+        assert call_json["model"] == "qwen2.5:3b"
         assert call_json["messages"][0]["role"] == "system"
 
     @patch("backend.modules.events.summary.httpx.post")

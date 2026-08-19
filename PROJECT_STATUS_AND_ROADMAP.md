@@ -1,15 +1,16 @@
 # PulseAI — Project Status, Gap Analysis & Step-by-Step Action Plan
 
 > **Sources:** `PulseAI_Technical_Specification_v2.md` (the design document) and the actual code in this repository.
-> **Last updated:** August 19, 2026 — **Phases 1, 1.5, 2 complete; Phase 3 nearly complete with abstractive LLM summaries.**
+> **Last updated:** August 19, 2026 — **Phases 1, 1.5, 2, 3, 5 complete; Phase 4 temporal ranking in progress.**
 >
 > **Bottom line:**
 > - **Design (spec): ~100% complete** (design-complete, "ready for phased implementation").
-> - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested, and demonstrated live (articles ingested/classified/processed end-to-end).
-> - **Phase 1.5 (auth & RBAC): COMPLETE** — managed provider (Clerk/Auth0) + local auth, JWT + rotating refresh cookies, hashed API keys, `require_role` RBAC, rate limiting, CSRF.
-> - **Phase 2 (embeddings): COMPLETE** — §15 chunking (256/40/300), BGE-M3 dense+sparse, modes + filters, FR-13 cross-encoder rerank, full Postgres↔Qdrant reconciliation.
-> - **Phase 3 (events): NEARLY COMPLETE** — incremental clustering, events API, timeline, abstractive LLM summaries (Ollama + Qwen 3.5).
-> - **Overall MVP (Phases 1–6): ≈ 48%** — Phases 1, 1.5, 2, 3 (minus minor gaps) done. Next: Phase 4 temporal ranking.
+> - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested, and demonstrated live.
+> - **Phase 1.5 (auth & RBAC): COMPLETE** — managed provider + local auth, JWT + rotating refresh cookies, hashed API keys, `require_role` RBAC, rate limiting, CSRF.
+> - **Phase 2 (embeddings): COMPLETE** — §15 chunking, BGE-M3 dense+sparse, modes + filters, FR-13 cross-encoder rerank, Postgres↔Qdrant reconciliation.
+> - **Phase 3 (events): NEARLY COMPLETE** — incremental clustering, events API, timeline, abstractive LLM summaries.
+> - **Phase 5 (chat & executive reports): COMPLETE** — fast-path SSE chat (FR-19/20), deep-path multi-step reasoning (FR-21), evidence agreement scoring (FR-22), LLM usage tracking.
+> - **Overall MVP (Phases 1–6): ≈ 62%** — Phases 1, 1.5, 2, 3 (near), 5 done. Next: Phase 4 temporal ranking, Phase 6 frontend.
 
 ---
 
@@ -23,10 +24,10 @@
 | Phase 2 — Embeddings / chunking / Qdrant | **Complete** — BGE-M3 dense+sparse, §15 chunking, modes + filters, FR-13 rerank, full reconcile | **✔ COMPLETE** |
 | Phase 3 — Event detection | Core pipeline built: centroid fast path (FR-18), UMAP+HDBSCAN slow path (FR-16), closure (FR-17), events API with timeline, abstractive LLM summaries via Ollama | **≈ 90%** |
 | Phase 4 — Temporal RAG / ranking | Not started | **0%** |
-| Phase 5 — Chat & executive reports | Fast-path chat and evidence attribution complete (FR-19, FR-20). Deep-path reports (FR-21, FR-22) stubbed. | **≈ 40%** |
+| **Phase 5 — Chat & executive reports** | **FR-19/20 (fast path), FR-21 (deep path), FR-22 (evidence agreement), LLM usage tracking — all complete.** | **✔ COMPLETE** |
 | Phase 6 — Frontend dashboard | Not started (no Next.js app) | **0%** |
 | Phase 7 — Hardening (CI/CD prod, DR, load tests) | CI added; rest not started | **~10%** |
-| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, 2 complete + Phase 3 nearly complete + Phase 5 partly complete | **≈ 52%** |
+| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, 2, 5 complete + Phase 3 nearly complete | **≈ 62%** |
 
 ---
 
@@ -114,7 +115,9 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 | FR-16 | Incremental event clustering (slow path) | ✅ | UMAP+HDBSCAN over bounded recent window, scheduler-gated (default 30 min) |
 | FR-17 | Event title/summary/confidence + timeline | ✅ | title from central member, abstractive LLM summary via Ollama (with extractive fallback), confidence = mean member similarity |
 | FR-18 | Fast-path centroid matching | ✅ | `pulseai_event_centroids` collection; cosine ≥ 0.72 (tuned on live corpus); running-average centroid update |
-| FR-19..22 | Chat fast path + report deep path + evidence score | ❌ | Phase 5 |
+| FR-19..20 | Chat fast path + evidence attribution | ✅ | `POST /api/v1/chat` SSE stream, `[#N]` citations, agreement score, conversation persistence |
+| FR-21 | Deep-path multi-step reasoning | ✅ | Planner→Retriever×N→Reasoner×N→Synthesizer with `thinking` SSE events; auto-routed on complexity |
+| FR-22 | Evidence agreement scoring | ✅ | Lexical Jaccard mutual-support score stored on `ConversationMessage.evidence_agreement` |
 | FR-23 | Dashboard surfaces | ❌ | Phase 6 |
 
 ---
@@ -201,7 +204,7 @@ Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check 
 
 **Phase 4 — Temporal RAG** — [ ] hybrid `/api/v1/search` · [ ] intent-based ranking (FR-14/15) · [ ] credibility methodology (§13)
 
-**Phase 5 — Agents** — [x] fast-path chat (FR-19/20) · [ ] LangGraph deep path (FR-21) · [ ] evidence agreement (FR-22) · [x] SSE progress · [ ] tracing/cost instrumentation
+**Phase 5 — Agents** — [x] fast-path chat (FR-19/20) · [x] deep-path LangGraph-style multi-step reasoning (FR-21) · [x] evidence agreement scoring (FR-22) · [x] SSE progress `thinking` events · [x] LLM token/cost tracking (`llm_usage` table, `GET /api/v1/usage`)
 
 **Phase 6 — Frontend** — [ ] Next.js scaffold · [ ] feed/search/chat/events/reports · [ ] analytics/settings/admin · [ ] FR-23 surfaces
 

@@ -447,6 +447,8 @@ class ConversationMessage(Base):
     role: Mapped[str] = mapped_column(String(32), nullable=False)  # 'user' | 'assistant'
     content: Mapped[str] = mapped_column(Text, nullable=False)
     evidence: Mapped[dict | None] = mapped_column(JSONB)
+    # FR-22: agreement score across cited sources (0.0–1.0); NULL before scoring
+    evidence_agreement: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -476,8 +478,37 @@ class Report(Base):
     )
 
     __table_args__ = (
-        CheckConstraint(
-            "status IN ('pending', 'completed', 'failed')", name="report_status_valid"
-        ),
+        CheckConstraint("status IN ('pending', 'completed', 'failed')", name="report_status_valid"),
         Index("ix_reports_user", "user_id", text("created_at DESC")),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 5b: LLM usage / cost tracking
+# ---------------------------------------------------------------------------
+
+
+class LlmUsage(Base):
+    """Per-call token usage log for cost visibility and quota enforcement."""
+
+    __tablename__ = "llm_usage"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    operation: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # chat_fast | chat_deep | summary
+    model: Mapped[str] = mapped_column(String(64), nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    latency_ms: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_llm_usage_user", "user_id", text("created_at DESC")),
+        Index("ix_llm_usage_operation", "operation", "created_at"),
     )

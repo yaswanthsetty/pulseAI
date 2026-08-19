@@ -90,13 +90,13 @@ class Settings(BaseSettings):
 
     # --- LLM Summary (Ollama) & Chat (Phase 5) -----------------------------
     summary_provider: str = "ollama"  # ollama | none
-    summary_model: str = "qwen3.5:9b"
+    summary_model: str = "qwen2.5:3b"
     ollama_url: str = "http://localhost:11434"
     summary_max_tokens: int = 300
     summary_timeout_seconds: int = 120
 
     chat_provider: str = "ollama"
-    chat_model: str = "qwen3.5:9b"
+    chat_model: str = "qwen2.5:3b"
     chat_max_tokens: int = 500
     chat_timeout_seconds: int = 120
 

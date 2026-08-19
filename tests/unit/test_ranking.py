@@ -146,14 +146,14 @@ class TestBlendScores:
         results = blend_scores(
             [fresh, old], w_sim=0.35, w_fresh=0.40, w_cred=0.15, w_event=0.10, now=now
         )
-        assert results[0].article_id == fresh[0].article_id
+        assert results[0][0].article_id == fresh[0].article_id
 
     def test_high_cred_wins_tie(self):
         now = datetime(2026, 8, 19, tzinfo=UTC)
         a = _make_result(sim=0.8, published_days_ago=1, cred=0.3, event_id=None)
         b = _make_result(sim=0.8, published_days_ago=1, cred=0.9, event_id=None)
         results = blend_scores([a, b], w_sim=0.55, w_fresh=0.20, w_cred=0.15, w_event=0.10, now=now)
-        assert results[0].article_id == b[0].article_id
+        assert results[0][0].article_id == b[0].article_id
 
     def test_event_article_gets_boost(self):
         now = datetime(2026, 8, 19, tzinfo=UTC)
@@ -167,14 +167,14 @@ class TestBlendScores:
             w_event=0.10,
             now=now,
         )
-        assert results[0].article_id == with_event[0].article_id
+        assert results[0][0].article_id == with_event[0].article_id
 
     def test_scores_are_normalized(self):
         now = datetime(2026, 8, 19, tzinfo=UTC)
         items = [_make_result(sim=0.5, published_days_ago=3) for _ in range(3)]
         results = blend_scores(items, w_sim=2, w_fresh=4, w_cred=3, w_event=1, now=now)
-        for r in results:
-            assert 0.0 <= r.similarity_score <= 1.0
+        for r_result, _payload in results:
+            assert 0.0 <= r_result.similarity_score <= 1.0
 
     def test_empty_candidates(self):
         results = blend_scores([])
