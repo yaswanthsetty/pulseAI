@@ -28,6 +28,10 @@ class SearchQuery(BaseModel):
         default=None, ge=1, le=100, deprecated=True, description="alias for top_k"
     )
     mode: Literal["semantic", "keyword", "hybrid"] = "semantic"
+    intent: Literal["recency", "default", "historical"] | None = Field(
+        default=None,
+        description="Ranking intent override. Omit to auto-detect from query.",
+    )
     filters: SearchFilters | None = None
 
 

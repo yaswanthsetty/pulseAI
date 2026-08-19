@@ -55,6 +55,7 @@ from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.core.storage import get_storage
 from backend.db.models import Article, ArticleChunk, Source
+from backend.modules.ranking.service import blend_scores, detect_intent
 from backend.modules.retrieval.chunker import chunk_text, estimate_tokens
 from backend.modules.retrieval.schemas import SearchFilters, SearchResult
 
@@ -329,12 +330,13 @@ def search(
     query: str,
     limit: int = 10,
     mode: str = "semantic",
+    intent: str | None = None,
     filters: SearchFilters | None = None,
     embedder: Any = None,
     qdrant: QdrantClient | None = None,
     reranker: Any = None,
 ) -> list[SearchResult]:
-    """Retrieve the nearest article vectors for ``query`` (FR-11/FR-12, FR-13).
+    """Retrieve the nearest article vectors for ``query`` (FR-11/FR-12, FR-13, FR-14/15).
 
     Vectors are stored per chunk, so the collection is over-fetched and the
     results deduplicated by article (keeping each article's best score). When
@@ -342,6 +344,11 @@ def search(
     are re-scored by the FR-13 cross-encoder and the top ``limit`` are
     returned; otherwise retrieval order is used. ``mode`` selects the dense
     (``semantic``), sparse (``keyword``), or fused (``hybrid``) query path.
+
+    ``intent`` triggers temporal ranking (FR-14/15): candidates are re-scored
+    using weighted blend of similarity, freshness, credibility, and event
+    signal from the ``ranking_configs`` table.  ``None`` = auto-detect from
+    query keywords; ``"default"`` skips temporal ranking.
 
     ``embedder``/``qdrant``/``reranker`` are injectable for tests; defaults
     resolve lazily. A reranker load failure degrades to retrieval order — it
@@ -453,12 +460,42 @@ def search(
         try:
             scores = list(rerank_model.predict(pairs))
             ranked = sorted(zip(candidates, scores, strict=False), key=lambda t: t[1], reverse=True)
-            results: list[SearchResult] = []
-            for (result, _payload), score in ranked[:limit]:
+            # Carry reranker scores into similarity_score before temporal blend.
+            candidates = []
+            for (result, _payload), score in ranked[: settings.rerank_top_k]:
                 result.similarity_score = float(score)
-                results.append(result)
-            return results
+                candidates.append((result, _payload))
         except Exception as exc:  # noqa: BLE001 - rerank failure degrades, never 503s
             logger.warning("rerank failed; returning retrieval order: %s", exc)
+
+    # FR-14/15: temporal ranking — weighted blend of similarity, freshness,
+    # credibility, and event membership.  Only runs when intent != "default"
+    # (auto-detected or explicitly overridden by the caller).
+    effective_intent = intent if intent is not None else detect_intent(query)
+    if effective_intent != "default" and candidates:
+        from backend.core.database import SessionLocal
+        from backend.db.models import RankingConfig
+
+        db = SessionLocal()
+        try:
+            config = db.get(RankingConfig, effective_intent)
+        finally:
+            db.close()
+        if config is not None:
+            candidates = blend_scores(
+                candidates,
+                w_sim=config.w_sim,
+                w_fresh=config.w_fresh,
+                w_cred=config.w_cred,
+                w_event=config.w_event,
+            )
+            logger.info(
+                "temporal ranking: intent=%s w_sim=%.2f w_fresh=%.2f w_cred=%.2f w_event=%.2f",
+                effective_intent,
+                config.w_sim,
+                config.w_fresh,
+                config.w_cred,
+                config.w_event,
+            )
 
     return [result for result, _payload in candidates[:limit]]

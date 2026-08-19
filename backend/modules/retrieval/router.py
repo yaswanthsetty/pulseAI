@@ -22,6 +22,7 @@ def semantic_search(payload: SearchQuery):
             query=payload.query,
             limit=payload.top_k or payload.limit or 10,
             mode=payload.mode,
+            intent=payload.intent,
             filters=payload.filters,
         )
     except service.SearchUnavailableError as exc:
