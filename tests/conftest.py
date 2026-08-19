@@ -56,6 +56,10 @@ _MUTABLE_TABLES = (
     "saved_searches",
     "notification_rules",
     "audit_log",
+    "llm_usage",
+    "conversation_messages",
+    "conversations",
+    "reports",
     "users",
 )
 
