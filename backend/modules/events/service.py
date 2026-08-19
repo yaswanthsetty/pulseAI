@@ -383,6 +383,8 @@ def cluster_unmatched_articles(
     CLI); ``clusterer`` is injectable for tests (default: UMAP+HDBSCAN).
     Returns the newly created events (ordered by creation).
     """
+    from backend.modules.events.summary import generate_summary
+
     qdrant = client or get_qdrant_client()
     ensure_centroids_collection(qdrant)
     pairs = list_unmatched_articles(db, hours=hours, client=qdrant)
@@ -401,6 +403,18 @@ def cluster_unmatched_articles(
             continue  # noise
         event = _event_from_cluster(db, qdrant, members)
         if event is not None:
+            # Generate abstractive summary via LLM (FR-17).
+            # Extractive fallback is already stored; update only on success.
+            member_articles = [art for art, _ in members]
+            llm_summary = generate_summary(member_articles)
+            if llm_summary:
+                event.summary = llm_summary
+                db.commit()
+                logger.info(
+                    "abstractive summary updated for event %s (%d chars)",
+                    event.id,
+                    len(llm_summary),
+                )
             created.append(event)
     return created
 

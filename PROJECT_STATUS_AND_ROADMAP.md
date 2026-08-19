@@ -1,15 +1,15 @@
 # PulseAI — Project Status, Gap Analysis & Step-by-Step Action Plan
 
 > **Sources:** `PulseAI_Technical_Specification_v2.md` (the design document) and the actual code in this repository.
-> **Last updated:** August 17, 2026 — **Phases 1, 1.5, 2 complete; Phase 3 core pipeline implemented and verified.**
+> **Last updated:** August 19, 2026 — **Phases 1, 1.5, 2 complete; Phase 3 nearly complete with abstractive LLM summaries.**
 >
 > **Bottom line:**
 > - **Design (spec): ~100% complete** (design-complete, "ready for phased implementation").
 > - **Phase 1 (core infra + ingestion): COMPLETE** — implemented, tested, and demonstrated live (articles ingested/classified/processed end-to-end).
 > - **Phase 1.5 (auth & RBAC): COMPLETE** — managed provider (Clerk/Auth0) + local auth, JWT + rotating refresh cookies, hashed API keys, `require_role` RBAC, rate limiting, CSRF.
-> - **Phase 2 (embeddings): COMPLETE** — §15 chunking (256/40/300), BGE-M3 dense+sparse, modes + filters, FR-13 cross-encoder rerank, full Postgres↔Qdrant reconciliation; 234 tests green total.
-> - **Phase 3 (events): CORE PIPELINE BUILT** — §14 incremental clustering (centroid fast path + UMAP+HDBSCAN slow path + 72h closure), events API; verified live on the 113-article corpus.
-> - **Overall MVP (Phases 1–6): ≈ 43%** — 3.5 of 8 phases done; Phase 3 remaining is abstractive summaries (needs LLM, Phase 5).
+> - **Phase 2 (embeddings): COMPLETE** — §15 chunking (256/40/300), BGE-M3 dense+sparse, modes + filters, FR-13 cross-encoder rerank, full Postgres↔Qdrant reconciliation.
+> - **Phase 3 (events): NEARLY COMPLETE** — incremental clustering, events API, timeline, abstractive LLM summaries (Ollama + Qwen 3.5).
+> - **Overall MVP (Phases 1–6): ≈ 48%** — Phases 1, 1.5, 2, 3 (minus minor gaps) done. Next: Phase 4 temporal ranking.
 
 ---
 
@@ -21,12 +21,12 @@
 | **Phase 1 — Infra, schema, ingestion (FR-1..FR-7)** | **Implemented & verified** | **✔ COMPLETE** |
 | **Phase 1.5 — Auth / RBAC (spec §21-23)** | **Implemented & verified** | **✔ COMPLETE** |
 | Phase 2 — Embeddings / chunking / Qdrant | **Complete** — BGE-M3 dense+sparse, §15 chunking, modes + filters, FR-13 rerank, full reconcile | **✔ COMPLETE** |
-| Phase 3 — Event detection | Core pipeline built: centroid fast path (FR-18), UMAP+HDBSCAN slow path (FR-16), closure (FR-17), events API; abstractive summaries need LLM (Phase 5) | **≈ 60%** |
+| Phase 3 — Event detection | Core pipeline built: centroid fast path (FR-18), UMAP+HDBSCAN slow path (FR-16), closure (FR-17), events API with timeline, abstractive LLM summaries via Ollama | **≈ 90%** |
 | Phase 4 — Temporal RAG / ranking | Not started | **0%** |
 | Phase 5 — Chat & executive reports | Not started | **0%** |
 | Phase 6 — Frontend dashboard | Not started (no Next.js app) | **0%** |
 | Phase 7 — Hardening (CI/CD prod, DR, load tests) | CI added; rest not started | **~10%** |
-| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, 2 complete + Phase 3 core built | **≈ 43%** |
+| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, 2 complete + Phase 3 nearly complete | **≈ 48%** |
 
 ---
 
@@ -112,7 +112,7 @@ Legend: ✅ done · 🟡 partial · ❌ not done
 | FR-13 | Cross-encoder rerank (top-K → top-N) | ✅ | BGE-reranker-base via sentence-transformers CrossEncoder; top-K=50 → top-N=10; degrades to retrieval order if unavailable; verified live |
 | FR-14..15 | Intent-aware temporal ranking + freshness decay | ❌ | Phase 4 (`ranking_configs` seeded) |
 | FR-16 | Incremental event clustering (slow path) | ✅ | UMAP+HDBSCAN over bounded recent window, scheduler-gated (default 30 min) |
-| FR-17 | Event title/summary/confidence + timeline | ✅ | title + extractive summary from most-central article, confidence = mean member similarity; abstractive summary needs LLM (Phase 5) |
+| FR-17 | Event title/summary/confidence + timeline | ✅ | title from central member, abstractive LLM summary via Ollama (with extractive fallback), confidence = mean member similarity |
 | FR-18 | Fast-path centroid matching | ✅ | `pulseai_event_centroids` collection; cosine ≥ 0.72 (tuned on live corpus); running-average centroid update |
 | FR-19..22 | Chat fast path + report deep path + evidence score | ❌ | Phase 5 |
 | FR-23 | Dashboard surfaces | ❌ | Phase 6 |
@@ -197,7 +197,7 @@ Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check 
 > driver option (asyncpg pinned in deps); the sync engine and Alembic always
 > strip the async prefix, so Phase 1 runs unchanged on `postgresql`.
 
-**Phase 3 — Events** — [x] `pulseai_event_centroids` collection · [x] fast-path matching (FR-18) + running-average centroid update · [x] slow-path UMAP+HDBSCAN clustering (FR-16) · [x] closure after 72h (FR-17) · [x] events API (§20: list + detail with timeline) · [x] `pulseai-backfill-clusters` · [ ] abstractive summaries (needs LLM — Phase 5)
+**Phase 3 — Events** — [x] `pulseai_event_centroids` collection · [x] fast-path matching (FR-18) + running-average centroid update · [x] slow-path UMAP+HDBSCAN clustering (FR-16) · [x] closure after 72h (FR-17) · [x] events API (§20: list + detail with timeline) · [x] `pulseai-backfill-clusters` · [x] abstractive LLM summaries via Ollama (Qwen 3.5:9b)
 
 **Phase 4 — Temporal RAG** — [ ] hybrid `/api/v1/search` · [ ] intent-based ranking (FR-14/15) · [ ] credibility methodology (§13)
 

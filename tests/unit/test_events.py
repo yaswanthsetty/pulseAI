@@ -220,6 +220,11 @@ class TestFastPathMatch:
 class TestSlowPathCluster:
     """FR-16: UMAP+HDBSCAN over unmatched articles creates events."""
 
+    @pytest.fixture(autouse=True)
+    def _mock_summary(self, monkeypatch):
+        """Disable LLM summary in slow-path tests to avoid Ollama calls."""
+        monkeypatch.setattr("backend.modules.events.summary.generate_summary", lambda arts: None)
+
     def test_creates_events_for_clusters(self, db):
         # Three articles in two well-separated groups; injectable clusterer.
         articles = [

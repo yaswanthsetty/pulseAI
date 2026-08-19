@@ -88,6 +88,13 @@ class Settings(BaseSettings):
     event_close_hours: int = 72
     event_umap_components: int = 5
 
+    # --- LLM Summary (Ollama) --------------------------------------------
+    summary_provider: str = "ollama"  # ollama | none
+    summary_model: str = "qwen3.5:9b"
+    ollama_url: str = "http://localhost:11434"
+    summary_max_tokens: int = 300
+    summary_timeout_seconds: int = 120
+
     # --- Redis --------------------------------------------------------------
     redis_url: str = "redis://localhost:6379/0"
 

@@ -2,7 +2,8 @@
 
 Real-time AI news intelligence platform — a modular-monolith backend that ingests
 global news streams, de-duplicates and classifies articles, embeds them for
-semantic search, and groups duplicate coverage into evolving events.
+semantic search, groups duplicate coverage into evolving events, and generates
+abstractive summaries via a local LLM.
 
 > **New here?** Read [`DEVELOPER.md`](DEVELOPER.md) — the living developer
 > documentation (architecture, setup, environment, schema, workflows, testing,
@@ -40,7 +41,7 @@ semantic search, and groups duplicate coverage into evolving events.
 
 Python 3.14 · FastAPI · SQLAlchemy 2 + Alembic · PostgreSQL 15 · Redis 7 + RQ ·
 Qdrant (vector store) · BGE-M3 embeddings · BGE-reranker cross-encoder · UMAP +
-HDBSCAN event clustering · BeautifulSoup + feedparser · langdetect · ruff +
+HDBSCAN event clustering · Ollama abstractive summaries · BeautifulSoup + feedparser · langdetect · ruff +
 pytest + import-linter.
 
 ## Quick start (Docker)
