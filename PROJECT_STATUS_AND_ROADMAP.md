@@ -10,7 +10,7 @@
 > - **Phase 2 (embeddings): COMPLETE** — §15 chunking, BGE-M3 dense+sparse, modes + filters, FR-13 cross-encoder rerank, Postgres↔Qdrant reconciliation.
 > - **Phase 3 (events): NEARLY COMPLETE** — incremental clustering, events API, timeline, abstractive LLM summaries.
 > - **Phase 5 (chat & executive reports): COMPLETE** — fast-path SSE chat (FR-19/20), deep-path multi-step reasoning (FR-21), evidence agreement scoring (FR-22), LLM usage tracking.
-> - **Overall MVP (Phases 1–6): ≈ 62%** — Phases 1, 1.5, 2, 3 (near), 5 done. Next: Phase 4 temporal ranking, Phase 6 frontend.
+> - **Overall MVP (Phases 1–6): ≈ 75%** — Phases 1, 1.5, 2, 3, 4, 5 complete. Phase 6 frontend scaffolded with 8 pages.
 
 ---
 
@@ -25,9 +25,9 @@
 | Phase 3 — Event detection | Core pipeline built: centroid fast path (FR-18), UMAP+HDBSCAN slow path (FR-16), closure (FR-17), events API with timeline, abstractive LLM summaries via Ollama | **≈ 90%** |
 | Phase 4 — Temporal RAG / ranking | Not started | **0%** |
 | **Phase 5 — Chat & executive reports** | **FR-19/20 (fast path), FR-21 (deep path), FR-22 (evidence agreement), LLM usage tracking — all complete.** | **✔ COMPLETE** |
-| Phase 6 — Frontend dashboard | Not started (no Next.js app) | **0%** |
+| **Phase 6 — Frontend** | Scaffolded: Next.js 16, 8 pages, design system, SSE chat, events timeline | **≈ 30%** |
 | Phase 7 — Hardening (CI/CD prod, DR, load tests) | CI added; rest not started | **~10%** |
-| **Overall MVP (Phases 1–6)** | Phases 1, 1.5, 2, 5 complete + Phase 3 nearly complete | **≈ 62%** |
+| **Overall MVP (Phases 1–6)** | Phases 1–5 complete + Phase 6 scaffolded | **≈ 75%** |
 
 ---
 
@@ -145,8 +145,8 @@ Intent detection → weights from `ranking_configs`; `freshness = e^(−hours/24
 ### Phase 5 — Agents
 Fast-path chat (one retrieve→generate→cite call, SSE for reports; LangGraph deep path with evidence agreement score (§16/§17); OTel tracing + cost logging from day one.
 
-### Phase 6 — Frontend
-Next.js 14+ App Router per §24; TanStack Query; Recharts; streaming chat + SSE report progress.
+### Phase 6 — Frontend (scaffolded)
+Next.js 16 App Router with Tailwind v4, TanStack Query, Framer Motion. Design system: "The Pulse" — clinical intelligence aesthetic with dark base, aged-gold signal, sage resolved, ice blue navigation. Three-column rail layout with Pulse Line. 8 pages: login, register, search, events, chat, reports. SSE streaming chat with thinking states and evidence citations. Token persisted in localStorage.
 
 ### Phase 7 — Hardening
 CI already runs lint/format/boundaries/migrations/tests; add staging deploy, load tests, backup/DR (RPO 24h/RTO 4h), Grafana alerts, security review.
@@ -206,7 +206,7 @@ Quality gates (all green): `uv run ruff check .` · `uv run ruff format --check 
 
 **Phase 5 — Agents** — [x] fast-path chat (FR-19/20) · [x] deep-path LangGraph-style multi-step reasoning (FR-21) · [x] evidence agreement scoring (FR-22) · [x] SSE progress `thinking` events · [x] LLM token/cost tracking (`llm_usage` table, `GET /api/v1/usage`)
 
-**Phase 6 — Frontend** — [ ] Next.js scaffold · [ ] feed/search/chat/events/reports · [ ] analytics/settings/admin · [ ] FR-23 surfaces
+**Phase 6 — Frontend** — [x] Next.js scaffold · [x] search/events/chat/reports pages · [x] design system · [x] SSE chat · [ ] analytics/settings/admin · [ ] FR-23 surfaces
 
 **Phase 7 — Hardening** — [ ] staging deploy + approval gate · [ ] load tests · [ ] backup/DR · [ ] monitoring/alerting · [ ] security review
 

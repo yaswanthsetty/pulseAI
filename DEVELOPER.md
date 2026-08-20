@@ -516,6 +516,68 @@ CI never downloads the 2.3 GB model.
 secrets, S3-backed storage, real secrets via environment (never commit `.env`),
 and `ENVIRONMENT=production`.
 
+
+## 12. Frontend (Phase 6)
+
+The frontend is a Next.js 16 App Router application in `frontend/`. It provides
+a Kimi-inspired dark UI for searching, browsing events, chatting with the RAG
+pipeline, and generating executive reports.
+
+```bash
+cd frontend
+npm install
+npm run dev    # http://localhost:3000
+```
+
+**Tech stack:** Next.js 16 (Turbopack), TypeScript, Tailwind CSS v4 (`@theme inline`),
+TanStack Query (data fetching + caching).
+
+**Design system:**
+
+| Token | Hex | Role |
+|---|---|---|
+| `background` | `#0f1117` | Dark base |
+| `card` | `#181a20` | Card/panel surfaces |
+| `primary` | `#ff6b35` | Accent / CTA (orange) |
+| `success` | `#22c55e` | Resolved states |
+| `muted` | `#6b7280` | Secondary text |
+
+Fonts: Space Grotesk (display), Inter (body), JetBrains Mono (data).
+
+**Pages:**
+
+| Route | Description |
+|---|---|
+| `/login` | Email/password auth with validation, password toggle, auto-redirect |
+| `/register` | Account creation with name/email/password, auto-login after register |
+| `/search` | Semantic / keyword / hybrid mode selector, result cards with scores |
+| `/events` | Event cards with confidence indicators, skeleton loading |
+| `/chat` | SSE streaming chat, thinking states, evidence citations with `[N]` IDs |
+| `/reports` | Topic input + timeframe selector, report cards with status badges |
+
+**Architecture:**
+
+- `Shell.tsx` — sidebar navigation (logo, "New Chat" button, nav items, sign out)
+  with mobile hamburger menu and overlay
+- `AuthGuard.tsx` — redirects to `/login` if no token in localStorage
+- `Toast.tsx` — global notification system (success / error / info, auto-dismiss)
+- `api.ts` — API client with auth headers, SSE streaming wrapper, 401 handling
+
+**Auth flow:** Token stored in `localStorage` (`pulseai_token`). All API requests
+include `Authorization: Bearer <token>`. Login/register pages redirect to `/search`
+if already authenticated. Sidebar has sign-out button that clears token.
+
+**Environment:** `NEXT_PUBLIC_API_URL=http://127.0.0.1:8090` in `frontend/.env.local`.
+
+**React best practices applied:**
+
+- `useCallback` on all event handlers passed as props
+- `React.memo` on `MessageBubble` to prevent re-rendering all messages per token
+- `useRef` for input values in streaming callbacks (avoids stale closures)
+- Hoisted `Intl.DateTimeFormat` instances (avoids per-render allocation)
+- Ternary conditionals (`? :`) instead of `&&` for conditional rendering
+- Hoisted static data (suggestion queries, color maps) outside components
+
 ## 13. Troubleshooting
 
 | Symptom | Cause / fix |

@@ -1,134 +1,103 @@
 # PulseAI
 
-Real-time AI news intelligence platform — a modular-monolith backend that ingests
-global news streams, de-duplicates and classifies articles, embeds them for
-semantic search, groups duplicate coverage into evolving events, and generates
-abstractive summaries via a local LLM.
+Real-time AI news intelligence platform. Ingests global news, embeds for semantic
+search, clusters into evolving events, and answers questions with cited sources.
 
-> **New here?** Read [`DEVELOPER.md`](DEVELOPER.md) — the living developer
-> documentation (architecture, setup, environment, schema, workflows, testing,
-> deployment, troubleshooting). Keep it updated when you change the code.
+> **Backend docs:** [`DEVELOPER.md`](DEVELOPER.md) — architecture, setup,
+> config, schema, workflows, testing, deployment, troubleshooting.
+> **Frontend docs:** [`frontend/README.md`](frontend/README.md) — design system,
+> pages, architecture.
+
+## What it does
+
+1. **Ingests** — polls RSS feeds, deduplicates (exact + fuzzy), classifies by
+   category/country/language, stores article bodies out-of-line.
+2. **Embeds** — chunks articles into sentence-aligned passages, encodes with
+   BGE-M3 (dense + sparse vectors), stores in Qdrant.
+3. **Searches** — semantic / keyword / hybrid retrieval, cross-encoder reranking,
+   intent-aware temporal ranking with freshness decay.
+4. **Clusters** — fast centroid-match on every new article, scheduled UMAP +
+   HDBSCAN for new stories, automatic closure of stale events.
+5. **Chats** — RAG pipeline with SSE streaming, fast-path (single retrieve →
+   generate → cite) and deep-path (planner → retriever × N → reasoner × N →
+   synthesizer), evidence agreement scoring.
+6. **Reports** — executive intelligence reports with source analysis.
+
+## Quick start
+
+**Docker (all-in-one):**
+
+```bash
+docker compose up --build -d
+docker compose exec api uv run alembic upgrade head
+curl http://localhost:8000/readyz   # → {"status": "ready", ...}
+```
+
+**Local development:**
+
+```bash
+docker compose up -d postgres qdrant redis   # infrastructure
+cp .env.example .env
+uv sync && uv run alembic upgrade head
+
+# Three terminals:
+uv run pulseai-api          # http://localhost:8000 (Swagger at /docs)
+uv run pulseai-scheduler    # per-source polling
+uv run pulseai-worker       # RQ job executor
+```
+
+**Frontend:**
+
+```bash
+cd frontend && npm install && npm run dev   # http://localhost:3000
+```
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | Python 3.14, FastAPI, uvicorn |
+| Database | PostgreSQL 15, Redis 7 + RQ, Qdrant |
+| ML | BGE-M3 embeddings, BGE-reranker, UMAP + HDBSCAN |
+| LLM | Ollama (qwen2.5:3b) for summaries and chat |
+| Frontend | Next.js 16, TypeScript, Tailwind CSS v4 |
+| Auth | bcrypt, PyJWT, Clerk/Auth0 (optional) |
+| CI | GitHub Actions — ruff, import-linter, pytest (80% coverage) |
 
 ## Architecture
 
 ```
- News sources (RSS)                 ┌─────────────────────────────┐
-        │                           │  FastAPI application         │
-        ▼                           │  modules/api (routers)       │
- ┌─────────────┐   enqueue          │  modules/ingestion           │
- │  scheduler  ├──────────────────► │  modules/retrieval           │
- └─────────────┘    poll jobs       │  modules/events              │
-        ▲                           │  modules/auth                │
-        │ retry markers (Redis)     │  modules/ranking  (reserved) │
- ┌─────────────┐                    │  modules/agents   (reserved) │
- │ RQ worker   │ ◄── ingest queue   │  modules/reports  (reserved) │
- └──────┬──────┘                    └────────────┬────────────────┘
-        │                                        │
-        ▼                                        ▼
- PostgreSQL ───────────► object storage ◄─── previews stay inline
- (metadata)             (full article bodies)
+RSS feeds → Scheduler → Worker → PostgreSQL + Qdrant
+                                     ↓
+                              API (FastAPI) ← Frontend (Next.js)
+                                     ↓
+                              Chat (SSE) + Reports (LLM)
 ```
 
-- **Modular monolith**: strictly-bounded modules; `modules/api` is the only top
-  layer; sibling imports are rejected by **import-linter** in CI.
-- **Decoupled processes:** `api` (HTTP), `scheduler` (per-source polling), and
-  `worker` (RQ, executes poll/process/embed/cluster jobs). Backoff retries are
-  driven by Redis TTL markers, so the same code runs on Linux and Windows.
-- **Object storage:** full article bodies live out-of-line (`content_ref`);
-  Postgres keeps metadata + a ~500-char preview.
+**Modular monolith:** strictly-bounded modules under one FastAPI app.
+`modules/api` is the only top layer; sibling imports are rejected by
+import-linter in CI. Three processes share the codebase: `api` (HTTP),
+`scheduler` (polling), `worker` (RQ jobs).
 
-## Tech stack
+## API overview
 
-Python 3.14 · FastAPI · SQLAlchemy 2 + Alembic · PostgreSQL 15 · Redis 7 + RQ ·
-Qdrant (vector store) · BGE-M3 embeddings · BGE-reranker cross-encoder · UMAP +
-HDBSCAN event clustering · Ollama abstractive summaries · BeautifulSoup + feedparser · langdetect · ruff +
-pytest + import-linter.
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/v1/search` | Semantic / keyword / hybrid search |
+| `GET /api/v1/events` | Paginated event feed |
+| `GET /api/v1/events/{id}/timeline` | Articles grouped by day |
+| `POST /api/v1/chat` | RAG chat with SSE streaming |
+| `POST /api/v1/reports/generate` | Executive report generation |
+| `POST /api/v1/auth/login` | JWT authentication |
 
-## Quick start (Docker)
+Full API reference: [`DEVELOPER.md`](#8-api) or interactive docs at `/docs`.
 
-```bash
-docker compose up --build -d        # postgres, qdrant, redis, api, worker, scheduler
-docker compose exec api uv run alembic upgrade head
-curl http://localhost:8000/readyz   # → {"status": "ready", ...}
-curl http://localhost:8000/api/v1/sources
-```
+## Authentication
 
-## Quick start (local development)
-
-Prerequisites: Docker (for Postgres/Qdrant/Redis) and [uv](https://docs.astral.sh/uv/).
-
-```bash
-# 1. Infrastructure (Postgres on :5434, Qdrant on :6333, Redis on :6379)
-docker compose up -d postgres qdrant redis
-
-# 2. Environment
-cp .env.example .env                # adjust if needed
-
-# 3. Dependencies + schema
-uv sync
-uv run alembic upgrade head
-
-# 4. Run the three processes (three terminals)
-uv run pulseai-api                  # http://localhost:8000 (Swagger at /docs)
-uv run pulseai-scheduler            # per-source polling
-uv run pulseai-worker               # RQ job executor
-```
-
-The API seeds three demo RSS sources on startup (`SEED_DEFAULT_SOURCES=true`);
-the scheduler polls them and the worker processes articles end to end
-(dedupe → clean → classify → store → embed → cluster).
-
-## API surface
-
-| Method | Path | Purpose | Auth |
-|---|---|---|---|
-| GET | `/healthz`, `/readyz`, `/health` | liveness / readiness / legacy alias | open |
-| POST | `/api/v1/auth/register` | local account creation (role `user`) | open |
-| POST | `/api/v1/auth/login` | access token + rotating refresh cookie | open |
-| POST | `/api/v1/auth/session` | exchange a Clerk/Auth0 JWT for PulseAI tokens | open |
-| POST | `/api/v1/auth/refresh` | rotate refresh token (old one revoked) | cookie |
-| POST | `/api/v1/auth/logout` | revoke refresh token, clear cookies | cookie |
-| GET | `/api/v1/users/me` | current profile + role | user+ |
-| GET | `/api/v1/users` | list users (admin) | admin |
-| PATCH | `/api/v1/users/{id}/role` | change role (admin; audited) | admin |
-| GET | `/api/v1/api-keys` | list API keys (raw never returned) | user+ |
-| POST | `/api/v1/api-keys` | create API key (raw returned once) | user+ |
-| DELETE | `/api/v1/api-keys/{id}` | revoke API key | user+ |
-| GET | `/api/v1/sources` | list sources with health | user+ |
-| POST | `/api/v1/sources` | add source (feed validated first) | admin |
-| PATCH | `/api/v1/sources/{id}` | update credibility / interval / status | admin |
-| POST | `/api/v1/sources/{id}/poll` | queue an immediate poll | admin |
-| GET | `/api/v1/articles` | list/filter articles (date, source, category, …) | open |
-| GET | `/api/v1/articles/{id}` | article detail | open |
-| POST | `/api/v1/search` | semantic/keyword/hybrid search (BGE-M3 dense+sparse, reranked, deduped by article) | open (rate-limited) |
-| GET | `/api/v1/events` | paginated events with date/category/confidence filters | open |
-| GET | `/api/v1/events/{id}` | event detail + article timeline | open |
-| GET | `/api/v1/events/{id}/timeline` | articles grouped by day — per-day headline + keywords | open |
-
-Auth column = `require_role` minimum for the route (`user < analyst < admin`;
-guests are unauthenticated). All errors use the envelope
-`{"error": {"code", "message", "request_id"}}`; all lists use
-`{items, page, page_size, total}`.
-
-## Authentication & RBAC
-
-- **Managed provider or local:** `AUTH_PROVIDER=none` enables local
-  register/login (HS256 JWTs, bcrypt passwords). `AUTH_PROVIDER=clerk|auth0`
-  verifies the provider's RS256 JWT against its JWKS and syncs the identity
-  into the `users` table — provider JWTs work directly on any endpoint, and
-  `POST /auth/session` exchanges one for PulseAI tokens.
-- **Tokens:** access JWTs last 15 min; refresh tokens last 30 days, are stored
-  hashed, rotate on every use (old token revoked), and travel only as
-  `HttpOnly; Secure; SameSite=Lax` cookies.
-- **API keys:** `pls_`-prefixed, scoped (`read`/`chat`/`reports`), hashed at
-  rest, revocable, and returned to the client exactly once.
-- **RBAC:** `require_role(min_role)` enforces the role matrix per route (source
-  management = admin, source listing = user+, browsing/search = guests) and is
-  integration-tested for every endpoint × role.
-- **Security controls:** Redis sliding-window rate limiting (30/min anonymous
-  per IP, 120/min authenticated; fail-open), double-submit CSRF for
-  cookie-authenticated mutations, SSRF protection on all outbound fetches, and
-  audit-log events for every auth action.
+- **Local:** register/login with bcrypt passwords, HS256 JWTs.
+- **Managed:** Clerk or Auth0 via RS256 JWT verification.
+- **API keys:** `pls_`-prefixed, scoped (`read`/`chat`/`reports`).
+- **RBAC:** `user < analyst < admin` — enforced per route, integration-tested.
 
 ## Quality gates
 
@@ -136,13 +105,10 @@ guests are unauthenticated). All errors use the envelope
 uv run ruff check .        # lint
 uv run ruff format .       # format
 uv run lint-imports        # module boundaries
-uv run pytest              # unit + integration tests (need docker infra up)
+uv run pytest              # 305 tests (need docker infra up)
 ```
-
-CI (GitHub Actions) runs all four gates plus `alembic upgrade head` on a fresh
-database and a pytest coverage floor of 80%.
 
 ## Project status
 
-See [`PROJECT_STATUS_AND_ROADMAP.md`](PROJECT_STATUS_AND_ROADMAP.md) for the
-completion status, the spec-by-spec checklist, and what is planned next.
+See [`PROJECT_STATUS_AND_ROADMAP.md`](PROJECT_STATUS_AND_ROADMAP.md) for
+completion status and roadmap.

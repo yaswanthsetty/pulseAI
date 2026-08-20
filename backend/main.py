@@ -14,6 +14,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -94,6 +95,12 @@ app = FastAPI(
 )
 
 # Double-submit CSRF protection for cookie-authenticated mutations (§23).
+app.add_middleware(CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(CSRFMiddleware)
 
 app.include_router(health_router)

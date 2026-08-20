@@ -136,6 +136,7 @@ temp/
 *.backup
 tempdocs/
 .freebuff/
+AGENTS.md
 
 # ===== Local object storage (article bodies) =====
 storage/
