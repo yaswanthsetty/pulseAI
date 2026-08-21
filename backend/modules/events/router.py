@@ -40,6 +40,7 @@ def list_events(
     min_confidence: float | None = Query(default=None, ge=0, le=1),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
+    q: str | None = Query(default=None, description="Keyword search in title/summary"),
     db: Session = Depends(get_db),
 ):
     """Paginated event list with optional filters (spec §20)."""
@@ -50,6 +51,11 @@ def list_events(
         statement = statement.where(Event.last_updated <= date_to)
     if min_confidence is not None:
         statement = statement.where(Event.confidence >= min_confidence)
+    if q:
+        pattern = f"%{q.lower()}%"
+        statement = statement.where(
+            Event.title.ilike(pattern) | Event.summary.ilike(pattern)
+        )
     if category_code is not None:
         statement = statement.join(EventArticle, EventArticle.event_id == Event.id).join(
             Article, Article.id == EventArticle.article_id
