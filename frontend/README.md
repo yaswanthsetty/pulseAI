@@ -1,91 +1,83 @@
 # PulseAI Frontend
 
-Dark, Kimi-inspired interface for the PulseAI news intelligence platform.
-Browse events, search articles, chat with cited sources, and generate reports.
+Next.js 16 application with a Kimi-inspired dark UI for the PulseAI intelligence platform.
 
-## Quick start
+## What you can do
 
-```bash
-# Prerequisites: Node.js 18+, backend running on port 8090
-npm install
-npm run dev        # http://localhost:3000
-```
-
-## What it does
-
-| Page | What you can do |
+| Page | What it does |
 |---|---|
-| **Login / Register** | Create account or sign in. Password toggle, form validation, auto-redirect if already authenticated. |
-| **Search** | Find articles using semantic, keyword, or hybrid search. Results show scores, sources, and dates. |
-| **Events** | Browse clustered news events. Confidence indicators, article counts, skeleton loading. |
-| **Chat** | Ask questions, get answers with cited sources. SSE streaming shows tokens as they generate. Thinking stages visible during deep-path reasoning. |
-| **Reports** | Generate executive intelligence reports on any topic. Choose timeframe, track status. |
+| `/login` | Sign in with email/password, password visibility toggle, form validation |
+| `/register` | Create account, auto-login after registration |
+| `/search` | Semantic, keyword, or hybrid search with mode and intent selectors |
+| `/events` | Browse clustered news events, click for timeline with day-grouped articles |
+| `/chat` | Ask questions about your news corpus, get streaming cited answers |
+| `/reports` | Generate executive intelligence reports on any topic |
+| `/admin` | Manage users and their roles (admin only) |
+| `/settings` | Create and revoke API keys |
 
 ## Tech stack
 
-| Concern | Choice |
-|---|---|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 (`@theme inline`) |
-| Data | TanStack Query v5 |
-| Auth | JWT in `localStorage`, Bearer token on all requests |
+- **Next.js 16** (App Router, Turbopack)
+- **React 19** with TypeScript
+- **Tailwind CSS v4** (CSS-first configuration)
+- **TanStack Query** for data fetching and caching
+- **cmdk** for command palette (Cmd+K)
 
-## Design system
+## Setup
 
-Dark palette with warm orange accent:
-
-| Token | Hex | Role |
-|---|---|---|
-| `background` | `#0f1117` | Page background |
-| `card` | `#181a20` | Card and panel surfaces |
-| `primary` | `#ff6b35` | Buttons, active states, accent |
-| `success` | `#22c55e` | Resolved, completed |
-| `muted` | `#6b7280` | Secondary text |
-
-**Fonts:** Space Grotesk (headings), Inter (body), JetBrains Mono (data).
-
-## Architecture
-
-```
-src/
-├── app/                    # Pages (login, register, search, events, chat, reports)
-├── components/
-│   ├── layout/Shell.tsx    # Sidebar navigation + mobile hamburger
-│   ├── ui/Toast.tsx        # Global notifications
-│   ├── AuthGuard.tsx       # Protected route wrapper
-│   └── providers.tsx       # TanStack Query + Toast providers
-└── lib/
-    ├── api.ts              # API client (auth, search, events, chat, reports)
-    └── utils.ts            # cn() class merger, logout helper
+```bash
+npm install
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_URL
+npm run dev
 ```
 
-## Key features
+Open [http://localhost:3000](http://localhost:3000).
 
-- **Auth:** Login/register with validation. Token in localStorage. AuthGuard
-  redirects unauthenticated users. Sign-out in sidebar.
-- **Mobile:** Sidebar slides in with overlay on small screens. Hamburger menu.
-- **Chat streaming:** `fetch` + `ReadableStream` consumes SSE via POST. Token-by-
-  token display with blinking cursor. Thinking stages as animated dots.
-- **Toasts:** `useToast()` hook. Auto-dismiss after 4 seconds.
-
-## Environment
+## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
 | `NEXT_PUBLIC_API_URL` | `http://127.0.0.1:8090` | Backend API URL |
 
-## Lint and build
+## Architecture
 
-```bash
-npm run lint       # ESLint
-npm run build      # Production build
+```
+src/
+├── app/                    # Pages (Next.js App Router)
+│   ├── login/page.tsx      # Authentication
+│   ├── register/page.tsx   # Account creation
+│   ├── search/page.tsx     # Article search
+│   ├── events/page.tsx     # Event browser + detail
+│   ├── chat/page.tsx       # LLM chat with streaming
+│   ├── reports/page.tsx    # Report generation
+│   ├── admin/page.tsx      # User management
+│   └── settings/page.tsx   # API key management
+├── components/
+│   ├── layout/
+│   │   ├── Shell.tsx           # Sidebar + mobile nav
+│   │   └── CommandPalette.tsx  # Cmd+K navigation
+│   ├── AuthGuard.tsx       # Protected route wrapper
+│   ├── ErrorBoundary.tsx   # Error catching
+│   ├── providers.tsx       # Query client + toast provider
+│   └── ui/Toast.tsx        # Toast notifications
+└── lib/
+    ├── api.ts              # Backend API client
+    └── utils.ts            # cn() helper, logout
 ```
 
-## React best practices
+## Key features
 
-- `useCallback` on event handlers passed as props
-- `React.memo` on `MessageBubble` (avoids re-rendering all messages per token)
-- `useRef` for input in streaming callbacks (avoids stale closures)
-- Hoisted `Intl.DateTimeFormat` (avoids per-render allocation)
-- Ternary conditionals (`? :`) instead of `&&`
+- **Auth**: JWT-based login, protected routes via AuthGuard, 401 auto-redirect
+- **Mobile**: Hamburger menu sidebar on small screens
+- **Chat**: Server-Sent Events streaming, thinking indicators, evidence citations
+- **Events**: Split-panel layout — event list with search, detail with timeline
+- **Command palette**: Press Cmd+K (or Ctrl+K) to navigate anywhere
+- **Toast notifications**: Success/error feedback on actions
+- **Error boundary**: Catches rendering errors, shows reload option
+
+## Build
+
+```bash
+npm run build    # Production build (10 routes)
+npm run lint     # ESLint
+```

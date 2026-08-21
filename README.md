@@ -1,114 +1,119 @@
 # PulseAI
 
-Real-time AI news intelligence platform. Ingests global news, embeds for semantic
-search, clusters into evolving events, and answers questions with cited sources.
-
-> **Backend docs:** [`DEVELOPER.md`](DEVELOPER.md) — architecture, setup,
-> config, schema, workflows, testing, deployment, troubleshooting.
-> **Frontend docs:** [`frontend/README.md`](frontend/README.md) — design system,
-> pages, architecture.
+Real-time AI news intelligence platform. Ingests global news streams, deduplicates and classifies articles, embeds them for semantic search, groups coverage into evolving events, and generates summaries via a local LLM.
 
 ## What it does
 
-1. **Ingests** — polls RSS feeds, deduplicates (exact + fuzzy), classifies by
-   category/country/language, stores article bodies out-of-line.
-2. **Embeds** — chunks articles into sentence-aligned passages, encodes with
-   BGE-M3 (dense + sparse vectors), stores in Qdrant.
-3. **Searches** — semantic / keyword / hybrid retrieval, cross-encoder reranking,
-   intent-aware temporal ranking with freshness decay.
-4. **Clusters** — fast centroid-match on every new article, scheduled UMAP +
-   HDBSCAN for new stories, automatic closure of stale events.
-5. **Chats** — RAG pipeline with SSE streaming, fast-path (single retrieve →
-   generate → cite) and deep-path (planner → retriever × N → reasoner × N →
-   synthesizer), evidence agreement scoring.
-6. **Reports** — executive intelligence reports with source analysis.
-
-## Quick start
-
-**Docker (all-in-one):**
-
-```bash
-docker compose up --build -d
-docker compose exec api uv run alembic upgrade head
-curl http://localhost:8000/readyz   # → {"status": "ready", ...}
-```
-
-**Local development:**
-
-```bash
-docker compose up -d postgres qdrant redis   # infrastructure
-cp .env.example .env
-uv sync && uv run alembic upgrade head
-
-# Three terminals:
-uv run pulseai-api          # http://localhost:8000 (Swagger at /docs)
-uv run pulseai-scheduler    # per-source polling
-uv run pulseai-worker       # RQ job executor
-```
-
-**Frontend:**
-
-```bash
-cd frontend && npm install && npm run dev   # http://localhost:3000
-```
+1. **Ingests** news from RSS feeds on a configurable schedule
+2. **Deduplicates** articles by URL and fuzzy title matching
+3. **Classifies** articles by language and category
+4. **Embeds** article chunks for semantic search (BGE-M3 dense + sparse)
+5. **Searches** across all articles (semantic, keyword, or hybrid mode)
+6. **Clusters** articles into events — groups of stories about the same topic
+7. **Ranks** results by intent (recency, relevance, or historical)
+8. **Chats** with your corpus — ask questions, get cited answers via LLM
+9. **Generates reports** — executive intelligence summaries on any topic
 
 ## Tech stack
 
 | Layer | Technology |
 |---|---|
-| Runtime | Python 3.14, FastAPI, uvicorn |
-| Database | PostgreSQL 15, Redis 7 + RQ, Qdrant |
-| ML | BGE-M3 embeddings, BGE-reranker, UMAP + HDBSCAN |
-| LLM | Ollama (qwen2.5:3b) for summaries and chat |
-| Frontend | Next.js 16, TypeScript, Tailwind CSS v4 |
-| Auth | bcrypt, PyJWT, Clerk/Auth0 (optional) |
-| CI | GitHub Actions — ruff, import-linter, pytest (80% coverage) |
+| Backend | Python 3.14, FastAPI, SQLAlchemy 2, Alembic |
+| Database | PostgreSQL 15, Redis 7 (RQ queues), Qdrant (vectors) |
+| Embeddings | BGE-M3 (dense + sparse), BGE-reranker (cross-encoder) |
+| Clustering | UMAP + HDBSCAN (event detection) |
+| LLM | Ollama (Qwen 2.5:3b for chat and summaries) |
+| Frontend | Next.js 16, React 19, Tailwind CSS v4, TanStack Query |
+| Auth | JWT + refresh tokens, API keys, RBAC (user/analyst/admin) |
+| CI | GitHub Actions — ruff, import-linter, pytest |
+
+## Quick start
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) (for Postgres, Qdrant, Redis)
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- [Node.js](https://nodejs.org/) 18+ (for frontend)
+- [Ollama](https://ollama.ai/) (for LLM chat and summaries)
+
+### 1. Start infrastructure
+
+```bash
+docker compose up -d postgres qdrant redis
+```
+
+### 2. Set up backend
+
+```bash
+cp .env.example .env
+uv sync
+uv run alembic upgrade head
+uv run uvicorn backend.main:app --host 127.0.0.1 --port 8090
+```
+
+### 3. Seed articles and create events
+
+```bash
+uv run pulseai-backfill-embeddings
+uv run pulseai-backfill-clusters
+```
+
+### 4. Start frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and register an account.
+
+### 5. Start Ollama (for chat)
+
+```bash
+ollama serve
+```
 
 ## Architecture
 
 ```
-RSS feeds → Scheduler → Worker → PostgreSQL + Qdrant
-                                     ↓
-                              API (FastAPI) ← Frontend (Next.js)
-                                     ↓
-                              Chat (SSE) + Reports (LLM)
+RSS Feeds ──► Scheduler ──► Worker ──► PostgreSQL + Qdrant
+                                      │
+FastAPI API ◄─────────────────────────┘
+     │
+     ├── /search    (semantic/keyword/hybrid)
+     ├── /events    (clustered stories + timeline)
+     ├── /chat      (SSE streaming with citations)
+     ├── /reports   (executive summaries)
+     └── /admin     (user/role management)
+
+Next.js Frontend ──► FastAPI API
 ```
 
-**Modular monolith:** strictly-bounded modules under one FastAPI app.
-`modules/api` is the only top layer; sibling imports are rejected by
-import-linter in CI. Three processes share the codebase: `api` (HTTP),
-`scheduler` (polling), `worker` (RQ jobs).
+The backend is a **modular monolith** — each concern lives in its own module under `backend/modules/`, and import-linter enforces that modules don't import each other. The frontend is a standalone Next.js app that talks to the backend API.
 
 ## API overview
 
-| Endpoint | Purpose |
-|---|---|
-| `POST /api/v1/search` | Semantic / keyword / hybrid search |
-| `GET /api/v1/events` | Paginated event feed |
-| `GET /api/v1/events/{id}/timeline` | Articles grouped by day |
-| `POST /api/v1/chat` | RAG chat with SSE streaming |
-| `POST /api/v1/reports/generate` | Executive report generation |
-| `POST /api/v1/auth/login` | JWT authentication |
+| Endpoint | Purpose | Auth |
+|---|---|---|
+| `POST /api/v1/auth/register` | Create account | open |
+| `POST /api/v1/auth/login` | Get access token | open |
+| `POST /api/v1/search` | Search articles | open |
+| `GET /api/v1/events` | List events | open |
+| `GET /api/v1/events/{id}` | Event detail + timeline | open |
+| `POST /api/v1/chat` | Chat with corpus (SSE) | user |
+| `POST /api/v1/reports/generate` | Generate report | analyst |
+| `GET /api/v1/users` | List users | admin |
+| `POST /api/v1/events/merge` | Merge events | admin |
 
-Full API reference: [`DEVELOPER.md`](#8-api) or interactive docs at `/docs`.
+Full API docs at [http://localhost:8090/docs](http://localhost:8090/docs) when the backend is running.
 
-## Authentication
+## Documentation
 
-- **Local:** register/login with bcrypt passwords, HS256 JWTs.
-- **Managed:** Clerk or Auth0 via RS256 JWT verification.
-- **API keys:** `pls_`-prefixed, scoped (`read`/`chat`/`reports`).
-- **RBAC:** `user < analyst < admin` — enforced per route, integration-tested.
+- [`DEVELOPER.md`](DEVELOPER.md) — Full developer reference (architecture, setup, config, schema, workflows, testing)
+- [`PROJECT_STATUS_AND_ROADMAP.md`](PROJECT_STATUS_AND_ROADMAP.md) — Completion status and what's next
+- [`frontend/README.md`](frontend/README.md) — Frontend architecture and features
 
-## Quality gates
+## License
 
-```bash
-uv run ruff check .        # lint
-uv run ruff format .       # format
-uv run lint-imports        # module boundaries
-uv run pytest              # 305 tests (need docker infra up)
-```
-
-## Project status
-
-See [`PROJECT_STATUS_AND_ROADMAP.md`](PROJECT_STATUS_AND_ROADMAP.md) for
-completion status and roadmap.
+Private project.
