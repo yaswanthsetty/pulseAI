@@ -468,8 +468,8 @@ def check_notification_rules(db: Session, event: Event) -> int:
 
     Returns the number of matching rules.
     """
-    from backend.db.models import NotificationRule
     from backend.core.audit import write_audit
+    from backend.db.models import NotificationRule
 
     rules = list(
         db.execute(
@@ -489,6 +489,7 @@ def check_notification_rules(db: Session, event: Event) -> int:
         if rule.category_code:
             # Check if event has any articles in this category
             from backend.db.models import Article, EventArticle
+
             cat_match = db.execute(
                 select(EventArticle)
                 .join(Article, Article.id == EventArticle.article_id)

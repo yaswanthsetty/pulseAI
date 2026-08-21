@@ -53,9 +53,7 @@ def list_events(
         statement = statement.where(Event.confidence >= min_confidence)
     if q:
         pattern = f"%{q.lower()}%"
-        statement = statement.where(
-            Event.title.ilike(pattern) | Event.summary.ilike(pattern)
-        )
+        statement = statement.where(Event.title.ilike(pattern) | Event.summary.ilike(pattern))
     if category_code is not None:
         statement = statement.join(EventArticle, EventArticle.event_id == Event.id).join(
             Article, Article.id == EventArticle.article_id
@@ -322,7 +320,7 @@ class MergeEventsRequest(BaseModel):
 def merge_events(
     payload: MergeEventsRequest,
     db: Session = Depends(get_db),
-    _admin: "User" = Depends(require_role("admin")),
+    _admin: User = Depends(require_role("admin")),
 ):
     """Merge source event into target: move all articles, close source.
 
@@ -337,9 +335,9 @@ def merge_events(
         raise HTTPException(status_code=400, detail="Cannot merge event into itself")
 
     # Move all articles from source to target
-    links = db.execute(
-        select(EventArticle).where(EventArticle.event_id == source.id)
-    ).scalars().all()
+    links = (
+        db.execute(select(EventArticle).where(EventArticle.event_id == source.id)).scalars().all()
+    )
     moved = 0
     for link in links:
         # Check if target already has this article
