@@ -453,3 +453,67 @@ def close_stale_events(
     if events:
         logger.info("closed %d stale event(s) (no activity for %dh)", len(events), hours)
     return len(events)
+
+
+# ---------------------------------------------------------------------------
+# Notifications (Phase 3 completion): check notification_rules on new events
+# ---------------------------------------------------------------------------
+
+
+def check_notification_rules(db: Session, event: Event) -> int:
+    """Check active notification rules against a new event.
+
+    Logs matching rules to audit_log. Real email/in_app delivery is
+    handled by a separate worker (not implemented yet).
+
+    Returns the number of matching rules.
+    """
+    from backend.db.models import NotificationRule
+    from backend.core.audit import write_audit
+
+    rules = list(
+        db.execute(
+            select(NotificationRule).where(NotificationRule.is_active == True)  # noqa: E712
+        ).scalars()
+    )
+    matched = 0
+    for rule in rules:
+        # Check keyword/topic match
+        keyword_match = True
+        if rule.keyword_or_topic:
+            kw = rule.keyword_or_topic.lower()
+            keyword_match = kw in (event.title or "").lower() or kw in (event.summary or "").lower()
+
+        # Check category match
+        category_match = True
+        if rule.category_code:
+            # Check if event has any articles in this category
+            from backend.db.models import Article, EventArticle
+            cat_match = db.execute(
+                select(EventArticle)
+                .join(Article, Article.id == EventArticle.article_id)
+                .where(
+                    EventArticle.event_id == event.id,
+                    Article.category_code == rule.category_code,
+                )
+                .limit(1)
+            ).scalar_one_or_none()
+            category_match = cat_match is not None
+
+        if keyword_match and category_match:
+            matched += 1
+            write_audit(
+                db,
+                "notification_triggered",
+                user_id=str(rule.user_id),
+                target_type="event",
+                target_id=str(event.id),
+                metadata={
+                    "rule_id": str(rule.id),
+                    "channel": rule.channel,
+                    "event_title": event.title,
+                },
+            )
+    if matched:
+        logger.info("notification rules matched: %d for event %s", matched, event.id)
+    return matched

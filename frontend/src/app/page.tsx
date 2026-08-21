@@ -1,2 +1,8 @@
-import { redirect } from "next/navigation";
-export default function Home() { redirect("/search"); }
+"use client";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+export default function Home() {
+  const router = useRouter();
+  useEffect(() => { router.replace("/search"); }, [router]);
+  return null;
+}

@@ -1,40 +1,38 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
 import { Providers } from "@/components/providers";
+import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
   variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const inter = Inter({
-  subsets: ["latin"],
   variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
   variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "PulseAI — Real-time News Intelligence",
-  description:
-    "Real-time news intelligence platform with semantic search, event clustering, and AI-powered analysis.",
+  title: "PulseAI — Intelligence Engine",
+  description: "Real-time news intelligence: search, track, and understand stories as they evolve.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="min-h-full bg-void text-body antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

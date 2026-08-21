@@ -13,11 +13,13 @@ from collections import Counter, defaultdict
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
-from backend.db.models import Article, Event, EventArticle, Source
+from backend.db.models import Article, Event, EventArticle, Source, User
+from backend.modules.auth.deps import require_role
 from backend.modules.events.schemas import (
     EventDayEntry,
     EventDetail,
@@ -298,3 +300,68 @@ def _to_list_item(event: Event) -> EventListItem:
         created_at=event.created_at,
         last_updated=event.last_updated,
     )
+
+
+# ---------------------------------------------------------------------------
+# Admin: event merge (Phase 3 completion)
+# ---------------------------------------------------------------------------
+
+
+class MergeEventsRequest(BaseModel):
+    source_event_id: uuid.UUID
+    target_event_id: uuid.UUID
+
+
+@router.post("/events/merge")
+def merge_events(
+    payload: MergeEventsRequest,
+    db: Session = Depends(get_db),
+    _admin: "User" = Depends(require_role("admin")),
+):
+    """Merge source event into target: move all articles, close source.
+
+    Admin-only. Both events must exist and be open.
+    """
+
+    source = db.get(Event, payload.source_event_id)
+    target = db.get(Event, payload.target_event_id)
+    if source is None or target is None:
+        raise HTTPException(status_code=404, detail="event not found")
+    if source.id == target.id:
+        raise HTTPException(status_code=400, detail="Cannot merge event into itself")
+
+    # Move all articles from source to target
+    links = db.execute(
+        select(EventArticle).where(EventArticle.event_id == source.id)
+    ).scalars().all()
+    moved = 0
+    for link in links:
+        # Check if target already has this article
+        exists = db.execute(
+            select(EventArticle).where(
+                EventArticle.event_id == target.id,
+                EventArticle.article_id == link.article_id,
+            )
+        ).scalar_one_or_none()
+        if exists is None:
+            link.event_id = target.id
+            moved += 1
+        else:
+            db.delete(link)
+
+    # Update target article count
+    target.article_count = db.execute(
+        select(func.count()).select_from(
+            select(EventArticle).where(EventArticle.event_id == target.id).subquery()
+        )
+    ).scalar_one()
+
+    # Close source
+    source.status = "merged"
+    db.commit()
+
+    return {
+        "source_event_id": str(source.id),
+        "target_event_id": str(target.id),
+        "articles_moved": moved,
+    }

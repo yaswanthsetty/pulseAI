@@ -21,7 +21,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <span className="text-xs text-muted">Loading\u2026</span>
+          <span className="text-xs text-muted">Loading…</span>
         </div>
       </div>
     );
