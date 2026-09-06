@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CommandPalette } from "@/components/layout/CommandPalette";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -32,8 +34,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full bg-void text-body antialiased">
-        <Providers>{children}</Providers>
+      <body className="min-h-full bg-background text-foreground antialiased">
+        <ErrorBoundary>
+          <Providers>
+            {children}
+            <CommandPalette />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

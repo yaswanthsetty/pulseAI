@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { chatStream, fetchConversations, type ChatEvent, type EvidenceItem, type Conversation } from "@/lib/api";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { chatStream, fetchConversations, type EvidenceItem, type Conversation } from "@/lib/api";
 import { Shell } from "@/components/layout/Shell";
 import { getAccessToken } from "@/lib/api";
 
@@ -22,7 +22,7 @@ function EvidencePanel({ evidence }: { evidence: EvidenceItem[] }) {
       <div className="space-y-1.5">
         {evidence.map((item) => (
           <div key={item.citation_id} className="flex items-start gap-2 text-xs">
-            <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-lg bg-primary/10 text-[10px] font-mono text-primary">
+            <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-lg bg-primary/10 text-[10px] font-mono text-primary">
               {item.citation_id}
             </span>
             <div className="min-w-0">
@@ -147,7 +147,7 @@ export default function ChatPage() {
     <Shell>
       <div className="flex h-full">
         {/* Conversation history sidebar */}
-        <div className="hidden md:flex w-56 flex-shrink-0 border-r border-border/40 flex-col">
+        <div className="hidden md:flex w-56 shrink-0 border-r border-border/40 flex-col">
           <div className="px-3 py-3 border-b border-border/40">
             <span className="text-[11px] font-mono text-muted uppercase tracking-wider">History</span>
           </div>
@@ -180,7 +180,7 @@ export default function ChatPage() {
                 </div>
               </div>
             ) : (
-              <div className="max-w-3xl mx-auto">
+              <div className="max-w-3xl mx-auto" aria-live="polite" aria-relevant="additions text">
                 {messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
               </div>
             )}

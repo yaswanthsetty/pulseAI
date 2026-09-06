@@ -94,7 +94,7 @@ export default function SearchPage() {
         </div>
 
         {mutation.isError && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-sm text-destructive">
+          <div role="alert" className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-sm text-destructive">
             {mutation.error.message}
           </div>
         )}
@@ -102,7 +102,9 @@ export default function SearchPage() {
         {hasSearched && !mutation.isPending && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-mono text-muted">{results.length} result{results.length !== 1 ? "s" : ""}</span>
+              <span className="text-xs font-mono text-muted" role="status" aria-live="polite">
+                {results.length} result{results.length !== 1 ? "s" : ""}
+              </span>
             </div>
             {results.length === 0 ? (
               <div className="text-center py-12">
@@ -114,7 +116,7 @@ export default function SearchPage() {
                 {results.map((result, idx) => (
                   <div key={result.article_id} className="group p-4 bg-card border border-border/40 rounded-xl hover:border-primary/20 transition-colors">
                     <div className="flex items-start gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg bg-secondary text-[11px] font-mono text-muted group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                      <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg bg-secondary text-[11px] font-mono text-muted group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                         {idx + 1}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -142,7 +144,7 @@ export default function SearchPage() {
               </svg>
             </div>
             <p className="text-sm text-muted">Type a query to search articles</p>
-            <p className="text-xs text-muted/60 mt-1 font-mono">Try: "AI funding trends" or "climate change policy"</p>
+            <p className="text-xs text-muted/60 mt-1 font-mono">Try: &quot;AI funding trends&quot; or &quot;climate change policy&quot;</p>
           </div>
         )}
       </div>
