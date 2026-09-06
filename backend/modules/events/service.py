@@ -331,6 +331,12 @@ def _event_from_cluster(
         event.article_count,
         event.confidence,
     )
+    # Phase 3 completion: evaluate notification rules against the new event
+    # (after commit so a failed audit write can never roll the event back).
+    try:
+        check_notification_rules(db, event)
+    except Exception:  # noqa: BLE001 - notifications must not break clustering
+        logger.exception("notification rule check failed for event %s", event.id)
     return event
 
 

@@ -173,8 +173,21 @@ class TestBlendScores:
         now = datetime(2026, 8, 19, tzinfo=UTC)
         items = [_make_result(sim=0.5, published_days_ago=3) for _ in range(3)]
         results = blend_scores(items, w_sim=2, w_fresh=4, w_cred=3, w_event=1, now=now)
-        for r_result, _payload in results:
-            assert 0.0 <= r_result.similarity_score <= 1.0
+        for r, _payload in results:
+            assert 0.0 <= r.similarity_score <= 1.0
+
+    def test_returns_result_payload_tuples(self):
+        """Caller contract: retrieval.service unpacks (result, payload) pairs."""
+        items = [
+            _make_result(sim=0.5, published_days_ago=3),
+            _make_result(sim=0.9, published_days_ago=9),
+        ]
+        results = blend_scores(items, w_sim=0.55, w_fresh=0.2, w_cred=0.15, w_event=0.1)
+        for entry in results:
+            result, payload = entry
+            assert isinstance(result, SearchResult)
+            assert isinstance(payload, dict)
+            assert "credibility_score" in payload
 
     def test_empty_candidates(self):
         results = blend_scores([])
@@ -184,3 +197,7 @@ class TestBlendScores:
         items = [_make_result(sim=0.8)]
         results = blend_scores(items, w_sim=0, w_fresh=0, w_cred=0, w_event=0)
         assert len(results) == 1
+        # Degenerate weights must keep the same (result, payload) shape.
+        result, payload = results[0]
+        assert result.similarity_score == 0.8
+        assert isinstance(payload, dict)

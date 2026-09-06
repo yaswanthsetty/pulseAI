@@ -127,27 +127,28 @@ def blend_scores(
     w_event: float = 0.10,
     now: datetime | None = None,
     half_life_days: float = 7.0,
-) -> list[SearchResult]:
+) -> list[tuple[SearchResult, dict]]:
     """Re-rank candidates using a weighted blend of similarity, freshness,
     credibility, and event membership.
 
     Each weight corresponds to a column in ``ranking_configs``.  The
     function normalizes the weights to sum to 1.0 if they don't already.
 
-    Returns the candidates sorted by blended score (descending) with
-    ``similarity_score`` updated to the blended score so the API response
-    reflects the temporal ranking.
+    Returns the ``(result, payload)`` candidates sorted by blended score
+    (descending) with ``result.similarity_score`` updated to the blended
+    score so the API response reflects the temporal ranking.  The tuple
+    shape matches the caller's candidate list (retrieval.service.search).
     """
     total = w_sim + w_fresh + w_cred + w_event
     if total <= 0:
-        return candidates
+        return list(candidates)
 
     w_sim /= total
     w_fresh /= total
     w_cred /= total
     w_event /= total
 
-    scored: list[tuple[SearchResult, dict, float]] = []
+    scored: list[tuple[SearchResult, float, dict]] = []
     for result, payload in candidates:
         sim = result.similarity_score  # raw cosine or reranker score [0, 1]
         fresh = compute_freshness_score(result.published_at, now=now, half_life_days=half_life_days)
@@ -155,12 +156,12 @@ def blend_scores(
         evt = compute_event_signal(payload.get("event_id"))
 
         blended = w_sim * sim + w_fresh * fresh + w_cred * cred + w_event * evt
-        scored.append((result, payload, blended))
+        scored.append((result, blended, payload))
 
-    scored.sort(key=lambda t: t[2], reverse=True)
+    scored.sort(key=lambda t: t[1], reverse=True)
 
-    results: list[tuple[SearchResult, dict]] = []
-    for result, payload, score in scored:
-        result.similarity_score = round(score, 4)
-        results.append((result, payload))
-    return results
+    return [
+        (result, payload)
+        for result, blended, payload in scored
+        if setattr(result, "similarity_score", round(blended, 4)) is None
+    ]

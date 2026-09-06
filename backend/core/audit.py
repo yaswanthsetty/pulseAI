@@ -29,7 +29,10 @@ def write_audit(
                 target_type=target_type,
                 target_id=target_id,
                 ip_address=ip_address,
-                metadata=metadata,
+                # The Declarative attribute is ``metadata_`` (column "metadata");
+                # passing ``metadata=`` would silently shadow Base.metadata and
+                # the JSONB column would be written as NULL.
+                metadata_=metadata,
             )
         )
         db.commit()

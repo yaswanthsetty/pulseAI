@@ -38,9 +38,9 @@ def list_events(
     date_to: datetime | None = None,
     category_code: str | None = None,
     min_confidence: float | None = Query(default=None, ge=0, le=1),
+    q: str | None = Query(default=None, description="Keyword search in title/summary"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    q: str | None = Query(default=None, description="Keyword search in title/summary"),
     db: Session = Depends(get_db),
 ):
     """Paginated event list with optional filters (spec §20)."""

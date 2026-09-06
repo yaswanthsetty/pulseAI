@@ -9,6 +9,9 @@
 
 [importlinter]
 root_package = backend
+# Type-only imports (under ``if TYPE_CHECKING``) never couple modules at
+# runtime, so they are excluded rather than ignored contract by contract.
+exclude_type_checking_imports = true
 
 [importlinter:contract:1]
 name = API is the top layer (nothing imports modules.api)
@@ -42,14 +45,15 @@ ignore_imports =
     backend.core.queue -> backend.modules.ingestion.jobs
     backend.core.queue -> backend.modules.retrieval.jobs
     backend.core.queue -> backend.modules.events.jobs
-    
-    # agents router acts as an integration layer across modules
-    backend.modules.agents.router -> backend.modules.retrieval.service
-    backend.modules.agents.service -> backend.modules.retrieval.schemas
-
-    # ranking integrations
+    # FR-14/15: retrieval composes the ranking module's pure scoring functions
+    # (ranking stays retrieval-agnostic — it accepts generic candidates).
     backend.modules.retrieval.service -> backend.modules.ranking.service
-    backend.modules.ranking.service -> backend.modules.retrieval.schemas
+    # agents/router.py is the integration layer (spec §8): it fetches retrieval
+    # context and injects it into the pure agents service. agents/service.py
+    # itself only type-imports SearchResult (covered by
+    # exclude_type_checking_imports above).
+    backend.modules.agents.router -> backend.modules.retrieval.service
+
 [importlinter:contract:3]
 name = Auth is shared infrastructure (only API and business modules import it)
 type = protected
