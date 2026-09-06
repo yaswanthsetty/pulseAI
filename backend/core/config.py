@@ -131,8 +131,10 @@ class Settings(BaseSettings):
     # --- Auth (Phase 1.5) ------------------------------------------------------
     # none (local register/login) | clerk | auth0 (managed identity provider, §21)
     auth_provider: str = "none"
-    # Local-mode signing key. MUST be overridden with a strong secret in any
-    # deployment that exposes register/login (auth_provider=none).
+    # Local-mode signing key. MUST be overridden with a strong secret (>= 32
+    # bytes — PyJWT warns on shorter HS256 keys) in any deployment that
+    # exposes register/login (auth_provider=none).
+    # Generate: python -c "import secrets; print(secrets.token_urlsafe(48))"
     jwt_secret: str = "dev-only-secret-change-me"
     jwt_issuer: str = "pulseai"
     jwt_audience: str = "pulseai-api"

@@ -203,7 +203,7 @@ All settings in `backend/core/config.py` (pydantic-settings). See `.env.example`
 | Postgres | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (required) |
 | Qdrant | `QDRANT_URL` (default `http://localhost:6333`) |
 | Redis | `REDIS_URL` (default `redis://localhost:6379/0`) |
-| Auth | `AUTH_PROVIDER` (none/clerk/auth0), `JWT_SECRET`, `JWT_ACCESS_TTL_MINUTES` (15) |
+| Auth | `AUTH_PROVIDER` (none/clerk/auth0), `JWT_SECRET` (≥32 bytes; generate with `python -c "import secrets; print(secrets.token_urlsafe(48))"`), `JWT_ACCESS_TTL_MINUTES` (15) |
 | Rate limit | `RATE_LIMIT_ANON_PER_MINUTE` (30), `RATE_LIMIT_AUTH_PER_MINUTE` (120) |
 | Embeddings | `EMBEDDING_MODEL` (BAAI/bge-m3), chunking params (256/40/300) |
 | Rerank | `RERANKER_MODEL` (BAAI/bge-reranker-base), `RERANK_TOP_K` (50), `RERANK_TOP_N` (10) |
@@ -370,8 +370,10 @@ scheduler. App services use the same Dockerfile with different CMD overrides.
 **CI** (GitHub Actions): ruff check → ruff format → lint-imports → migrations →
 pytest with 80% coverage gate.
 
-**Production**: strong `JWT_SECRET`, `COOKIE_SECURE=true`, S3-backed storage,
-managed auth provider, real secrets via environment.
+**Production**: strong `JWT_SECRET` (≥32 bytes — PyJWT rejects/warns on shorter
+HS256 keys; `python -c "import secrets; print(secrets.token_urlsafe(48))"`),
+`COOKIE_SECURE=true`, S3-backed storage, managed auth provider, real secrets
+via environment.
 
 ## 14. Troubleshooting
 
