@@ -46,6 +46,8 @@ docker compose up -d postgres qdrant redis
 
 ```bash
 cp .env.example .env
+# In .env, set JWT_SECRET to a 32+ byte key:
+#   python -c "import secrets; print(secrets.token_urlsafe(48))"
 uv sync
 uv run alembic upgrade head
 uv run uvicorn backend.main:app --host 127.0.0.1 --port 8090

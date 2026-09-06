@@ -68,6 +68,10 @@
 | Security audit (OWASP checklist) | Medium | Low |
 | Dependency audit (`pip-audit`) | Low | Low |
 
+Note: production deployments require a 32+ byte `JWT_SECRET`
+(`python -c "import secrets; print(secrets.token_urlsafe(48))"`) — PyJWT warns
+on shorter HS256 keys.
+
 ---
 
 ## How to run
