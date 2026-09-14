@@ -467,22 +467,25 @@ def close_stale_events(
 
 
 def check_notification_rules(db: Session, event: Event) -> int:
-    """Check active notification rules against a new event.
+    """Match active notification rules against a new event and deliver.
 
-    Logs matching rules to audit_log. Real email/in_app delivery is
-    handled by a separate worker (not implemented yet).
+    Rule matching (keyword and/or category) stays here; delivery is delegated
+    to the notifications module, which records one ``notification_deliveries``
+    row per attempt (in-app inbox, webhook, or email). Delivery failures are
+    contained per rule and never propagate into clustering.
 
-    Returns the number of matching rules.
+    Returns the number of rules that matched.
     """
     from backend.core.audit import write_audit
-    from backend.db.models import NotificationRule
+    from backend.db.models import NotificationRule, User
+    from backend.modules.notifications import deliver_event
 
     rules = list(
         db.execute(
             select(NotificationRule).where(NotificationRule.is_active == True)  # noqa: E712
         ).scalars()
     )
-    matched = 0
+    matches: list[tuple[NotificationRule, str]] = []
     for rule in rules:
         # Check keyword/topic match
         keyword_match = True
@@ -508,19 +511,35 @@ def check_notification_rules(db: Session, event: Event) -> int:
             category_match = cat_match is not None
 
         if keyword_match and category_match:
-            matched += 1
-            write_audit(
-                db,
-                "notification_triggered",
-                user_id=str(rule.user_id),
-                target_type="event",
-                target_id=str(event.id),
-                metadata={
-                    "rule_id": str(rule.id),
-                    "channel": rule.channel,
-                    "event_title": event.title,
-                },
+            user_email = (
+                db.execute(select(User.email).where(User.id == rule.user_id)).scalar_one_or_none()
+                or ""
             )
+            matches.append((rule, user_email))
+
+    if not matches:
+        return 0
+
+    # Audit trail for the match decision (delivery rows carry the outcome).
+    for rule, _email in matches:
+        write_audit(
+            db,
+            "notification_triggered",
+            user_id=str(rule.user_id),
+            target_type="event",
+            target_id=str(event.id),
+            metadata={
+                "rule_id": str(rule.id),
+                "channel": rule.channel,
+                "event_title": event.title,
+            },
+        )
+
+    matched = len(matches)
+    try:
+        deliver_event(db, event, matches)
+    except Exception:  # noqa: BLE001 - notifications must not break clustering
+        logger.exception("notification delivery sweep failed for event %s", event.id)
     if matched:
         logger.info("notification rules matched: %d for event %s", matched, event.id)
     return matched

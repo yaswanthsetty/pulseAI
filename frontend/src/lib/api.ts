@@ -290,6 +290,23 @@ export async function getReport(id: string) {
   return request<Report>("/api/v1/reports/" + id);
 }
 
+export async function exportReportCsv(id: string, topic: string) {
+  const token = getAccessToken();
+  const res = await fetch(`${API_URL}/api/v1/reports/${id}/export`, {
+    headers: token ? { Authorization: "Bearer " + token } : undefined,
+  });
+  if (!res.ok) throw new Error("Export failed: " + res.status);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `pulseai-report-${topic.slice(0, 40).replace(/[^a-z0-9]+/gi, "-").toLowerCase() || id}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 /* ── Admin ────────────────────────────────────────────── */
 
 export async function fetchUsers(params?: { page?: number; page_size?: number }) {
@@ -332,4 +349,185 @@ export async function fetchUsage() {
   return request<{ breakdown: Record<string, unknown>[]; total_tokens: number }>(
     "/api/v1/usage"
   );
+}
+
+/* ── Insights (dashboard / trends / comparison) ────────── */
+
+export interface Stats {
+  articles_total: number;
+  articles_last_24h: number;
+  events_total: number;
+  events_open: number;
+  sources_total: number;
+  users_total: number;
+  articles_per_day: { date: string; count: number }[];
+  top_categories: { category: string; count: number }[];
+  top_sources: { source: string; count: number }[];
+}
+
+export interface TrendingEvent {
+  event_id: string;
+  title: string;
+  summary: string | null;
+  direction: "rising" | "steady" | "cooling" | "quiet";
+  momentum: number;
+  recent_24h: number;
+  previous_24h: number;
+  total_articles: number;
+  article_count: number;
+  confidence: number;
+}
+
+export interface SourceCoverage {
+  source: string;
+  credibility: number | null;
+  article_count: number;
+  latest: { article_id: string; title: string; published_at: string | null } | null;
+  top_keywords: string[];
+}
+
+export async function fetchStats() {
+  return request<Stats>("/api/v1/insights/stats");
+}
+
+export async function fetchTrending(limit = 10) {
+  const data = await request<{ items: TrendingEvent[] }>(
+    "/api/v1/insights/trending?limit=" + limit
+  );
+  return data.items || [];
+}
+
+export async function compareSources(query: string, a: string, b: string) {
+  const p = new URLSearchParams({ q: query, a, b });
+  return request<{ query: string; source_a: SourceCoverage; source_b: SourceCoverage }>(
+    "/api/v1/insights/compare?" + p.toString()
+  );
+}
+
+export interface ArticleDetail {
+  id: string;
+  title: string;
+  author: string | null;
+  description: string | null;
+  content_preview: string | null;
+  content: string | null;
+  url: string;
+  image_url: string | null;
+  language_code: string | null;
+  category_code: string | null;
+  published_at: string;
+  source: string | null;
+  credibility: number | null;
+  event: { id: string; title: string; status: string } | null;
+  bookmarked: boolean;
+}
+
+export async function getArticle(id: string) {
+  return request<ArticleDetail>("/api/v1/insights/articles/" + id);
+}
+
+/* ── Library (saved searches / bookmarks / notifications) ─ */
+
+export interface SavedSearch {
+  id: string;
+  query: string;
+  filters: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface BookmarkItem {
+  article_id: string;
+  title: string;
+  url: string;
+  description: string | null;
+  author: string | null;
+  published_at: string | null;
+  category: string | null;
+  source: string | null;
+  created_at: string;
+}
+
+export interface NotificationRule {
+  id: string;
+  keyword_or_topic: string | null;
+  category_code: string | null;
+  channel: "email" | "in_app" | "webhook";
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface NotificationDelivery {
+  id: string;
+  event_id: string | null;
+  channel: string;
+  status: string;
+  detail: string | null;
+  created_at: string;
+}
+
+export async function fetchSavedSearches() {
+  const data = await request<{ items: SavedSearch[] }>("/api/v1/library/searches");
+  return data.items || [];
+}
+
+export async function createSavedSearch(query: string, filters?: Record<string, unknown>) {
+  return request<SavedSearch>("/api/v1/library/searches", {
+    method: "POST",
+    body: JSON.stringify({ query, filters }),
+  });
+}
+
+export async function deleteSavedSearch(id: string) {
+  return request<void>("/api/v1/library/searches/" + id, { method: "DELETE" });
+}
+
+export async function fetchBookmarks() {
+  const data = await request<{ items: BookmarkItem[] }>("/api/v1/library/bookmarks");
+  return data.items || [];
+}
+
+export async function addBookmark(articleId: string) {
+  return request<void>("/api/v1/library/bookmarks/" + articleId, { method: "PUT" });
+}
+
+export async function removeBookmark(articleId: string) {
+  return request<void>("/api/v1/library/bookmarks/" + articleId, { method: "DELETE" });
+}
+
+export async function fetchNotificationRules() {
+  const data = await request<{ items: NotificationRule[] }>(
+    "/api/v1/library/notification-rules"
+  );
+  return data.items || [];
+}
+
+export async function createNotificationRule(
+  keyword: string | null,
+  category: string | null,
+  channel: string
+) {
+  return request<NotificationRule>("/api/v1/library/notification-rules", {
+    method: "POST",
+    body: JSON.stringify({
+      keyword_or_topic: keyword,
+      category_code: category,
+      channel,
+    }),
+  });
+}
+
+export async function deleteNotificationRule(id: string) {
+  return request<void>("/api/v1/library/notification-rules/" + id, { method: "DELETE" });
+}
+
+export async function fetchNotifications() {
+  return request<{ items: NotificationDelivery[]; unread: number }>(
+    "/api/v1/library/notifications"
+  );
+}
+
+export async function markNotificationsRead() {
+  return request<{ updated: number }>("/api/v1/library/notifications/read-all", {
+    method: "POST",
+  });
 }

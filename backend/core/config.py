@@ -113,6 +113,16 @@ class Settings(BaseSettings):
     # --- Ingestion ------------------------------------------------------------
     seed_default_sources: bool = True
     scheduler_tick_seconds: int = 30
+
+    # --- Notifications (Phase 7 delivery) --------------------------------
+    # Webhook sink for notification_rules with channel='webhook'; empty =
+    # webhook delivery is recorded as failed. Email uses the SMTP block.
+    notification_webhook_url: str | None = None
+    smtp_host: str | None = None  # empty SMTP host = email delivery skipped
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str = "pulseai@localhost"
     min_poll_interval_minutes: int = 5  # FR-1: polite-crawling floor
     default_poll_interval_minutes: int = 15  # FR-1: default per-source interval
     feed_fetch_timeout_seconds: float = 15.0

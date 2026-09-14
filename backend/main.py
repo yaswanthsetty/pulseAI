@@ -24,6 +24,12 @@ from backend.core.database import SessionLocal
 from backend.core.logging import setup_logging
 from backend.db.seed import seed_reference_data
 from backend.modules.api.health import router as health_router
+from backend.modules.api.metrics import (
+    MetricsMiddleware,
+)
+from backend.modules.api.metrics import (
+    router as metrics_router,
+)
 from backend.modules.api.router import api_router
 from backend.modules.auth.csrf import CSRFMiddleware
 from backend.modules.ingestion.seeds import seed_default_sources
@@ -104,7 +110,11 @@ app.add_middleware(
 )
 app.add_middleware(CSRFMiddleware)
 
+# Request metrics (Phase 7 monitoring) — added last so it wraps the outermost.
+app.add_middleware(MetricsMiddleware)
+
 app.include_router(health_router)
+app.include_router(metrics_router)
 app.include_router(api_router)
 
 

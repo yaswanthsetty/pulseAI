@@ -1,0 +1,216 @@
+# Production deployment (Phase 7).
+#
+# Differences from docker-compose.yml (development):
+#   * No host ports for infra — Postgres/Qdrant/Redis are reachable only via
+#     the internal network; only the API and frontend are published.
+#   * Traefik-free and TLS-free by design: put a reverse proxy (Caddy/nginx)
+#     in front of ports 8000/3000 for TLS termination.
+#   * backup service: nightly pg_dump to the ./backups volume with retention.
+#   * prometheus + grafana services wired to the API's /metrics endpoint.
+#
+# Required environment (put in a .env next to this file, never committed):
+#   POSTGRES_PASSWORD   strong password
+#   JWT_SECRET          32+ bytes: python -c "import secrets; print(secrets.token_urlsafe(48))"
+#   NEXT_PUBLIC_API_URL browser-reachable API origin, e.g. https://api.example.com
+
+name: pulseai-prod
+
+x-app-env: &app-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: ${POSTGRES_USER:-pulse_admin}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+  POSTGRES_DB: ${POSTGRES_DB:-pulseai_db}
+  QDRANT_URL: http://qdrant:6333
+  REDIS_URL: redis://redis:6379/0
+  STORAGE_BACKEND: local
+  STORAGE_LOCAL_DIR: /app/storage/objects
+  SEED_DEFAULT_SOURCES: "true"
+  ENVIRONMENT: production
+  JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (32+ bytes)}
+  JWT_ISSUER: ${JWT_ISSUER:-pulseai}
+  JWT_AUDIENCE: ${JWT_AUDIENCE:-pulseai-api}
+  COOKIE_SECURE: ${COOKIE_SECURE:-true}
+  CSRF_ENABLED: ${CSRF_ENABLED:-true}
+  RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+  # Notification delivery (optional)
+  NOTIFICATION_WEBHOOK_URL: ${NOTIFICATION_WEBHOOK_URL:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:-pulseai@localhost}
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulse_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-pulseai_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulse_admin} -d ${POSTGRES_DB:-pulseai_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment: *app-env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - storage_data:/app/storage/objects
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=3).status==200 else 1)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # One-shot migration runner; the API waits for it via compose ordering below.
+  migrate:
+    build: .
+    restart: "no"
+    command: ["uv", "run", "--no-sync", "alembic", "upgrade", "head"]
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build: .
+    restart: unless-stopped
+    command: ["uv", "run", "--no-sync", "pulseai-worker"]
+    environment: *app-env
+    volumes:
+      - storage_data:/app/storage/objects
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    build: .
+    restart: unless-stopped
+    command: ["uv", "run", "--no-sync", "pulseai-scheduler"]
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  # Nightly Postgres backup with 14-day retention (RPO 24h).
+  backup:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          ts=$$(date +%Y%m%d_%H%M%S)
+          echo "[backup] starting pulseai_db_$${ts}.sql.gz"
+          pg_dump -h postgres -U ${POSTGRES_USER:-pulse_admin} -d ${POSTGRES_DB:-pulseai_db} \
+            | gzip > /backups/pulseai_db_$${ts}.sql.gz
+          find /backups -name "pulseai_db_*.sql.gz" -mtime +14 -delete
+          echo "[backup] done; sleeping 24h"
+          sleep 86400
+        done
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # --- Monitoring stack (Phase 7) ------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?set GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./ops/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+  storage_data:
+  prometheus_data:
+  grafana_data:

@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+scrape_configs:
+  # PulseAI API — FastAPI /metrics endpoint (lightweight custom exporter).
+  - job_name: pulseai-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]
+        labels:
+          service: pulseai-api
+
+  # Prometheus self-monitoring (scrape health).
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

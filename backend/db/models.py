@@ -372,8 +372,50 @@ class NotificationRule(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("channel IN ('email', 'in_app')", name="channel_valid"),
+        CheckConstraint("channel IN ('email', 'in_app', 'webhook')", name="channel_valid"),
         Index("ix_notification_rules_user", "user_id"),
+    )
+
+
+class NotificationDelivery(Base):
+    """One notification delivery attempt (in-app inbox record / ops trail)."""
+
+    __tablename__ = "notification_deliveries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    rule_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("notification_rules.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    event_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("events.id", ondelete="SET NULL"))
+    channel: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="in_app", server_default=text("'in_app'")
+    )
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="sent", server_default=text("'sent'")
+    )
+    detail: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint(
+            "channel IN ('email', 'in_app', 'webhook')",
+            name="ck_notification_deliveries_channel_valid",
+        ),
+        CheckConstraint(
+            "status IN ('sent', 'failed', 'pending')",
+            name="ck_notification_deliveries_status_valid",
+        ),
+        Index(
+            "ix_notification_deliveries_user",
+            "user_id",
+            text("created_at DESC"),
+        ),
     )
 
 

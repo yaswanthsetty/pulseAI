@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { generateReport, fetchReports, getReport, type Report } from "@/lib/api";
+import { generateReport, fetchReports, getReport, exportReportCsv, type Report } from "@/lib/api";
 import { Shell } from "@/components/layout/Shell";
 import { useToast } from "@/components/ui/Toast";
 
@@ -110,6 +110,13 @@ function ReportDetail({ id, onBack }: { id: string; onBack: () => void }) {
     queryKey: ["report", id],
     queryFn: () => getReport(id),
   });
+  const { toast } = useToast();
+
+  const exportCsv = useMutation({
+    mutationFn: () => exportReportCsv(id, report?.topic || "report"),
+    onSuccess: () => toast("Report exported as CSV", "success"),
+    onError: (err: Error) => toast(err.message, "error"),
+  });
 
   if (isLoading) return <div className="h-40 bg-card rounded-xl animate-pulse" />;
   if (!report) return <p className="text-sm text-muted">Report not found</p>;
@@ -131,6 +138,15 @@ function ReportDetail({ id, onBack }: { id: string; onBack: () => void }) {
         <span className={"text-[11px] font-mono px-2 py-0.5 rounded-lg " + (report.status === "completed" ? "bg-success/10 text-success" : "bg-secondary text-muted")}>
           {report.status}
         </span>
+      </div>
+      <div className="flex items-center gap-3 mb-2">
+        <button
+          onClick={() => exportCsv.mutate()}
+          disabled={exportCsv.isPending}
+          className="text-xs text-primary hover:text-primary-hover border border-primary/30 rounded-lg px-3 py-1.5 hover:border-primary/60 transition-colors disabled:opacity-40"
+        >
+          {exportCsv.isPending ? "Exporting…" : "Export CSV"}
+        </button>
       </div>
       {report.timeframe && <p className="text-xs text-muted mb-2">Timeframe: {report.timeframe}</p>}
       <div className="text-[11px] font-mono text-muted mb-4">

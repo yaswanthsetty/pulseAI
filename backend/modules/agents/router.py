@@ -7,6 +7,10 @@ functions so that ``agents/service.py`` stays boundary-clean.
 
 from __future__ import annotations
 
+import csv
+import io
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
@@ -117,6 +121,64 @@ def get_report(
         "evidence_agreement": report.evidence_agreement,
         "created_at": report.created_at,
     }
+
+
+@router.get("/reports/{report_id}/export")
+def export_report(
+    report_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("analyst")),
+):
+    """Export a report as CSV (executive hand-off; spec §5 report output)."""
+    report = db.get(Report, report_id)
+    if not report or report.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["field", "value"])
+    writer.writerow(["id", str(report.id)])
+    writer.writerow(["topic", report.topic])
+    writer.writerow(["timeframe", report.timeframe or ""])
+    writer.writerow(["status", report.status])
+    writer.writerow(["created_at", report.created_at.isoformat() if report.created_at else ""])
+
+    content = report.content
+    if isinstance(content, str):
+        try:
+            content = json.loads(content)
+        except json.JSONDecodeError, TypeError:
+            content = {"summary": content}
+    if isinstance(content, dict):
+        evidence = content.pop("evidence", None)
+        for key, value in content.items():
+            if isinstance(value, (dict, list)):
+                value = json.dumps(value, ensure_ascii=False)
+            writer.writerow([key, value])
+        if isinstance(evidence, list):
+            writer.writerow([])
+            writer.writerow(["citation_id", "title", "source", "published_at", "score"])
+            for item in evidence:
+                if isinstance(item, dict):
+                    writer.writerow(
+                        [
+                            item.get("citation_id", ""),
+                            (item.get("title") or "").replace("\n", " ")[:300],
+                            item.get("source", ""),
+                            item.get("published_at") or "",
+                            item.get("score", ""),
+                        ]
+                    )
+    elif content is not None:
+        writer.writerow(["content", str(content)])
+
+    buffer.seek(0)
+    filename = f"pulseai-report-{str(report.id)[:8]}.csv"
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 # ---------------------------------------------------------------------------

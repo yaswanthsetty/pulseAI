@@ -64,6 +64,24 @@
   }
 }
 
+/* Light theme — same hue family, lifted lightness (Phase 7 polish). */
+html[data-theme="light"] {
+  --color-background: #f7f7f9;
+  --color-foreground: #1c1e26;
+  --color-card: #ffffff;
+  --color-card-hover: #f0f0f4;
+  --color-secondary: #ececf1;
+  --color-secondary-hover: #e0e0e8;
+  --color-muted: #6b7280;
+  --color-border: #d9dae2;
+  --color-input: #ffffff;
+  --color-surface: #ffffff;
+  --color-sidebar: #efeff4;
+  --color-sidebar-hover: #e4e4ec;
+  --color-assistant-bubble: #ececf1;
+  --color-signal-dim: #8a6a10;
+}
+
 html {
   background: var(--color-background);
   color: var(--color-foreground);

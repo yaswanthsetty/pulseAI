@@ -213,7 +213,7 @@ All settings in `backend/core/config.py` (pydantic-settings). See `.env.example`
 
 ## 7. Database
 
-21 tables in `backend/db/models.py`. Groups:
+22 tables in `backend/db/models.py`. Groups:
 
 | Group | Tables |
 |---|---|
@@ -223,10 +223,16 @@ All settings in `backend/core/config.py` (pydantic-settings). See `.env.example`
 | Identity | `users`, `api_keys`, `refresh_tokens` |
 | Chat/Reports | `conversations`, `conversation_messages`, `reports`, `llm_usage` |
 | User content | `saved_reports`, `saved_searches`, `bookmarks`, `notification_rules` |
+| Notifications | `notification_deliveries` (one row per delivery attempt) |
 | Ops | `audit_log` |
 
 Schema changes: edit `models.py`, then
 `uv run alembic revision --autogenerate -m "..."`, review, apply.
+
+> Constraint-naming note: the project MetaData applies a
+> `ck_%(table_name)s_%(constraint_name)s` convention. In hand-written migrations
+> pass the *pre-convention* token (e.g. `op.f("channel_valid")`) so Alembic
+> doesn't double the prefix.
 
 ## 8. API
 
@@ -290,6 +296,38 @@ All responses use the error envelope
 | POST | `/api/v1/reports/generate` | Generate executive report | analyst |
 | GET | `/api/v1/reports` | List reports | analyst |
 | GET | `/api/v1/reports/{id}` | Get report detail | analyst |
+| GET | `/api/v1/reports/{id}/export` | Download report as CSV | analyst |
+
+### Library (user-curated data, Phase 7)
+
+Every row is scoped to the authenticated principal.
+
+| Method | Path | Purpose | Auth |
+|---|---|---|---|
+| GET/POST | `/api/v1/library/searches` | List / save a search query | user |
+| DELETE | `/api/v1/library/searches/{id}` | Delete a saved search | owner |
+| GET | `/api/v1/library/bookmarks` | Bookmarked articles with metadata | user |
+| PUT/DELETE | `/api/v1/library/bookmarks/{article_id}` | Add / remove bookmark | user |
+| GET/POST | `/api/v1/library/notification-rules` | List / create alert rules | user |
+| DELETE | `/api/v1/library/notification-rules/{id}` | Delete a rule | owner |
+| GET | `/api/v1/library/notifications` | In-app inbox + unread count | user |
+| POST | `/api/v1/library/notifications/read-all` | Mark all delivered notifications read | user |
+
+### Insights (stats / trends / comparison, Phase 7)
+
+| Method | Path | Purpose | Auth |
+|---|---|---|---|
+| GET | `/api/v1/insights/stats` | Pipeline totals, 14-day volume, top categories/sources | open |
+| GET | `/api/v1/insights/trending` | Open events ranked by coverage momentum | open |
+| GET | `/api/v1/insights/compare?q&a&b` | Cross-source coverage comparison | open |
+| GET | `/api/v1/insights/articles/{id}` | Full article detail incl. event membership | open (bookmark state with auth) |
+
+### Ops
+
+| Method | Path | Purpose | Auth |
+|---|---|---|---|
+| GET | `/healthz` · `/readyz` · `/health` | Liveness / readiness probes | open |
+| GET | `/metrics` | Prometheus exposition (requests, latency, infra, queue depth) | open |
 
 ## 9. Authentication and authorization
 
@@ -330,11 +368,19 @@ embed_article_job → chunk_text (256 tokens, 40 overlap) → BGE-M3 encode
 - **Fast path**: retrieve context → single LLM call → SSE stream with citations
 - **Deep path**: planner → retriever×N → reasoner×N → synthesizer → SSE stream
 
-### Notification rules
+### Notification delivery (Phase 7)
 
-When a new event is created, active notification rules are checked. Matching rules
-log a `notification_triggered` audit event. Delivery (email/in-app) is not yet
-implemented.
+When a new event is created, active notification rules are checked (keyword
+and/or category match). Each match produces one delivery attempt recorded in
+`notification_deliveries`:
+
+- `in_app` — row visible in the frontend Library → Notifications inbox
+- `webhook` — POST of the event payload to `NOTIFICATION_WEBHOOK_URL`
+- `email` — SMTP via `SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD`
+
+Failures are contained per rule and never break clustering; a matching
+`notification_triggered` audit row is also written. Delivery config lives under
+"Notifications" in `backend/core/config.py`.
 
 ## 11. Frontend
 
@@ -342,11 +388,14 @@ See [`frontend/README.md`](frontend/README.md) for full details.
 
 Key points:
 - Next.js 16 App Router, React 19, Tailwind CSS v4
-- Kimi-inspired dark UI with warm orange accent
-- 9 pages: login, register, search, events, chat, reports, admin, settings, home
+- Kimi-inspired dark UI with warm orange accent; dark/light toggle (Library of tokens in `globals.css`, `data-theme="light"` overrides)
+- 12 pages: dashboard, login, register, search, events, chat, reports, admin, settings, library, article detail, home
 - Protected routes via AuthGuard, 401 auto-redirect
 - Command palette (Cmd+K), mobile hamburger menu, toast notifications
 - SSE streaming chat with thinking indicators and evidence citations
+- Dashboard with ingestion-volume chart and trending events (momentum)
+- Library page: saved searches, bookmarks, alert rules, notification inbox
+- Article detail view with bookmark toggle and event link; report CSV export
 
 ## 12. Testing
 
@@ -367,8 +416,25 @@ uv run lint-imports        # module boundaries
 **Docker Compose** (`docker-compose.yml`): postgres, qdrant, redis, api, worker,
 scheduler. App services use the same Dockerfile with different CMD overrides.
 
+**Production Compose** (`docker-compose.prod.yml`): hardened variant with
+host-port-free infra, one-shot `migrate` runner, frontend image
+(`frontend/Dockerfile`, standalone Next.js build), nightly Postgres backup with
+14-day retention (`./backups`), and Prometheus + Grafana wired to `/metrics`
+(see `ops/`). Secrets required: `POSTGRES_PASSWORD`, `JWT_SECRET`,
+`GRAFANA_PASSWORD`; optional SMTP/webhook notification config.
+
+**Metrics** (`backend/modules/api/metrics.py`): dependency-free Prometheus text
+exposition — request counters + latency histogram (per route), infra up/down
+probes, RQ queue depths, sources in FR-3 backoff. Scrape config in
+`ops/prometheus.yml`.
+
+**Load tests** (`tests/load/`): k6 scripts for `/search` (ramping VUs, p95<5s
+gate) and read endpoints (p95<1s gate). Run:
+`k6 run -e BASE_URL=http://localhost:8090 -e TOKEN=<jwt> tests/load/search.js`.
+
 **CI** (GitHub Actions): ruff check → ruff format → lint-imports → migrations →
-pytest with 80% coverage gate.
+pytest with 80% coverage gate, plus a `security` job running `pip-audit`
+(backend) and `npm audit --audit-level=high` (frontend).
 
 **Production**: strong `JWT_SECRET` (≥32 bytes — PyJWT rejects/warns on shorter
 HS256 keys; `python -c "import secrets; print(secrets.token_urlsafe(48))"`),

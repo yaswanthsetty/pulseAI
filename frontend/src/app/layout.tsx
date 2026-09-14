@@ -33,8 +33,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-background text-foreground antialiased">
+      <head>
+        {/* Apply the stored theme before hydration so there's no flash and no
+            mismatch: the server HTML has no data-theme, the script sets it,
+            and ThemeProvider syncs state after mount. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('pulseai_theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}",
+          }}
+        />
+      </head>
+      <body
+        className="min-h-full bg-background text-foreground antialiased"
+        suppressHydrationWarning
+      >
         <ErrorBoundary>
           <Providers>
             {children}

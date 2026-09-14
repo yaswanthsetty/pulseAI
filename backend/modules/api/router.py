@@ -11,6 +11,8 @@ from backend.modules.auth.ratelimit import rate_limit_dependency
 from backend.modules.auth.router import router as auth_router
 from backend.modules.events.router import router as events_router
 from backend.modules.ingestion.router import router as ingestion_router
+from backend.modules.insights.router import router as insights_router
+from backend.modules.library.router import router as library_router
 from backend.modules.retrieval.router import router as retrieval_router
 
 api_router = APIRouter(prefix="/api/v1", dependencies=[Depends(rate_limit_dependency)])
@@ -18,4 +20,6 @@ api_router.include_router(auth_router)
 api_router.include_router(ingestion_router)
 api_router.include_router(retrieval_router)
 api_router.include_router(events_router)
+api_router.include_router(insights_router)
+api_router.include_router(library_router)
 api_router.include_router(agents_router)

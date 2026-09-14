@@ -103,10 +103,20 @@ The backend is a **modular monolith** — each concern lives in its own module u
 | `POST /api/v1/search` | Search articles | open |
 | `GET /api/v1/events` | List events | open |
 | `GET /api/v1/events/{id}` | Event detail + timeline | open |
+| `GET /api/v1/insights/stats` | Pipeline stats for the dashboard | open |
+| `GET /api/v1/insights/trending` | Events ranked by coverage momentum | open |
+| `GET /api/v1/insights/compare` | Cross-source coverage comparison | open |
+| `GET /api/v1/insights/articles/{id}` | Full article detail | open |
+| `GET/POST /api/v1/library/searches` | Saved searches | user |
+| `GET/PUT/DELETE /api/v1/library/bookmarks` | Bookmarks | user |
+| `GET/POST /api/v1/library/notification-rules` | Event alert rules | user |
+| `GET /api/v1/library/notifications` | In-app notification inbox | user |
 | `POST /api/v1/chat` | Chat with corpus (SSE) | user |
 | `POST /api/v1/reports/generate` | Generate report | analyst |
+| `GET /api/v1/reports/{id}/export` | Export report as CSV | analyst |
 | `GET /api/v1/users` | List users | admin |
 | `POST /api/v1/events/merge` | Merge events | admin |
+| `GET /metrics` | Prometheus metrics | open |
 
 Full API docs at [http://localhost:8090/docs](http://localhost:8090/docs) when the backend is running.
 

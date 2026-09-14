@@ -37,6 +37,8 @@ modules =
     backend.modules.agents
     backend.modules.reports
     backend.modules.ingestion
+    backend.modules.library
+    backend.modules.insights
 ignore_imports =
     # ``backend.core.queue`` is the RQ wiring hub (spec §12): it registers each
     # phase's jobs via deferred imports so business modules never import each
@@ -68,6 +70,8 @@ allowed_importers =
     backend.modules.agents
     backend.modules.reports
     backend.modules.ingestion
+    backend.modules.library
+    backend.modules.insights
 
 [importlinter:contract:4]
 name = Auth never imports business modules

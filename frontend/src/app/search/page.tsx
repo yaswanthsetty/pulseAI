@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { search, type SearchResult } from "@/lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { search, createSavedSearch, type SearchResult } from "@/lib/api";
 import { Shell } from "@/components/layout/Shell";
+import { useToast } from "@/components/ui/Toast";
 
 const MODES = [
   { value: "semantic", label: "Semantic" },
@@ -26,10 +28,21 @@ export default function SearchPage() {
   const [intent, setIntent] = useState<string | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: () => search({ query, mode, intent: intent || undefined, limit: 10 }),
     onSuccess: (data) => { setResults(Array.isArray(data) ? data : []); setHasSearched(true); },
+  });
+
+  const saveSearch = useMutation({
+    mutationFn: () => createSavedSearch(query.trim()),
+    onSuccess: () => {
+      toast("Search saved to your library", "success");
+      queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
+    },
+    onError: (err: Error) => toast(err.message, "error"),
   });
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
@@ -105,6 +118,15 @@ export default function SearchPage() {
               <span className="text-xs font-mono text-muted" role="status" aria-live="polite">
                 {results.length} result{results.length !== 1 ? "s" : ""}
               </span>
+              {results.length > 0 && (
+                <button
+                  onClick={() => saveSearch.mutate()}
+                  disabled={saveSearch.isPending}
+                  className="text-xs text-primary hover:text-primary-hover"
+                >
+                  {saveSearch.isPending ? "Saving…" : "☆ Save this search"}
+                </button>
+              )}
             </div>
             {results.length === 0 ? (
               <div className="text-center py-12">
@@ -120,7 +142,12 @@ export default function SearchPage() {
                         {idx + 1}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-display font-medium text-foreground group-hover:text-primary transition-colors leading-snug">{result.title}</h3>
+                        <Link
+                          href={`/article/${result.article_id}`}
+                          className="text-sm font-display font-medium text-foreground group-hover:text-primary transition-colors leading-snug hover:underline"
+                        >
+                          {result.title}
+                        </Link>
                         {result.snippet && <p className="mt-1 text-xs text-muted leading-relaxed line-clamp-2">{result.snippet}</p>}
                         <div className="mt-1.5 flex items-center gap-3 text-[11px] font-mono text-muted">
                           {result.published_at && <span>{DATE_FORMATTER.format(new Date(result.published_at))}</span>}
