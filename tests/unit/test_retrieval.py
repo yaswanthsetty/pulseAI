@@ -309,3 +309,27 @@ class TestRerank:
         )
 
         assert [r.title for r in results] == ["Weather report", "AI startup raises funding"]
+
+    def test_max_chunks_per_article(self):
+        qdrant = FakeQdrant(
+            collections=[service.COLLECTION_NAME],
+            points=[
+                _hit("1", source_id="2", score=0.9, title="Chunk 1"),
+                _hit("1", source_id="2", score=0.8, title="Chunk 2"),
+            ],
+        )
+        for i, pt in enumerate(qdrant._points):
+            pt.payload["chunk_number"] = i
+            pt.payload["chunk_text"] = f"Chunk {i}"
+
+        results = service.search(
+            "AI",
+            embedder=FakeEmbedder(),
+            qdrant=qdrant,
+            max_chunks_per_article=2,
+            limit=10,
+            reranker=FakeReranker(),
+        )
+        assert len(results) == 1
+        assert len(results[0].extra_chunks) == 1
+        assert results[0].extra_chunks[0].chunk_text == "Chunk 1"

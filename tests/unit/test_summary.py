@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import httpx
+from backend.core.config import settings
 from backend.db.models import Article
 from backend.modules.events.summary import (
     _build_user_prompt,
@@ -113,7 +114,8 @@ class TestGenerateSummary:
         generate_summary([_make_article(), _make_article()])
         body = mock_post.call_args[1]["json"]
         assert body["stream"] is False
-        assert body["options"]["num_predict"] == 300
+        assert body["options"]["num_predict"] == settings.chat_num_predict
+        assert body["options"]["num_ctx"] == settings.chat_num_ctx
         assert body["options"]["temperature"] == 0.3
         msgs = body["messages"]
         assert msgs[1]["role"] == "user"

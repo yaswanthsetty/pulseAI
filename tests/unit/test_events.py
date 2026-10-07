@@ -120,8 +120,8 @@ class FakeQdrant:
             if kwargs["collection_name"] == events.CENTROIDS_COLLECTION:
                 self._centroids[str(point.id)] = point
 
-    def delete(self, collection_name, point_selector):
-        self.deleted.append({"collection": collection_name, "points": point_selector.points})
+    def delete(self, collection_name, points_selector):
+        self.deleted.append({"collection": collection_name, "points": points_selector.points})
 
 
 def _make_article(db, **overrides):

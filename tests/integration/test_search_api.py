@@ -90,3 +90,28 @@ class TestSearchApi:
 
         assert resp.status_code == 422
         assert resp.json()["error"]["code"] == "VALIDATION_ERROR"
+
+    def test_search_chunk_text_truncation(self, client, monkeypatch):
+        article_id = uuid.uuid4()
+        source_id = uuid.uuid4()
+        long_text = "A" * 1500
+        fake_results = [
+            SearchResult(
+                article_id=article_id,
+                source_id=source_id,
+                title="Test Truncation",
+                similarity_score=0.9,
+                chunk_text=long_text,
+            )
+        ]
+
+        def _fake_search(query, limit, mode="semantic", intent=None, filters=None):
+            return fake_results
+
+        monkeypatch.setattr(service, "search", _fake_search)
+
+        resp = client.post("/api/v1/search", json={"query": "test"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert len(body) == 1
+        assert body[0]["chunk_text"] == "A" * 1000
