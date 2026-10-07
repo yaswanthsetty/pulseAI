@@ -62,7 +62,8 @@ def generate_summary(articles: list[Article]) -> str | None:
                 "stream": False,
                 "think": False,  # disable thinking mode for Qwen 3.5+
                 "options": {
-                    "num_predict": settings.summary_max_tokens,
+                    "num_ctx": settings.chat_num_ctx,
+                    "num_predict": settings.chat_num_predict,
                     "temperature": 0.3,
                 },
             },

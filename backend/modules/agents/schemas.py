@@ -18,6 +18,10 @@ class EvidenceItem(BaseModel):
     source_id: uuid.UUID | None = None
     published_at: datetime | None = None
     score: float
+    source_name: str | None = None
+    # First ~240 chars of the cited chunk, cut on a word boundary.
+    snippet: str | None = None
+    chunk_id: uuid.UUID | None = None
 
 
 class ChatResponse(BaseModel):
@@ -28,6 +32,9 @@ class ChatResponse(BaseModel):
     evidence: list[EvidenceItem] = Field(default_factory=list)
     # FR-22: 0.0–1.0 (fraction of citations with mutual textual support)
     agreement: float | None = None
+    # [#n] markers the model emitted that matched no context block; already
+    # stripped from ``message``.
+    invalid_citations: list[int] = Field(default_factory=list)
 
 
 class ReportRequest(BaseModel):
@@ -57,3 +64,38 @@ class UsageResponse(BaseModel):
     scope: str  # 'own' | 'all'
     breakdown: list[UsageBreakdown]
     total_tokens: int
+
+
+class ConversationSummary(BaseModel):
+    """One row in the chat history sidebar."""
+
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    title: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConversationListResponse(BaseModel):
+    items: list[ConversationSummary] = Field(default_factory=list)
+
+
+class ConversationMessageOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    role: str
+    content: str
+    # Stored as {"items": [...], "error"?: true} in the JSONB column.
+    evidence: dict | None = None
+    evidence_agreement: float | None = None
+    created_at: datetime
+
+
+class ConversationDetailResponse(BaseModel):
+    id: uuid.UUID
+    title: str | None
+    created_at: datetime
+    updated_at: datetime
+    messages: list[ConversationMessageOut] = Field(default_factory=list)

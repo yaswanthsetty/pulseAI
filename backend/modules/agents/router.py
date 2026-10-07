@@ -17,7 +17,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
-from backend.db.models import LlmUsage, Report, User
+from backend.db.models import Conversation, ConversationMessage, LlmUsage, Report, User
 from backend.modules.agents import schemas
 from backend.modules.agents import service as agent_service
 from backend.modules.auth.deps import require_role
@@ -179,6 +179,68 @@ def export_report(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+# ---------------------------------------------------------------------------
+# Conversations (chat history sidebar)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/conversations")
+def list_conversations(
+    limit: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("user")),
+):
+    """List the current user's chat conversations, newest activity first."""
+    rows = (
+        db.scalars(
+            select(Conversation)
+            .where(Conversation.user_id == user.id)
+            .order_by(Conversation.updated_at.desc())
+            .limit(limit)
+        )
+        .unique()
+        .all()
+    )
+    return {"items": [schemas.ConversationSummary.model_validate(r) for r in rows]}
+
+
+@router.get("/conversations/{conversation_id}")
+def get_conversation(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("user")),
+):
+    """Fetch one conversation with its messages (owner-scoped)."""
+    conv = db.get(Conversation, conversation_id)
+    if conv is None or conv.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    messages = db.scalars(
+        select(ConversationMessage)
+        .where(ConversationMessage.conversation_id == conv.id)
+        .order_by(ConversationMessage.created_at)
+    ).all()
+
+    detail = schemas.ConversationDetailResponse(
+        id=conv.id,
+        title=conv.title,
+        created_at=conv.created_at,
+        updated_at=conv.updated_at,
+        messages=[
+            schemas.ConversationMessageOut(
+                id=m.id,
+                role=m.role,
+                content=m.content,
+                evidence=m.evidence,
+                evidence_agreement=m.evidence_agreement,
+                created_at=m.created_at,
+            )
+            for m in messages
+        ],
+    )
+    return detail
 
 
 # ---------------------------------------------------------------------------

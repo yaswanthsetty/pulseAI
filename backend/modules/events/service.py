@@ -260,16 +260,31 @@ def _cluster_labels(vectors: np.ndarray) -> np.ndarray:
     """UMAP (5-dim) + HDBSCAN labels for a batch of article vectors.
 
     Deterministic (fixed random state). Label -1 = noise (no event).
+
+    Small batches skip UMAP: its spectral layout crashes with
+    ``k >= N`` (scipy eigsh) when N <= n_components, and a handful of
+    articles cluster fine directly on the raw vectors anyway.
     """
     import hdbscan  # deferred: heavy import, only used by the slow path
     import umap
 
-    if len(vectors) < 2:
-        return np.full(len(vectors), -1, dtype=int)
+    n = len(vectors)
+    if n < 2:
+        return np.full(n, -1, dtype=int)
+    if n <= max(settings.event_umap_components + 2, settings.event_min_cluster_size):
+        # sklearn's BallTree lacks 'cosine'; normalise and use euclidean
+        # (identical neighbour ordering for unit-length vectors).
+        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+        unit = vectors / np.where(norms == 0, 1.0, norms)
+        labels = hdbscan.HDBSCAN(
+            min_cluster_size=settings.event_min_cluster_size,
+            metric="euclidean",
+        ).fit_predict(unit)
+        return labels.astype(int)
     reduced = umap.UMAP(
         n_components=settings.event_umap_components,
         random_state=42,
-        n_neighbors=max(2, min(15, len(vectors) - 1)),
+        n_neighbors=max(2, min(15, n - 1)),
         min_dist=0.0,
         metric="cosine",
     ).fit_transform(vectors)
@@ -451,7 +466,7 @@ def close_stale_events(
         try:
             qdrant.delete(
                 collection_name=CENTROIDS_COLLECTION,
-                point_selector=PointIdsList(points=[str(event.id)]),
+                points_selector=PointIdsList(points=[str(event.id)]),
             )
         except Exception as exc:  # noqa: BLE001 - closure must not fail on a stale point
             logger.warning("could not delete centroid for closed event %s: %s", event.id, exc)
