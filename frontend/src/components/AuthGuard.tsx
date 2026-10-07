@@ -12,6 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!getAccessToken()) {
       router.replace("/login");
     } else {
+      // Safe to set state here because this is mount-time initialization and we want to avoid server-client hydration mismatch
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setChecked(true);
     }

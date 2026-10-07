@@ -1,6 +1,6 @@
 # PulseAI — Project Status & Roadmap
 
-> Last updated: August 21, 2026
+> Last updated: October 8, 2026
 
 ## Status
 
@@ -59,7 +59,7 @@
 - Docker Compose (Postgres, Qdrant, Redis) + production compose with frontend image, migrate runner, nightly backups, Prometheus + Grafana
 - GitHub Actions CI (ruff, import-linter, pytest, pip-audit, npm audit)
 - Import-linter module boundary enforcement
-- 80% test coverage gate (42 tests across the new Phase 7 modules)
+- 80% test coverage gate (358 tests in the backend test suite)
 - k6 load-test scripts for search and read endpoints
 
 ---
@@ -110,3 +110,9 @@ docker compose -f docker-compose.prod.yml up -d --build
 # API on :8000, frontend on :3000, Grafana on :3001, Prometheus on :9090
 # Nightly DB dumps land in ./backups (14-day retention)
 ```
+
+## Coding Agent Upgrade Plan
+- **Phase 1**: Ground every answer in real text (Completed).
+- **Phase 2**: Evaluation harness (Pending).
+- **Phase 3**: Improve chunking & ranking (Pending).
+- **Phase 4**: Agent tools & tool calling (Pending).

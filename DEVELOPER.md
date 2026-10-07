@@ -138,6 +138,7 @@ backend/
     ssrf.py               #   SSRF protection
     audit.py              #   audit_log writer
     pagination.py         #   list pagination envelope
+    counters.py           #   metrics counters
   db/
     models.py             # all 21 tables (SQLAlchemy 2 mapped_column style)
     seed.py / seed_data.py  # idempotent reference-data seeding
@@ -148,7 +149,7 @@ backend/
     retrieval/            # service (embed + search + rerank), chunker, jobs, router, schemas
     events/               # service (fast path, slow path, closure, notifications), router, schemas
     ranking/              # service (intent detection, temporal ranking), schemas
-    agents/               # service (chat SSE, deep path, reports), router, schemas
+    agents/               # service (chat SSE, deep path, reports), grounding, router, schemas
     reports/              # placeholder (reports logic is in agents module)
   workers/
     worker.py             # RQ worker (SimpleWorker on Windows)
@@ -208,7 +209,7 @@ All settings in `backend/core/config.py` (pydantic-settings). See `.env.example`
 | Embeddings | `EMBEDDING_MODEL` (BAAI/bge-m3), chunking params (256/40/300) |
 | Rerank | `RERANKER_MODEL` (BAAI/bge-reranker-base), `RERANK_TOP_K` (50), `RERANK_TOP_N` (10) |
 | Events | `EVENT_MATCH_THRESHOLD` (0.72), `EVENT_CLOSE_HOURS` (72) |
-| LLM | `OLLAMA_URL`, `CHAT_MODEL` (qwen2.5:3b), `SUMMARY_MODEL` |
+| LLM | `OLLAMA_URL`, `CHAT_MODEL` (qwen2.5:3b), `CHAT_NUM_CTX` (8192), `CHAT_NUM_PREDICT` (768), `CHAT_CONTEXT_TOKEN_CAP` (6144), `CHAT_MAX_CHUNKS_PER_ARTICLE` (2), `SUMMARY_MODEL` |
 | Ingestion | `SEED_DEFAULT_SOURCES` (true), polling intervals, dedupe thresholds |
 
 ## 7. Database
@@ -365,8 +366,8 @@ embed_article_job → chunk_text (256 tokens, 40 overlap) → BGE-M3 encode
 
 ### Chat
 
-- **Fast path**: retrieve context → single LLM call → SSE stream with citations
-- **Deep path**: planner → retriever×N → reasoner×N → synthesizer → SSE stream
+- **Fast path**: retrieve context → single LLM call → SSE stream with citations → inline grounding validation (strip invalid citations, record core/ counters)
+- **Deep path**: planner → retriever×N → reasoner×N → synthesizer → SSE stream → inline grounding validation
 
 ### Notification delivery (Phase 7)
 
@@ -425,7 +426,7 @@ host-port-free infra, one-shot `migrate` runner, frontend image
 
 **Metrics** (`backend/modules/api/metrics.py`): dependency-free Prometheus text
 exposition — request counters + latency histogram (per route), infra up/down
-probes, RQ queue depths, sources in FR-3 backoff. Scrape config in
+probes, RQ queue depths, sources in FR-3 backoff, and agent grounding telemetry (`pulseai_counter_total` tracking invalid citations and context budget overflows). Scrape config in
 `ops/prometheus.yml`.
 
 **Load tests** (`tests/load/`): k6 scripts for `/search` (ramping VUs, p95<5s

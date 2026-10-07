@@ -31,6 +31,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Adopt whatever the inline script applied (localStorage preference).
     const current = document.documentElement.dataset.theme;
     if (current === "light" || current === "dark") {
+      // Safe to set state here because this is mount-time initialization and we want to avoid server-client hydration mismatch
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(current);
     }
