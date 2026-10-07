@@ -92,13 +92,27 @@ class Settings(BaseSettings):
     summary_provider: str = "ollama"  # ollama | none
     summary_model: str = "qwen2.5:3b"
     ollama_url: str = "http://localhost:11434"
-    summary_max_tokens: int = 300
     summary_timeout_seconds: int = 120
 
     chat_provider: str = "ollama"
     chat_model: str = "qwen2.5:3b"
-    chat_max_tokens: int = 500
     chat_timeout_seconds: int = 120
+
+    # Ollama context window / generation cap. Sent on EVERY Ollama call (chat,
+    # planner/reasoner/synthesizer, reports, event summaries): Ollama reloads
+    # the model whenever num_ctx differs between requests, and its default
+    # window silently truncates long prompts from the front. The grounded
+    # context budget is derived from these (see agents/grounding.py):
+    #   budget = num_ctx - system - question - num_predict - 10% safety margin.
+    # qwen2.5:3b at 8192 costs ~300 MB of KV cache; set CHAT_NUM_CTX=4096 on
+    # machines with < 8 GB RAM (the computed budget adapts).
+    chat_num_ctx: int = 8192
+    chat_num_predict: int = 768
+    # Optional hard cap on the excerpt budget (0 = use the computed budget).
+    chat_context_token_cap: int = 0
+    # Chunks of the same article placed in a RAG prompt (retrieval returns the
+    # best N chunks per article for RAG callers; /search stays at 1).
+    chat_max_chunks_per_article: int = 2
 
     # --- Redis --------------------------------------------------------------
     redis_url: str = "redis://localhost:6379/0"

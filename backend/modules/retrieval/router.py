@@ -7,6 +7,10 @@ from backend.modules.retrieval.schemas import SearchQuery, SearchResult
 
 router = APIRouter(tags=["retrieval"])
 
+# /search returns the matched chunk for display only; RAG callers get the full
+# chunk from service.search() directly.
+MAX_RESPONSE_CHUNK_CHARS = 1000
+
 
 @router.post("/search", response_model=list[SearchResult])
 def semantic_search(payload: SearchQuery):
@@ -18,7 +22,7 @@ def semantic_search(payload: SearchQuery):
     embed/Qdrant work in a threadpool.
     """
     try:
-        return service.search(
+        results = service.search(
             query=payload.query,
             limit=payload.top_k or payload.limit or 10,
             mode=payload.mode,
@@ -27,3 +31,9 @@ def semantic_search(payload: SearchQuery):
         )
     except service.SearchUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return [
+        r.model_copy(update={"chunk_text": r.chunk_text[:MAX_RESPONSE_CHUNK_CHARS]})
+        if r.chunk_text and len(r.chunk_text) > MAX_RESPONSE_CHUNK_CHARS
+        else r
+        for r in results
+    ]

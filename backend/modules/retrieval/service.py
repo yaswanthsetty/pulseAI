@@ -57,7 +57,7 @@ from backend.core.storage import get_storage
 from backend.db.models import Article, ArticleChunk, Source
 from backend.modules.ranking.service import blend_scores, detect_intent
 from backend.modules.retrieval.chunker import chunk_text, estimate_tokens
-from backend.modules.retrieval.schemas import SearchFilters, SearchResult
+from backend.modules.retrieval.schemas import ChunkExcerpt, SearchFilters, SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -335,6 +335,7 @@ def search(
     embedder: Any = None,
     qdrant: QdrantClient | None = None,
     reranker: Any = None,
+    max_chunks_per_article: int = 1,
 ) -> list[SearchResult]:
     """Retrieve the nearest article vectors for ``query`` (FR-11/FR-12, FR-13, FR-14/15).
 
@@ -349,6 +350,10 @@ def search(
     using weighted blend of similarity, freshness, credibility, and event
     signal from the ``ranking_configs`` table.  ``None`` = auto-detect from
     query keywords; ``"default"`` skips temporal ranking.
+
+    ``max_chunks_per_article`` (default 1) controls RAG grounding: results are
+    always one per article, but with a value > 1 each result also carries its
+    next-best matching chunks in ``extra_chunks`` (best score first).
 
     ``embedder``/``qdrant``/``reranker`` are injectable for tests; defaults
     resolve lazily. A reranker load failure degrades to retrieval order — it
@@ -415,10 +420,12 @@ def search(
         logger.warning("semantic search unavailable: %s", exc)
         raise SearchUnavailableError("Semantic search is temporarily unavailable") from exc
 
-    # Build the deduplicated candidate set (one hit per article — the chunk
-    # with the best retrieval score) with its payload for reranking.
-    candidates: list[tuple[SearchResult, dict[str, Any]]] = []
-    seen: set[uuid.UUID] = set()
+    # Build the deduplicated candidate set (one candidate per article — its
+    # best chunk) with its payload for reranking. When
+    # ``max_chunks_per_article > 1`` the article's next-best chunks ride along
+    # as ``extra_chunks`` for RAG grounding.
+    max_chunks = max(1, max_chunks_per_article)
+    groups: dict[uuid.UUID, list[tuple[SearchResult, dict[str, Any]]]] = {}
     for hit in response.points:
         payload: dict[str, Any] = hit.payload or {}
         article_id = payload.get("article_id")
@@ -438,18 +445,38 @@ def search(
                 similarity_score=hit.score,
                 published_at=published_at,
                 chunk_id=payload.get("chunk_id"),
+                source_name=payload.get("source_name"),
+                chunk_text=payload.get("chunk_text"),
+                chunk_index=payload.get("chunk_number"),
             )
         except ValidationError:
             # e.g. legacy integer IDs from a previous schema generation that
             # cannot resolve to the UUID-keyed articles table — skip, don't 500.
             logger.warning("search hit has an unresolvable article id (%r); skipping", article_id)
             continue
-        if result.article_id in seen:
+        if result.article_id in groups:
+            if max_chunks > 1:
+                groups[result.article_id].append((result, payload))
             continue  # chunk-level dedupe: keep each article's best (first) hit
-        seen.add(result.article_id)
-        candidates.append((result, payload))
-        if rerank_model is None and len(candidates) >= limit:
+        groups[result.article_id] = [(result, payload)]
+        if rerank_model is None and max_chunks == 1 and len(groups) >= limit:
             break
+
+    candidates: list[tuple[SearchResult, dict[str, Any]]] = []
+    for hits in groups.values():
+        if max_chunks > 1 and len(hits) > 1:
+            hits.sort(key=lambda t: t[0].similarity_score, reverse=True)  # stable
+        primary, primary_payload = hits[0]
+        primary.extra_chunks = [
+            ChunkExcerpt(
+                chunk_id=extra.chunk_id,
+                chunk_index=extra.chunk_index,
+                chunk_text=extra.chunk_text or "",
+                score=extra.similarity_score,
+            )
+            for extra, _extra_payload in hits[1:max_chunks]
+        ]
+        candidates.append((primary, primary_payload))
 
     # FR-13: cross-encoder rerank of the top-K candidates → final top-N.
     if rerank_model is not None and candidates:

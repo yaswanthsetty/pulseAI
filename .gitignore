@@ -137,6 +137,7 @@ temp/
 tempdocs/
 .freebuff/
 AGENTS.md
+PROJECT_CONTEXT.md
 
 # ===== Local object storage (article bodies) =====
 storage/

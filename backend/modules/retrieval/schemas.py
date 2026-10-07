@@ -35,6 +35,15 @@ class SearchQuery(BaseModel):
     filters: SearchFilters | None = None
 
 
+class ChunkExcerpt(BaseModel):
+    """An additional matching chunk of the same article (RAG grounding only)."""
+
+    chunk_id: uuid.UUID | None = None
+    chunk_index: int | None = None
+    chunk_text: str = ""
+    score: float = 0.0
+
+
 class SearchResult(BaseModel):
     """A single semantic hit, resolved to its source article."""
 
@@ -44,3 +53,9 @@ class SearchResult(BaseModel):
     similarity_score: float
     published_at: datetime | None = None
     chunk_id: uuid.UUID | None = None
+    source_name: str | None = None
+    chunk_text: str | None = None
+    chunk_index: int | None = None
+    # Further chunks of the same article, best first. Populated only when
+    # ``search(max_chunks_per_article>1)``; never serialised in API responses.
+    extra_chunks: list[ChunkExcerpt] = Field(default_factory=list, exclude=True)

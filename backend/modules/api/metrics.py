@@ -118,6 +118,26 @@ def metrics() -> Response:
     lines.append("# TYPE pulseai_sources_failing gauge")
     lines.append(f"pulseai_sources_failing {_probe_failing_sources()}")
 
+    from backend.core import counters
+
+    snap = counters.snapshot()
+    for name, help_text in [
+        ("pulseai_answers", "Total number of generated answers."),
+        ("pulseai_invalid_citations", "Total number of invalid citations stripped from answers."),
+        (
+            "pulseai_context_chunks_dropped",
+            "Total number of chunks dropped from context due to token budget.",
+        ),
+    ]:
+        if name in snap:
+            lines.append(f"# HELP {name}_total {help_text}")
+            lines.append(f"# TYPE {name}_total counter")
+            for labels, value in sorted(snap[name].items()):
+                label_str = ",".join(f'{k}="{v}"' for k, v in labels)
+                lines.append(
+                    f"{name}_total{{{label_str}}} {value}" if label_str else f"{name}_total {value}"
+                )
+
     return Response(content="\n".join(lines) + "\n", media_type="text/plain; version=0.0.4")
 
 
