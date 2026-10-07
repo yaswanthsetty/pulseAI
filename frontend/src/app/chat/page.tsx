@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { chatStream, fetchConversations, type EvidenceItem, type Conversation } from "@/lib/api";
 import { Shell } from "@/components/layout/Shell";
+import { AuthGuard } from "@/components/AuthGuard";
 import { getAccessToken } from "@/lib/api";
 
 interface Message {
@@ -10,25 +11,49 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   evidence?: EvidenceItem[];
+  invalid_citations?: number[];
   agreement?: number;
   thinking?: string[];
   isStreaming?: boolean;
 }
 
 function EvidencePanel({ evidence }: { evidence: EvidenceItem[] }) {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  
   return (
     <div className="mt-3 p-3 bg-secondary/30 border border-border/40 rounded-xl">
       <div className="text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Sources</div>
       <div className="space-y-1.5">
         {evidence.map((item) => (
-          <div key={item.citation_id} className="flex items-start gap-2 text-xs">
-            <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-lg bg-primary/10 text-[10px] font-mono text-primary">
-              {item.citation_id}
-            </span>
-            <div className="min-w-0">
-              <p className="text-foreground leading-snug line-clamp-1">{item.title}</p>
-              <p className="text-[10px] font-mono text-muted mt-0.5">{item.score.toFixed(3)}</p>
-            </div>
+          <div key={item.citation_id} className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => setExpandedId(expandedId === item.citation_id ? null : item.citation_id)}
+              aria-expanded={expandedId === item.citation_id}
+              className="flex items-start gap-2 text-left hover:bg-secondary/50 rounded-lg p-1 -ml-1 transition-colors group"
+              title={item.source_name || "Unknown source"}
+            >
+              <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-lg bg-primary/10 text-[10px] font-mono text-primary group-hover:bg-primary/20 transition-colors">
+                {item.citation_id}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-foreground text-xs leading-snug line-clamp-1">{item.title}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] font-mono text-muted">{item.score.toFixed(3)}</span>
+                  {item.source_name && (
+                    <>
+                      <span className="text-border text-[10px]">|</span>
+                      <span className="text-[10px] text-muted truncate">{item.source_name}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </button>
+            {expandedId === item.citation_id && item.snippet && (
+              <div className="text-xs text-muted/90 pl-8 pr-2 py-1 mb-1 border-l-2 border-border/50 ml-1.5">
+                {item.snippet}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -76,6 +101,11 @@ const ChatMessage = ({ message }: { message: Message }) => {
               )}
             </div>
             <EvidencePanel evidence={message.evidence} />
+            {message.invalid_citations && message.invalid_citations.length > 0 && (
+              <div className="mt-2 text-[10px] text-destructive/80">
+                Stripped hallucinated citations: {message.invalid_citations.map((id) => `[#${id}]`).join(", ")}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -121,7 +151,7 @@ export default function ChatPage() {
           switch (event.type) {
             case "token": updated.content += event.token || ""; break;
             case "thinking": if (event.stage) updated.thinking = [...(updated.thinking || []), event.stage]; break;
-            case "evidence": updated.content = event.message || updated.content; updated.evidence = event.evidence; updated.agreement = event.agreement; updated.isStreaming = false; break;
+            case "evidence": updated.content = event.message || updated.content; updated.evidence = event.evidence; updated.agreement = event.agreement; updated.invalid_citations = event.invalid_citations; updated.isStreaming = false; break;
             case "error": updated.content = event.error ? `Error: ${event.error}` : "An error occurred"; updated.isStreaming = false; break;
           }
           return [...prev.slice(0, -1), updated];
@@ -144,7 +174,8 @@ export default function ChatPage() {
   }, [handleSend]);
 
   return (
-    <Shell>
+    <AuthGuard>
+      <Shell>
       <div className="flex h-full">
         {/* Conversation history sidebar */}
         <div className="hidden md:flex w-56 shrink-0 border-r border-border/40 flex-col">
@@ -211,6 +242,7 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
-    </Shell>
+      </Shell>
+    </AuthGuard>
   );
 }

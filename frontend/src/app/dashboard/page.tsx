@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { fetchStats, fetchTrending, type TrendingEvent } from "@/lib/api";
 import { AuthGuard } from "@/components/AuthGuard";
+import { Shell } from "@/components/layout/Shell";
 
 const DIRECTION_STYLES: Record<string, { label: string; className: string }> = {
   rising: { label: "▲ Rising", className: "text-success" },
@@ -89,8 +90,9 @@ export default function DashboardPage() {
 
   return (
     <AuthGuard>
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <Shell>
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-5xl mx-auto p-6 space-y-6">
           <header>
             <h1 className="font-display text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-sm text-muted mt-1">
@@ -208,8 +210,9 @@ export default function DashboardPage() {
               </div>
             )}
           </section>
+          </div>
         </div>
-      </div>
+      </Shell>
     </AuthGuard>
   );
 }

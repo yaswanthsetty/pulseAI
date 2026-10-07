@@ -12,6 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!getAccessToken()) {
       router.replace("/login");
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChecked(true);
     }
   }, [router]);

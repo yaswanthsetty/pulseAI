@@ -63,6 +63,7 @@ export interface ChatEvent {
   sub_questions?: string[];
   agreement?: number;
   evidence?: EvidenceItem[];
+  invalid_citations?: number[];
   conversation_id?: string;
   error?: string;
 }
@@ -71,9 +72,10 @@ export interface EvidenceItem {
   citation_id: number;
   article_id: string;
   title: string;
-  snippet?: string;
-  source?: string;
   source_id: string;
+  source_name?: string;
+  snippet?: string;
+  chunk_id?: string;
   published_at: string | null;
   score: number;
 }
@@ -129,6 +131,7 @@ export function getAccessToken(): string | null {
 
 export function logout() {
   setAccessToken(null);
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   if (typeof window !== "undefined") window.location.href = "/login";
 }
 
