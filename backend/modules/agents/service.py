@@ -214,7 +214,8 @@ async def _call_ollama_blocking(prompt_messages: list[dict], *, label: str = "")
                 "stream": False,
                 "think": False,
                 "options": {
-                    "num_predict": settings.chat_num_predict, "num_ctx": settings.chat_num_ctx,
+                    "num_predict": settings.chat_num_predict,
+                    "num_ctx": settings.chat_num_ctx,
                     "temperature": 0.3,
                 },
             },
@@ -337,7 +338,8 @@ async def chat_stream(
                     "stream": True,
                     "think": False,
                     "options": {
-                        "num_predict": settings.chat_num_predict, "num_ctx": settings.chat_num_ctx,
+                        "num_predict": settings.chat_num_predict,
+                        "num_ctx": settings.chat_num_ctx,
                         "temperature": 0.3,
                     },
                 },

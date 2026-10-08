@@ -311,11 +311,12 @@ class TestRerank:
         assert [r.title for r in results] == ["Weather report", "AI startup raises funding"]
 
     def test_max_chunks_per_article(self):
+        article_id = str(uuid.uuid4())
         qdrant = FakeQdrant(
             collections=[service.COLLECTION_NAME],
             points=[
-                _hit("1", source_id="2", score=0.9, title="Chunk 1"),
-                _hit("1", source_id="2", score=0.8, title="Chunk 2"),
+                _hit(article_id, score=0.9, title="Chunk 1"),
+                _hit(article_id, score=0.8, title="Chunk 2"),
             ],
         )
         for i, pt in enumerate(qdrant._points):

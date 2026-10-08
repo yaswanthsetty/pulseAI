@@ -13,7 +13,8 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moves to Ubuntu 26 on 2026-10-19.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     services:
       postgres:
@@ -55,10 +56,10 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
 
@@ -82,24 +83,41 @@ jobs:
 
   security:
     name: Dependency security audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
 
+      # Audit the locked dependency graph from uv.lock. Auditing the installed
+      # environment instead checks zero packages: `pip list --local` (what
+      # pip-audit uses via pip-api) returns [] inside uv-managed virtual
+      # environments, so the old `-l` invocation always reported "No known
+      # vulnerabilities found" without ever querying a package.
       - name: Backend audit (pip-audit)
         run: |
+          uv export --frozen --no-hashes --no-emit-project -o requirements-audit.txt
+          # accelerate 1.14.0 (PYSEC-2026-3804) has no fixed release, and it
+          # cannot be removed: flagembedding and peft import it directly and it
+          # is required for BGE-M3 embeddings. Revisit 2027-01-15: drop this
+          # ignore once a patched accelerate is published.
           uv run --with pip-audit python -m pip_audit \
-            --skip-editable \
-            -l --progress-spinner off
+            -r requirements-audit.txt \
+            --progress-spinner off \
+            --desc off \
+            --ignore-vuln PYSEC-2026-3804
 
+      # Production dependency tree only. The remaining high findings are in ESLint
+      # dev tooling: braces (GHSA-vfj7-8cjw-p6xm, affects <= 3.0.3) has no patched
+      # release on npm, and the eslint-config-next -> @next/eslint-plugin-next ->
+      # fast-glob -> micromatch -> braces chain has no path around it. Revisit
+      # 2027-01-15: drop --omit=dev once braces ships a fix.
       - name: Frontend audit (npm audit)
         working-directory: frontend
         run: |
           npm install --package-lock-only --ignore-scripts
-          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
