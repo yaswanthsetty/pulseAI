@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html><head><title>Why our migration took three tries</title></head>
+<body>
+<main>
+  <h1>Why our database migration took three tries</h1>
+  <p>The first attempt failed because we had not accounted for a foreign key that the ORM created
+  implicitly; the second attempt ran out of disk space halfway through the rewrite of a two hundred
+  gigabyte table on the primary.</p>
+  <p>The third attempt succeeded only after we switched to a two-phase approach: backfill the new
+  column in batches of ten thousand rows, verify counts, then flip the application reads over.</p>
+  <p>Looking back, the lesson is boring but true: migrations that rewrite large tables need a rollback
+  story that has actually been rehearsed, not one that only exists in a design document.</p>
+</main>
+</body></html>

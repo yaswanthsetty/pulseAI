@@ -5,14 +5,32 @@ from datetime import UTC, datetime
 
 import numpy as np
 import pytest
+from backend.core import counters
+from backend.core.content_quality import is_boilerplate
 from backend.db.models import Article, ArticleChunk, Source
 from backend.modules.ingestion.dedupe import url_hash
 from backend.modules.retrieval import service
 from backend.modules.retrieval.service import EmbeddingError
 
 
+def _varied_body(count: int) -> str:
+    """Deterministic article-like prose with enough lexical diversity that the
+    boilerplate classifier (rightly) does not flag it.
+
+    A single repeated template *would* be flagged - which is what the
+    filter-under-test is for - so every sentence carries unique tokens.
+    """
+    parts = []
+    for i in range(count):
+        parts.append(
+            f"Dispatch {i} discusses finding {i * 3 + 1} with detail {i * 7 + 2} "
+            f"noted within section {i * 11 + 3} after review {i * 13 + 4}."
+        )
+    return " ".join(parts)
+
+
 class FakeEmbedder:
-    """BGE-M3-shaped fake: returns dense vectors + sparse lexical weights."""
+    """BGE-M3-shaped fake: returns dense vectors + sparse lexical weights.""" ""
 
     def encode(self, texts, **kwargs):
         dense = np.array([[0.1 + i * 0.001] * service.EMBEDDING_SIZE for i in range(len(texts))])
@@ -36,6 +54,7 @@ class FakeQdrant:
         self.fail_on_upsert = fail_on_upsert
         self.upserted: list[dict] = []
         self.created: list[dict] = []
+        self.deleted: list[tuple] = []
 
     def get_collections(self):
         return _Collections(self._collections)
@@ -47,6 +66,16 @@ class FakeQdrant:
         if self.fail_on_upsert:
             raise ConnectionError("qdrant unreachable")
         self.upserted.append(kwargs)
+
+    # Re-ingest swap support: explicit-id deletes are tracked; scroll is not
+    # implemented so callers exercise their known-ids fallback path.
+    def delete(self, collection_name=None, points_selector=None, **kwargs):
+        # Mirrors the real QdrantClient.delete keyword so typos surface in
+        # tests instead of at production runtime.
+        self.deleted.append((collection_name, list(getattr(points_selector, "points", []))))
+
+    def scroll(self, **kwargs):
+        raise AttributeError("FakeQdrant does not implement scroll")
 
 
 @pytest.fixture
@@ -214,10 +243,7 @@ class TestEmbedArticle:
         assert set(points[0].vector["sparse"].indices) == {581, 63773}
 
     def test_long_article_produces_numbered_chunks(self, db, make_article):
-        body = " ".join(
-            f"Paragraph {i} describes yet another aspect of the research findings. "
-            for i in range(120)
-        )
+        body = _varied_body(120)
         article = make_article(description=body)
         qdrant = FakeQdrant(collections=[service.COLLECTION_NAME])
 
@@ -262,6 +288,41 @@ class TestEmbedArticle:
 
         assert outcome.status == "skipped"
         assert outcome.detail == "no embeddable content"
+
+    def test_boilerplate_tail_chunk_rejected_before_embedding(self, db, make_article):
+        """Phase 1.2: a nav-rail tail must never become a vector."""
+        counters.reset()
+        body = _varied_body(60)
+        rail = " ".join(
+            ["Newsletters Subscribe for the industry's biggest tech news Related AI"] * 40
+        )
+        article = make_article(description=body + " " + rail)
+        qdrant = FakeQdrant(collections=[service.COLLECTION_NAME])
+
+        outcome = service.embed_article(db, article.id, embedder=FakeEmbedder(), qdrant=qdrant)
+
+        assert outcome.status == "ok"
+        chunks = db.query(ArticleChunk).filter(ArticleChunk.article_id == article.id).all()
+        assert chunks
+        assert all(not is_boilerplate(c.chunk_text) for c in chunks)
+        assert counters.get("pulseai_chunks_rejected", reason="boilerplate") >= 1
+        assert outcome.chunk_count == len(chunks)
+
+    def test_pure_boilerplate_article_is_not_embedded(self, db, make_article):
+        counters.reset()
+        junk = "Most Popular " + (
+            "Stripe will reportedly acquire AI gateway startup OpenRouter for $7B+ Anthony Ha " * 60
+        )
+        article = make_article(description=junk)
+        qdrant = FakeQdrant(collections=[service.COLLECTION_NAME])
+
+        outcome = service.embed_article(db, article.id, embedder=FakeEmbedder(), qdrant=qdrant)
+
+        assert outcome.status == "skipped"
+        assert outcome.detail == "no embeddable content"
+        assert db.query(ArticleChunk).filter(ArticleChunk.article_id == article.id).count() == 0
+        assert not qdrant.upserted
+        assert counters.get("pulseai_chunks_rejected", reason="boilerplate") >= 1
 
     def test_missing_article(self, db):
         outcome = service.embed_article(

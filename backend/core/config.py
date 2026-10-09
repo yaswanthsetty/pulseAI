@@ -107,6 +107,10 @@ class Settings(BaseSettings):
     # qwen2.5:3b at 8192 costs ~300 MB of KV cache; set CHAT_NUM_CTX=4096 on
     # machines with < 8 GB RAM (the computed budget adapts).
     chat_num_ctx: int = 8192
+    # FastAPI/uvicorn listen port (``APP_PORT``). On Windows, Hyper-V reserves
+    # shifting TCP port ranges - see AGENTS.md "Common Issues" for how to find
+    # a free port before starting the API.
+    app_port: int = 8000
     chat_num_predict: int = 768
     # Optional hard cap on the excerpt budget (0 = use the computed budget).
     chat_context_token_cap: int = 0

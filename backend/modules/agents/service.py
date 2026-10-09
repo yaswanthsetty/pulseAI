@@ -53,6 +53,7 @@ from backend.modules.agents.schemas import (
     EvidenceItem,
     ReportRequest,
     ReportResponse,
+    ReportSource,
 )
 
 if TYPE_CHECKING:
@@ -686,6 +687,7 @@ def generate_report(
     db.add(report)
     db.commit()
 
+    evidence_list: list[EvidenceItem] = []
     try:
         results: list[SearchResult] = search_fn(
             query=request.topic + (" " + request.timeframe if request.timeframe else ""),
@@ -774,4 +776,5 @@ def generate_report(
         topic=report.topic,
         status=report.status,
         created_at=report.created_at,
+        sources=[ReportSource.model_validate(e.model_dump(mode="json")) for e in evidence_list],
     )

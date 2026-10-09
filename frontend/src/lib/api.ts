@@ -80,12 +80,26 @@ export interface EvidenceItem {
   score: number;
 }
 
+export interface ReportSource {
+  citation_id: number;
+  article_id: string;
+  title: string;
+  score: number;
+  source_id?: string | null;
+  source_name?: string | null;
+  published_at?: string | null;
+  snippet?: string | null;
+  chunk_id?: string | null;
+}
+
 export interface Report {
   id: string;
   topic: string;
   timeframe: string | null;
   status: string;
   content: Record<string, unknown> | string | null;
+  /** Present on the generate response; stored reports carry sources inside content. */
+  sources?: ReportSource[];
   evidence_agreement: number | Record<string, unknown> | null;
   created_at: string;
 }

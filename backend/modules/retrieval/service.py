@@ -52,7 +52,9 @@ from qdrant_client.http.models import (
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from backend.core import counters
 from backend.core.config import settings
+from backend.core.content_quality import count_rejected
 from backend.core.storage import get_storage
 from backend.db.models import Article, ArticleChunk, Source
 from backend.modules.ranking.service import blend_scores, detect_intent
@@ -239,6 +241,12 @@ def embed_article(
             overlap_tokens=settings.chunk_overlap_tokens,
             single_chunk_max_tokens=settings.single_chunk_max_tokens,
         )
+        # Phase 1.2: boilerplate never becomes a vector (safety net behind
+        # trafilatura extraction); rejected chunks are counted per reason.
+        pieces, rejected = count_rejected(pieces)
+        if rejected:
+            counters.incr("pulseai_chunks_rejected", rejected, reason="boilerplate")
+            logger.info("article %s: %d chunks rejected as boilerplate", article.id, rejected)
         if not pieces:
             return EmbedOutcome(status="skipped", detail="no embeddable content")
         chunks = [

@@ -36,7 +36,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pulse_password_123}
       POSTGRES_DB: ${POSTGRES_DB:-pulseai_db}
     ports:
-      - "5434:5432"
+      # Windows/Hyper-V reserves port ranges (netsh excludedportrange); when
+      # 5434 falls inside one, set POSTGRES_HOST_PORT in .env to a free port.
+      - "${POSTGRES_HOST_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

@@ -128,6 +128,10 @@ def metrics() -> Response:
             "pulseai_context_chunks_dropped",
             "Total number of chunks dropped from context due to token budget.",
         ),
+        (
+            "pulseai_chunks_rejected",
+            "Total number of chunks rejected before embedding as boilerplate.",
+        ),
     ]:
         if name in snap:
             lines.append(f"# HELP {name}_total {help_text}")

@@ -175,6 +175,6 @@ def run() -> None:
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=settings.app_port,
         reload=settings.debug,
     )

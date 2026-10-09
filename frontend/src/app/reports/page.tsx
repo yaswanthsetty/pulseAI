@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { generateReport, fetchReports, getReport, exportReportCsv, type Report } from "@/lib/api";
+import { generateReport, fetchReports, getReport, exportReportCsv, type Report, type ReportSource } from "@/lib/api";
 import { Shell } from "@/components/layout/Shell";
 import { useToast } from "@/components/ui/Toast";
 
@@ -121,6 +121,12 @@ function ReportDetail({ id, onBack }: { id: string; onBack: () => void }) {
   if (isLoading) return <div className="h-40 bg-card rounded-xl animate-pulse" />;
   if (!report) return <p className="text-sm text-muted">Report not found</p>;
 
+  const parsedContent =
+    typeof report.content === "object" && report.content !== null
+      ? (report.content as Record<string, unknown>)
+      : null;
+  const sources: ReportSource[] =
+    report.sources ?? ((parsedContent?.sources as ReportSource[] | undefined) ?? []);
   const content = report.content
     ? (typeof report.content === "object" ? JSON.stringify(report.content, null, 2) : String(report.content))
     : "No content available";
@@ -155,6 +161,25 @@ function ReportDetail({ id, onBack }: { id: string; onBack: () => void }) {
           <span className="ml-2">Agreement: {Math.round(report.evidence_agreement * 100)}%</span>
         )}
       </div>
+      {sources.length > 0 && (
+        <div className="mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Evidence sources</h3>
+          <ul className="space-y-1.5">
+            {sources.map((src) => (
+              <li key={`${src.citation_id}-${src.chunk_id ?? src.article_id}`} className="text-xs text-foreground/80">
+                <span className="font-mono text-primary">[#{src.citation_id}]</span>{" "}
+                {src.title}
+                {src.source_name && <span className="text-muted"> — {src.source_name}</span>}
+                {src.chunk_id && (
+                  <span className="font-mono text-muted" title={src.chunk_id}>
+                    {" "}· chunk {src.chunk_id.slice(0, 8)}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="bg-secondary/30 rounded-xl p-4 text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto">
         {content}
       </div>

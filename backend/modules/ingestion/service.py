@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from backend.core import queue
 from backend.core.audit import write_audit
 from backend.core.config import settings
+from backend.core.content_quality import EXTRACTOR_VERSION, body_is_usable
 from backend.core.storage import get_storage
 from backend.db.models import Article, Source
 from backend.modules.ingestion.classifier import (
@@ -28,7 +29,7 @@ from backend.modules.ingestion.dedupe import find_fuzzy_duplicate, normalize_url
 from backend.modules.ingestion.fetcher import FetchError, UnsafeUrlError, fetch_url
 from backend.modules.ingestion.parser import (
     FeedEntry,
-    extract_main_content,
+    extract_article,
     parse_feed,
     validate_feed,
 )
@@ -330,14 +331,27 @@ def process_article(db: Session, article_id) -> str:
         return article.content_ref or ""
 
     content: str | None = None
+    extractor = "summary"
     try:
         html = fetch_url(article.url, timeout=settings.article_fetch_timeout_seconds)
-        content = extract_main_content(html)
+        extraction = extract_article(html)
+        content = extraction.text
+        extractor = extraction.extractor
     except (FetchError, UnsafeUrlError) as exc:
         logger.warning("article %s body fetch failed; using description: %s", article_id, exc)
 
-    if not content or len(content) < len(article.description or ""):
-        content = article.description or content or ""
+    # Phase 1.2 quality gate: fall back to the feed summary ONLY when the
+    # extraction as a whole is unusable (both extractors < MIN_BODY_CHARS, or
+    # the whole body scores as boilerplate). A few bad tail chunks are the
+    # chunk filter's problem, not a reason to discard the body.
+    quality = "ok"
+    if not body_is_usable(content or ""):
+        quality = "low"
+        if article.description:
+            content = article.description
+            extractor = "summary"
+        else:
+            content = content or ""
 
     content = content[: settings.max_article_storage_chars]
 
@@ -355,6 +369,17 @@ def process_article(db: Session, article_id) -> str:
     if not article.category_code:
         article.category_code = classify_category(article.title, content)
 
+    article.extraction_quality = quality
+    article.extractor = extractor
+    article.extractor_version = EXTRACTOR_VERSION
+    logger.info(
+        "article %s extracted by %s (v%s): %d chars, quality=%s",
+        article_id,
+        extractor,
+        EXTRACTOR_VERSION,
+        len(content),
+        quality,
+    )
     article.processed_at = datetime.now(UTC)
     db.commit()
     return article.content_ref or ""

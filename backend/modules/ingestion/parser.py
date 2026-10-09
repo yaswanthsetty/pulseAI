@@ -11,9 +11,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import feedparser
+import trafilatura
 from bs4 import BeautifulSoup
+from trafilatura.deduplication import LRUCache
 
 from backend.core.config import settings
+from backend.core.content_quality import MIN_BODY_CHARS
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +51,22 @@ class FeedValidation:
 # HTML → text
 # ---------------------------------------------------------------------------
 
+#: Class/id fragments that mark non-article chrome divs (TechCrunch-style
+#: rails, promos, newsletter blocks). Matched case-insensitively as substrings.
+_CHROME_RE = re.compile(
+    r"nav|sidebar|side-bar|related|popular|newsletter|promo|widget|share|social|"
+    r"breadcrumb|advert|masthead|banner|recommend|in-brief|latest-in",
+    re.IGNORECASE,
+)
+
+
+@dataclass
+class ExtractionResult:
+    """Extracted article text plus which extractor produced it."""
+
+    text: str
+    extractor: str  # "trafilatura" | "fallback"
+
 
 def clean_html(raw_html: str) -> str:
     """Strip tags from feed summaries/descriptions, collapsing whitespace."""
@@ -61,12 +80,42 @@ def clean_html(raw_html: str) -> str:
     return _PUNCT_RE.sub(r"\1", text)
 
 
-def extract_main_content(html: str, max_chars: int | None = None) -> str:
-    """Best-effort extraction of the main article text from a full HTML page.
+def _chrome_elements(root) -> list:
+    """Elements inside ``root`` whose class/id looks like nav chrome."""
+    found = []
+    for tag in root.find_all(True):
+        if tag.parent is None:  # already decomposed via an ancestor
+            continue
+        marker = " ".join(tag.get("class") or []) + " " + str(tag.get("id") or "")
+        if marker and _CHROME_RE.search(marker):
+            found.append(tag)
+    return found
 
-    Heuristic (no trained model): drop boilerplate elements, prefer
-    <article>/<main>/role=main, then concatenate paragraph/heading text.
-    Falls back to the whole body when no paragraph elements exist.
+
+def _text_blocks(root, *, allow_list_items: bool) -> str:
+    tags = ["p", "h1", "h2", "h3", "blockquote"]
+    if allow_list_items:
+        tags.append("li")
+    blocks = root.find_all(tags)
+    if blocks:
+        text = "\n".join(
+            block.get_text(" ", strip=True) for block in blocks if block.get_text(strip=True)
+        )
+    else:
+        text = root.get_text(" ", strip=True)
+    return " ".join(text.split())
+
+
+def extract_main_content(html: str, max_chars: int | None = None) -> str:
+    """Heuristic BeautifulSoup extraction (fallback path).
+
+    Hardened against TechCrunch-style pages:
+
+    * picks the ``<article>`` with the *most paragraph text* instead of the
+      first one (the first is often a card/teaser);
+    * strips div-level chrome (rails, promos, newsletter blocks) by class/id;
+    * ``<li>`` items are only collected when they sit inside the chosen
+      ``<article>`` body - a nav list in ``<body>`` is never article text.
     """
     if not html:
         return ""
@@ -78,19 +127,53 @@ def extract_main_content(html: str, max_chars: int | None = None) -> str:
     ):
         tag.decompose()
 
-    article = soup.find("article") or soup.find("main") or soup.find(attrs={"role": "main"})
-    root = article if article is not None else (soup.body or soup)
-
-    blocks = root.find_all(["p", "h1", "h2", "h3", "blockquote", "li"])
-    if blocks:
-        text = "\n".join(
-            block.get_text(" ", strip=True) for block in blocks if block.get_text(strip=True)
-        )
+    # Choose the article element with the most paragraph text (not the first).
+    articles = soup.find_all("article")
+    root = None
+    from_article = False
+    if articles:
+        root = max(articles, key=lambda a: len(a.get_text(" ", strip=True)))
+        from_article = True
     else:
-        text = root.get_text(" ", strip=True)
+        root = soup.find("main") or soup.find(attrs={"role": "main"})
+    if root is None:
+        root = soup.body or soup
 
-    text = " ".join(text.split())
+    for tag in _chrome_elements(root):
+        tag.decompose()
+
+    text = _text_blocks(root, allow_list_items=from_article)
     return text[:max_chars]
+
+
+def extract_article(html: str, max_chars: int | None = None) -> ExtractionResult:
+    """Primary extraction: trafilatura (precision) with BS fallback.
+
+    ``ExtractionResult.extractor`` records which path won so ingestion can
+    store it per article (``articles.extractor``) and log the mix.
+    """
+    if not html:
+        return ExtractionResult(text="", extractor="fallback")
+    try:
+        text = trafilatura.extract(
+            html,
+            favor_precision=True,
+            include_comments=False,
+            include_tables=False,
+            # deduplicate=True uses a process-global document cache: the
+            # second identical document (syndicated HTML, re-extraction,
+            # re-ingest) silently returns None and downgrades to fallback.
+            # A per-call scoped cache keeps within-document segment dedup
+            # while making extraction deterministic.
+            deduplicate=LRUCache(),
+        )
+    except Exception as exc:  # noqa: BLE001 - third-party parser must not kill ingestion
+        logger.warning("trafilatura failed, using BS fallback: %s", exc)
+        text = None
+    if text and len(text) >= MIN_BODY_CHARS:
+        max_chars = max_chars or settings.max_article_storage_chars
+        return ExtractionResult(text=text[:max_chars], extractor="trafilatura")
+    return ExtractionResult(text=extract_main_content(html, max_chars), extractor="fallback")
 
 
 # ---------------------------------------------------------------------------

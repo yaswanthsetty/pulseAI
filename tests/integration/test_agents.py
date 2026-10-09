@@ -28,18 +28,27 @@ ARTICLE1 = SearchResult(
     title="AI startup raises $50M funding round",
     source_id=uuid.uuid4(),
     similarity_score=0.91,
+    source_name="Fixture Wire",
+    chunk_id=uuid.uuid4(),
+    chunk_text="AI startup raises $50M funding round The capital will fund a new research lab.",
 )
 ARTICLE2 = SearchResult(
     article_id=uuid.uuid4(),
     title="AI funding surge continues in 2026",
     source_id=uuid.uuid4(),
     similarity_score=0.82,
+    source_name="Fixture Daily",
+    chunk_id=uuid.uuid4(),
+    chunk_text="AI funding surge continues in 2026 Investors point to inference cost drops.",
 )
 ARTICLE3 = SearchResult(
     article_id=uuid.uuid4(),
     title="Climate summit reaches new agreement on emissions",
     source_id=uuid.uuid4(),
     similarity_score=0.75,
+    source_name="Fixture Globe",
+    chunk_id=uuid.uuid4(),
+    chunk_text="Climate summit reaches new agreement on emissions The pact sets 2035 targets.",
 )
 
 
@@ -353,6 +362,15 @@ class TestReports:
         data = resp.json()
         assert data["topic"] == "AI Trends"
         assert data["status"] in ("completed", "failed")
+        if data["status"] == "completed":
+            # Phase 1 evidence contract: every source exposes chunk_id +
+            # source_name + snippet on the response schema.
+            assert len(data["sources"]) == 2
+            for src in data["sources"]:
+                assert src["chunk_id"]
+                assert src["source_name"] in {"Fixture Wire", "Fixture Daily"}
+                assert src["snippet"]
+                assert src["citation_id"] >= 1
 
     def test_report_requires_analyst(self, client, make_user):
         headers = make_user(role="user")

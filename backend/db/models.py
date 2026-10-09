@@ -127,6 +127,13 @@ class Article(Base):
     description: Mapped[str | None] = mapped_column(Text)
     content_ref: Mapped[str | None] = mapped_column(Text)
     content_preview: Mapped[str | None] = mapped_column(Text)
+    # Phase 1.2 clean extraction: "ok" | "low" (quality gate fell back to the
+    # feed summary); extractor is "trafilatura" | "fallback" | "summary".
+    extraction_quality: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="ok", server_default="ok"
+    )
+    extractor: Mapped[str | None] = mapped_column(String(16))
+    extractor_version: Mapped[str | None] = mapped_column(String(16))
     url: Mapped[str] = mapped_column(Text, nullable=False)
     url_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     image_url: Mapped[str | None] = mapped_column(Text)

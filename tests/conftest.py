@@ -6,6 +6,7 @@ are captured at import time (pydantic-settings with lru_cache).
 
 import os
 import tempfile
+from pathlib import Path
 
 # --- Point the backend at the dedicated test database ----------------------
 # Forced (not setdefault): tests must never run against a dev/prod database.
@@ -13,7 +14,21 @@ os.environ["POSTGRES_DB"] = "pulseai_test"
 os.environ.setdefault("POSTGRES_USER", "pulse_admin")
 os.environ.setdefault("POSTGRES_PASSWORD", "pulse_password_123")
 os.environ.setdefault("POSTGRES_HOST", "localhost")
-os.environ.setdefault("POSTGRES_PORT", "5434")
+# Host port: honor the project's .env (machines where 5434 is reserved by
+# Hyper-V exclusions move it there), fall back to the compose default.
+def _env_port() -> str:
+    env_file = Path(__file__).parent.parent / ".env"
+    try:
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "POSTGRES_PORT" and value.strip():
+                return value.strip()
+    except OSError:
+        pass
+    return "5434"
+
+
+os.environ.setdefault("POSTGRES_PORT", _env_port())
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("QDRANT_URL", "http://localhost:6333")
 os.environ.setdefault("SEED_DEFAULT_SOURCES", "false")

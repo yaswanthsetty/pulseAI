@@ -42,11 +42,31 @@ class ReportRequest(BaseModel):
     timeframe: str | None = None
 
 
+class ReportSource(BaseModel):
+    """One evidence source exposed by the reports API.
+
+    Phase 1 evidence contract: ``chunk_id``/``source_name`` must be available
+    for every cited source (they were already stored in ``content.sources``;
+    this surfaces them on the response schema too).
+    """
+
+    citation_id: int
+    article_id: uuid.UUID
+    title: str
+    score: float
+    source_id: uuid.UUID | None = None
+    source_name: str | None = None
+    published_at: datetime | None = None
+    snippet: str | None = None
+    chunk_id: uuid.UUID | None = None
+
+
 class ReportResponse(BaseModel):
     id: uuid.UUID
     topic: str
     status: str
     created_at: datetime
+    sources: list[ReportSource] = Field(default_factory=list)
 
 
 class UsageBreakdown(BaseModel):

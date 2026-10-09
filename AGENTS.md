@@ -48,7 +48,7 @@ PulseAI is an advanced web-app running FastAPI, Qdrant, Postgres, and Redis. It 
 - 305 backend tests, all need Docker (Postgres :5434, Qdrant :6333, Redis :6379).
 
 **Common Issues**
-- Port 8000 is reserved by Hyper-V on Windows - use 8090 instead.
+- **Windows Hyper-V reserved port ranges**: Hyper-V reserves *shifting* TCP ranges on Windows (e.g. 8069-8168, 8169-8268), and which ranges are reserved changes across reboots. A port that worked yesterday can be unbindable today (`WinError 10013`). Check first with `netsh interface ipv4 show excludedportrange protocol=tcp` and pick a port outside every listed range. This affects both the API (`APP_PORT`, default 8000) and Ollama (`OLLAMA_URL`, default `http://localhost:11434` - on this host Ollama serves on port 16000 instead). Both are env-configurable; never assume 8090 is free either.
 - `ruff check --fix` auto-fixes import ordering and type annotation style.
 - Migration files must be manually written (not `--autogenerate`).
 - The `api/router.py` import order matters for ruff.
