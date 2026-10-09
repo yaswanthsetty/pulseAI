@@ -90,7 +90,9 @@ def _plan_content(article: Article) -> tuple[str, str, str, bool]:
         if len((stored or "").strip()) >= MIN_BODY_CHARS:
             logger.warning(
                 "article %s: extraction unusable (%d chars) but stored body "
-                "is usable; keeping stored content", article.id, len(content or "")
+                "is usable; keeping stored content",
+                article.id,
+                len(content or ""),
             )
             return stored, article.extractor or "fallback", article.extraction_quality, False
         if article.description:
@@ -161,9 +163,7 @@ def reingest_article(
         return Outcome(str(article.id), status, detail)
 
     if not kept:
-        old_junk_only = bool(old_chunks) and all(
-            is_boilerplate(c.chunk_text) for c in old_chunks
-        )
+        old_junk_only = bool(old_chunks) and all(is_boilerplate(c.chunk_text) for c in old_chunks)
         if not old_junk_only:
             return Outcome(
                 str(article.id),

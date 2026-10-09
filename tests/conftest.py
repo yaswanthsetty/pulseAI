@@ -14,6 +14,8 @@ os.environ["POSTGRES_DB"] = "pulseai_test"
 os.environ.setdefault("POSTGRES_USER", "pulse_admin")
 os.environ.setdefault("POSTGRES_PASSWORD", "pulse_password_123")
 os.environ.setdefault("POSTGRES_HOST", "localhost")
+
+
 # Host port: honor the project's .env (machines where 5434 is reserved by
 # Hyper-V exclusions move it there), fall back to the compose default.
 def _env_port() -> str:
