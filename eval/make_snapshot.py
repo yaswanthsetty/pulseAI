@@ -17,11 +17,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from sqlalchemy import select
-
 from backend.core.database import SessionLocal
 from backend.db.models import Article, ArticleChunk, Source
 from backend.modules.retrieval import service as retrieval
+from sqlalchemy import select
 
 SNAPSHOT_DIR = Path(__file__).parent / "snapshots"
 
@@ -105,7 +104,7 @@ def build_snapshot() -> dict:
 
     return {
         "snapshot_id": f"{dt.date.today().strftime('%Y%m%d')}_{_git_sha7()}",
-        "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "created_at": dt.datetime.now(dt.UTC).isoformat(),
         "git_sha": _git_sha7(),
         "counts": {
             "articles": len(article_records),
@@ -144,8 +143,10 @@ def main() -> int:
     k = snap["consistency"]
     print(f"snapshot_id : {snap['snapshot_id']}")
     print(f"articles    : {c['articles']}  chunks: {c['chunks']}  embedded: {c['embedded_chunks']}")
-    print(f"qdrant      : {k['qdrant_points']} points, db point ids: {k['db_point_ids']}, "
-          f"consistent: {k['consistent']}")
+    print(
+        f"qdrant      : {k['qdrant_points']} points, db point ids: {k['db_point_ids']}, "
+        f"consistent: {k['consistent']}"
+    )
     print(f"extractor   : {snap['extractor_mix']}")
     print(f"quality     : {snap['quality_mix']}")
     print(f"written     : {path}")
