@@ -1,0 +1,4553 @@
+{
+ "snapshot_id": "20261011_18b35cf",
+ "created_at": "2026-10-11T16:45:52.867833+00:00",
+ "git_sha": "18b35cf",
+ "counts": {
+  "articles": 80,
+  "chunks": 397,
+  "embedded_chunks": 397
+ },
+ "consistency": {
+  "db_point_ids": 397,
+  "qdrant_points": 397,
+  "missing_in_qdrant": [],
+  "orphaned_in_qdrant": [],
+  "consistent": true
+ },
+ "extractor_mix": {
+  "summary": 5,
+  "trafilatura": 75
+ },
+ "quality_mix": {
+  "low": 5,
+  "ok": 75
+ },
+ "articles": [
+  {
+   "article_id": "ac44dd91-b136-453e-a98d-ffb79ec0b493",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Nothing Phone 4a Pro review: premium aluminium meets quirky design",
+   "published_at": "2026-05-18T00:30:01+00:00",
+   "processed_at": "2026-08-17T18:24:06.103150+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "a9c0d8d4-af43-47ba-982b-be351da92be3",
+    "59150e29-b42b-4633-97d9-aba6f900a92c",
+    "e3961986-9079-47f1-9fa3-df26b8065c27",
+    "807e8fdb-e526-4bcb-a6e6-5023122c7770",
+    "08d83ebe-7a8b-43fc-aed1-68f22340df0c",
+    "f92ec3ee-88ec-4901-b3a2-2249057651c0",
+    "c7ebd76a-c661-4bed-8826-7abc0921c9a8",
+    "3fa6a5be-3afd-49f4-9321-ebbd395d9c22"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "a9c0d8d4-af43-47ba-982b-be351da92be3",
+     "chunk_number": 0,
+     "token_count": 254,
+     "qdrant_point_id": "a9c0d8d4-af43-47ba-982b-be351da92be3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "59150e29-b42b-4633-97d9-aba6f900a92c",
+     "chunk_number": 1,
+     "token_count": 162,
+     "qdrant_point_id": "59150e29-b42b-4633-97d9-aba6f900a92c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e3961986-9079-47f1-9fa3-df26b8065c27",
+     "chunk_number": 2,
+     "token_count": 246,
+     "qdrant_point_id": "e3961986-9079-47f1-9fa3-df26b8065c27",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "807e8fdb-e526-4bcb-a6e6-5023122c7770",
+     "chunk_number": 3,
+     "token_count": 203,
+     "qdrant_point_id": "807e8fdb-e526-4bcb-a6e6-5023122c7770",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "08d83ebe-7a8b-43fc-aed1-68f22340df0c",
+     "chunk_number": 4,
+     "token_count": 220,
+     "qdrant_point_id": "08d83ebe-7a8b-43fc-aed1-68f22340df0c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "f92ec3ee-88ec-4901-b3a2-2249057651c0",
+     "chunk_number": 5,
+     "token_count": 228,
+     "qdrant_point_id": "f92ec3ee-88ec-4901-b3a2-2249057651c0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c7ebd76a-c661-4bed-8826-7abc0921c9a8",
+     "chunk_number": 6,
+     "token_count": 233,
+     "qdrant_point_id": "c7ebd76a-c661-4bed-8826-7abc0921c9a8",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3fa6a5be-3afd-49f4-9321-ebbd395d9c22",
+     "chunk_number": 7,
+     "token_count": 242,
+     "qdrant_point_id": "3fa6a5be-3afd-49f4-9321-ebbd395d9c22",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "1ee3260b-d0db-4ffd-bf2c-40e906432705",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Ring Video Doorbell Pro review: night and day better with new 4K camera",
+   "published_at": "2026-06-29T00:30:31+00:00",
+   "processed_at": "2026-08-17T18:24:09.551699+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "c161e6d4-5263-4f7d-8581-30bc611f4d6e",
+    "5d900630-4544-4789-a98a-3a25cfa3d323",
+    "b4d50a5b-b6ab-408f-b265-cd0da14e9a8c",
+    "d37cd146-a4cf-4781-90a3-094832bfb615",
+    "46aaa266-ea16-4419-ab71-79e48b9db4f0",
+    "139297a7-8009-4ebe-b2c4-27cfa2b8b89f",
+    "f48bbcd3-6aeb-4d1f-9a61-06d81afd6187",
+    "bf1dad66-511b-427a-99af-115420949756",
+    "8db8f8af-3a55-468b-aec1-6fa1f9f64c1a",
+    "7d639a5a-3bed-49b5-9d94-901280f1a4e1"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "c161e6d4-5263-4f7d-8581-30bc611f4d6e",
+     "chunk_number": 0,
+     "token_count": 247,
+     "qdrant_point_id": "c161e6d4-5263-4f7d-8581-30bc611f4d6e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5d900630-4544-4789-a98a-3a25cfa3d323",
+     "chunk_number": 1,
+     "token_count": 213,
+     "qdrant_point_id": "5d900630-4544-4789-a98a-3a25cfa3d323",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b4d50a5b-b6ab-408f-b265-cd0da14e9a8c",
+     "chunk_number": 2,
+     "token_count": 255,
+     "qdrant_point_id": "b4d50a5b-b6ab-408f-b265-cd0da14e9a8c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d37cd146-a4cf-4781-90a3-094832bfb615",
+     "chunk_number": 3,
+     "token_count": 162,
+     "qdrant_point_id": "d37cd146-a4cf-4781-90a3-094832bfb615",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "46aaa266-ea16-4419-ab71-79e48b9db4f0",
+     "chunk_number": 4,
+     "token_count": 247,
+     "qdrant_point_id": "46aaa266-ea16-4419-ab71-79e48b9db4f0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "139297a7-8009-4ebe-b2c4-27cfa2b8b89f",
+     "chunk_number": 5,
+     "token_count": 255,
+     "qdrant_point_id": "139297a7-8009-4ebe-b2c4-27cfa2b8b89f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "f48bbcd3-6aeb-4d1f-9a61-06d81afd6187",
+     "chunk_number": 6,
+     "token_count": 250,
+     "qdrant_point_id": "f48bbcd3-6aeb-4d1f-9a61-06d81afd6187",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bf1dad66-511b-427a-99af-115420949756",
+     "chunk_number": 7,
+     "token_count": 222,
+     "qdrant_point_id": "bf1dad66-511b-427a-99af-115420949756",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8db8f8af-3a55-468b-aec1-6fa1f9f64c1a",
+     "chunk_number": 8,
+     "token_count": 221,
+     "qdrant_point_id": "8db8f8af-3a55-468b-aec1-6fa1f9f64c1a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7d639a5a-3bed-49b5-9d94-901280f1a4e1",
+     "chunk_number": 9,
+     "token_count": 100,
+     "qdrant_point_id": "7d639a5a-3bed-49b5-9d94-901280f1a4e1",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "c05ae9b6-bf20-4ad9-b947-a6c87d3fab0c",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Oura Ring 5 review: a stunning generational leap for smart rings",
+   "published_at": "2026-06-30T00:30:42+00:00",
+   "processed_at": "2026-08-17T18:24:08.609882+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "467adb2a-2fef-47b4-9dea-4c417e694527",
+    "fbcdd1b3-31f2-497f-aac6-4748e6ab9938",
+    "a421fae8-bb29-4387-95e7-93bfc6a6cece",
+    "9af49334-657c-4126-be7f-b55546882fd5",
+    "7c50b611-465f-467c-85f2-0a0f617e5cd4",
+    "9c8ec324-c8fc-4358-a7e5-7b0656ed1027",
+    "022e3b7d-05c7-4e2a-930b-6c11e924763e",
+    "97c0008a-e0ca-4318-af1a-2825c09769f1",
+    "e10e1a93-07cc-403b-8814-c7e73bb346bd",
+    "1c1a302f-fc44-4fa5-bd1b-20742b39b8d2"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "467adb2a-2fef-47b4-9dea-4c417e694527",
+     "chunk_number": 0,
+     "token_count": 254,
+     "qdrant_point_id": "467adb2a-2fef-47b4-9dea-4c417e694527",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fbcdd1b3-31f2-497f-aac6-4748e6ab9938",
+     "chunk_number": 1,
+     "token_count": 218,
+     "qdrant_point_id": "fbcdd1b3-31f2-497f-aac6-4748e6ab9938",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a421fae8-bb29-4387-95e7-93bfc6a6cece",
+     "chunk_number": 2,
+     "token_count": 252,
+     "qdrant_point_id": "a421fae8-bb29-4387-95e7-93bfc6a6cece",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9af49334-657c-4126-be7f-b55546882fd5",
+     "chunk_number": 3,
+     "token_count": 247,
+     "qdrant_point_id": "9af49334-657c-4126-be7f-b55546882fd5",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7c50b611-465f-467c-85f2-0a0f617e5cd4",
+     "chunk_number": 4,
+     "token_count": 230,
+     "qdrant_point_id": "7c50b611-465f-467c-85f2-0a0f617e5cd4",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9c8ec324-c8fc-4358-a7e5-7b0656ed1027",
+     "chunk_number": 5,
+     "token_count": 217,
+     "qdrant_point_id": "9c8ec324-c8fc-4358-a7e5-7b0656ed1027",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "022e3b7d-05c7-4e2a-930b-6c11e924763e",
+     "chunk_number": 6,
+     "token_count": 225,
+     "qdrant_point_id": "022e3b7d-05c7-4e2a-930b-6c11e924763e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "97c0008a-e0ca-4318-af1a-2825c09769f1",
+     "chunk_number": 7,
+     "token_count": 254,
+     "qdrant_point_id": "97c0008a-e0ca-4318-af1a-2825c09769f1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e10e1a93-07cc-403b-8814-c7e73bb346bd",
+     "chunk_number": 8,
+     "token_count": 216,
+     "qdrant_point_id": "e10e1a93-07cc-403b-8814-c7e73bb346bd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1c1a302f-fc44-4fa5-bd1b-20742b39b8d2",
+     "chunk_number": 9,
+     "token_count": 78,
+     "qdrant_point_id": "1c1a302f-fc44-4fa5-bd1b-20742b39b8d2",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "d51f471c-3264-4c84-bb89-1f277e122586",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Sennheiser Momentum 5 headphones review: great sound meets exceptional battery life",
+   "published_at": "2026-07-06T00:30:03+00:00",
+   "processed_at": "2026-08-17T18:24:07.681104+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "0c78551b-4fa4-46aa-8a5b-e82f5dc29282",
+    "898d88f4-d156-465b-9a55-3f6ada4be9f5",
+    "3057cc8d-ad4d-4e8a-8737-3e87105d4962",
+    "b5f9cba4-53a4-423f-8199-d832a937a392",
+    "9d45a294-22a6-4859-889c-e69cb2781d03"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "0c78551b-4fa4-46aa-8a5b-e82f5dc29282",
+     "chunk_number": 0,
+     "token_count": 244,
+     "qdrant_point_id": "0c78551b-4fa4-46aa-8a5b-e82f5dc29282",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "898d88f4-d156-465b-9a55-3f6ada4be9f5",
+     "chunk_number": 1,
+     "token_count": 246,
+     "qdrant_point_id": "898d88f4-d156-465b-9a55-3f6ada4be9f5",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3057cc8d-ad4d-4e8a-8737-3e87105d4962",
+     "chunk_number": 2,
+     "token_count": 230,
+     "qdrant_point_id": "3057cc8d-ad4d-4e8a-8737-3e87105d4962",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b5f9cba4-53a4-423f-8199-d832a937a392",
+     "chunk_number": 3,
+     "token_count": 233,
+     "qdrant_point_id": "b5f9cba4-53a4-423f-8199-d832a937a392",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9d45a294-22a6-4859-889c-e69cb2781d03",
+     "chunk_number": 4,
+     "token_count": 237,
+     "qdrant_point_id": "9d45a294-22a6-4859-889c-e69cb2781d03",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "4165e8f0-5586-40f5-bc75-5a24a42c3c6e",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Now",
+   "published_at": "2026-07-10T19:30:00+00:00",
+   "processed_at": "2026-08-17T18:24:35.074941+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "summary",
+   "extractor_version": "1",
+   "extraction_quality": "low",
+   "chunk_ids": [],
+   "chunks": []
+  },
+  {
+   "article_id": "3b16d30f-411f-42e3-8333-ee9f66019fda",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "AI and artists can click – a new manifesto for modern creativity",
+   "published_at": "2026-07-13T09:23:30+00:00",
+   "processed_at": "2026-08-17T18:24:02.427530+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "fef4f675-e9ac-4965-a7af-6a88d5bd3ef9"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "fef4f675-e9ac-4965-a7af-6a88d5bd3ef9",
+     "chunk_number": 0,
+     "token_count": 108,
+     "qdrant_point_id": "fef4f675-e9ac-4965-a7af-6a88d5bd3ef9",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "e41dae93-496f-4acc-bc85-30f10e5a49a5",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Microsoft Surface Laptop 8 review: a quality PC whose trackpad taps you back",
+   "published_at": "2026-07-14T00:30:22+00:00",
+   "processed_at": "2026-08-17T18:24:07.024038+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "ef1d32a7-f148-4a40-b2ed-2d8c9d2d476a",
+    "0f860193-74a2-498f-947f-8de2e60ab4d4",
+    "814dcbf2-f8aa-4102-9d94-6c1aeb6e417a",
+    "debe33e4-8c22-4501-9cc1-64a74aef9d83",
+    "fde1c660-725c-4a65-bed1-85778c6036aa",
+    "144cbf26-bf6e-424d-a4b6-947406be4b17",
+    "500bcb86-37a2-4c38-b30f-eb89e94c0848",
+    "3681f38b-7bdf-436b-a864-b90331a8243f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "ef1d32a7-f148-4a40-b2ed-2d8c9d2d476a",
+     "chunk_number": 0,
+     "token_count": 250,
+     "qdrant_point_id": "ef1d32a7-f148-4a40-b2ed-2d8c9d2d476a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0f860193-74a2-498f-947f-8de2e60ab4d4",
+     "chunk_number": 1,
+     "token_count": 146,
+     "qdrant_point_id": "0f860193-74a2-498f-947f-8de2e60ab4d4",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "814dcbf2-f8aa-4102-9d94-6c1aeb6e417a",
+     "chunk_number": 2,
+     "token_count": 247,
+     "qdrant_point_id": "814dcbf2-f8aa-4102-9d94-6c1aeb6e417a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "debe33e4-8c22-4501-9cc1-64a74aef9d83",
+     "chunk_number": 3,
+     "token_count": 254,
+     "qdrant_point_id": "debe33e4-8c22-4501-9cc1-64a74aef9d83",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fde1c660-725c-4a65-bed1-85778c6036aa",
+     "chunk_number": 4,
+     "token_count": 234,
+     "qdrant_point_id": "fde1c660-725c-4a65-bed1-85778c6036aa",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "144cbf26-bf6e-424d-a4b6-947406be4b17",
+     "chunk_number": 5,
+     "token_count": 242,
+     "qdrant_point_id": "144cbf26-bf6e-424d-a4b6-947406be4b17",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "500bcb86-37a2-4c38-b30f-eb89e94c0848",
+     "chunk_number": 6,
+     "token_count": 226,
+     "qdrant_point_id": "500bcb86-37a2-4c38-b30f-eb89e94c0848",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3681f38b-7bdf-436b-a864-b90331a8243f",
+     "chunk_number": 7,
+     "token_count": 113,
+     "qdrant_point_id": "3681f38b-7bdf-436b-a864-b90331a8243f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "2deb2d4e-58c8-449e-9a5e-9e18973765f5",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Now",
+   "published_at": "2026-07-17T19:30:00+00:00",
+   "processed_at": "2026-08-17T18:24:33.718973+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "summary",
+   "extractor_version": "1",
+   "extraction_quality": "low",
+   "chunk_ids": [],
+   "chunks": []
+  },
+  {
+   "article_id": "f4d73634-3d74-4a0a-b389-b2823ef1e2ef",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Life",
+   "published_at": "2026-07-21T14:30:00+00:00",
+   "processed_at": "2026-08-17T18:24:29.619498+00:00",
+   "language_code": "en",
+   "category_code": "other",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "e843b947-2625-42be-8195-08bf658e420c"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "e843b947-2625-42be-8195-08bf658e420c",
+     "chunk_number": 0,
+     "token_count": 172,
+     "qdrant_point_id": "e843b947-2625-42be-8195-08bf658e420c",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "a1012c5d-344d-4af9-b726-ba9ed9bfbb9d",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Now",
+   "published_at": "2026-07-24T19:30:00+00:00",
+   "processed_at": "2026-08-17T18:24:32.760849+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "summary",
+   "extractor_version": "1",
+   "extraction_quality": "low",
+   "chunk_ids": [],
+   "chunks": []
+  },
+  {
+   "article_id": "0c8f2644-bb88-4ed7-9867-91a6d57d740b",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Honor Magic V6 review: sleek foldable phone lacking a bit of polish",
+   "published_at": "2026-07-27T00:30:32+00:00",
+   "processed_at": "2026-08-17T18:24:05.095048+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "b0aeea0d-9941-4b0b-b287-6c1f6f19ae34",
+    "208fd7a7-ae03-4c23-a631-2134e119e332",
+    "8aed8021-f33c-4dfc-b165-31716a649398",
+    "ab84870f-bf9b-47e4-b828-4d7a2edfd66f",
+    "2f6381ef-3cf3-4673-96c0-7c72f9a4a844",
+    "bc9c47f1-ba07-4b29-81a1-b4948809f134",
+    "732ef1ec-ff82-4122-b283-4e1bfd38f82c",
+    "6b8c0a0a-a562-45b3-9e56-af8a464f7cf6"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "b0aeea0d-9941-4b0b-b287-6c1f6f19ae34",
+     "chunk_number": 0,
+     "token_count": 239,
+     "qdrant_point_id": "b0aeea0d-9941-4b0b-b287-6c1f6f19ae34",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "208fd7a7-ae03-4c23-a631-2134e119e332",
+     "chunk_number": 1,
+     "token_count": 101,
+     "qdrant_point_id": "208fd7a7-ae03-4c23-a631-2134e119e332",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8aed8021-f33c-4dfc-b165-31716a649398",
+     "chunk_number": 2,
+     "token_count": 243,
+     "qdrant_point_id": "8aed8021-f33c-4dfc-b165-31716a649398",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ab84870f-bf9b-47e4-b828-4d7a2edfd66f",
+     "chunk_number": 3,
+     "token_count": 229,
+     "qdrant_point_id": "ab84870f-bf9b-47e4-b828-4d7a2edfd66f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2f6381ef-3cf3-4673-96c0-7c72f9a4a844",
+     "chunk_number": 4,
+     "token_count": 246,
+     "qdrant_point_id": "2f6381ef-3cf3-4673-96c0-7c72f9a4a844",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bc9c47f1-ba07-4b29-81a1-b4948809f134",
+     "chunk_number": 5,
+     "token_count": 233,
+     "qdrant_point_id": "bc9c47f1-ba07-4b29-81a1-b4948809f134",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "732ef1ec-ff82-4122-b283-4e1bfd38f82c",
+     "chunk_number": 6,
+     "token_count": 242,
+     "qdrant_point_id": "732ef1ec-ff82-4122-b283-4e1bfd38f82c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6b8c0a0a-a562-45b3-9e56-af8a464f7cf6",
+     "chunk_number": 7,
+     "token_count": 229,
+     "qdrant_point_id": "6b8c0a0a-a562-45b3-9e56-af8a464f7cf6",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "4e964d58-5470-49ef-b6fd-94d0acef1041",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Life",
+   "published_at": "2026-07-28T14:30:00+00:00",
+   "processed_at": "2026-08-17T18:24:28.956576+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "13b20530-e0bd-4c63-ba0c-0620cbb4cf71"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "13b20530-e0bd-4c63-ba0c-0620cbb4cf71",
+     "chunk_number": 0,
+     "token_count": 146,
+     "qdrant_point_id": "13b20530-e0bd-4c63-ba0c-0620cbb4cf71",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "7f0c7bd5-97f5-436f-a07d-a2cda514d478",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Now",
+   "published_at": "2026-07-31T19:30:12+00:00",
+   "processed_at": "2026-08-17T18:24:31.439846+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "summary",
+   "extractor_version": "1",
+   "extraction_quality": "low",
+   "chunk_ids": [],
+   "chunks": []
+  },
+  {
+   "article_id": "968ebc2d-8f7e-4dcd-8030-902ad806162d",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Life",
+   "published_at": "2026-08-04T14:00:00+00:00",
+   "processed_at": "2026-08-17T18:24:28.249977+00:00",
+   "language_code": "en",
+   "category_code": "world",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "8f62b811-e323-4e02-b206-2d6094de3cac"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "8f62b811-e323-4e02-b206-2d6094de3cac",
+     "chunk_number": 0,
+     "token_count": 135,
+     "qdrant_point_id": "8f62b811-e323-4e02-b206-2d6094de3cac",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "e75e7584-5d70-46d6-98d3-719b7c724d9a",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Samsung Galaxy Z Fold 8 review: your passport to a folding phone future",
+   "published_at": "2026-08-10T00:30:37+00:00",
+   "processed_at": "2026-08-17T18:24:04.392585+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "ca0ec9c0-23de-4669-bc9d-13a828fb81c6",
+    "24e41014-efa5-4a6e-aea0-55ff1daab73b",
+    "9d157796-3492-413f-a992-c88a11e0b583",
+    "6d742049-1e0c-4a96-b467-50a077b5b2aa",
+    "abd94139-647d-4f9c-a9f3-4534ac40b0f6",
+    "34f378f9-6529-4aff-8660-4bd874f60111",
+    "fa34b998-9e6e-4c1a-8148-49145bde052c",
+    "3328cb3a-9ace-41a1-9e6d-82acc8001855",
+    "6eff8166-e85a-408c-9832-f57fe88e9f0f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "ca0ec9c0-23de-4669-bc9d-13a828fb81c6",
+     "chunk_number": 0,
+     "token_count": 250,
+     "qdrant_point_id": "ca0ec9c0-23de-4669-bc9d-13a828fb81c6",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "24e41014-efa5-4a6e-aea0-55ff1daab73b",
+     "chunk_number": 1,
+     "token_count": 242,
+     "qdrant_point_id": "24e41014-efa5-4a6e-aea0-55ff1daab73b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9d157796-3492-413f-a992-c88a11e0b583",
+     "chunk_number": 2,
+     "token_count": 216,
+     "qdrant_point_id": "9d157796-3492-413f-a992-c88a11e0b583",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6d742049-1e0c-4a96-b467-50a077b5b2aa",
+     "chunk_number": 3,
+     "token_count": 233,
+     "qdrant_point_id": "6d742049-1e0c-4a96-b467-50a077b5b2aa",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "abd94139-647d-4f9c-a9f3-4534ac40b0f6",
+     "chunk_number": 4,
+     "token_count": 234,
+     "qdrant_point_id": "abd94139-647d-4f9c-a9f3-4534ac40b0f6",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "34f378f9-6529-4aff-8660-4bd874f60111",
+     "chunk_number": 5,
+     "token_count": 239,
+     "qdrant_point_id": "34f378f9-6529-4aff-8660-4bd874f60111",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fa34b998-9e6e-4c1a-8148-49145bde052c",
+     "chunk_number": 6,
+     "token_count": 255,
+     "qdrant_point_id": "fa34b998-9e6e-4c1a-8148-49145bde052c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3328cb3a-9ace-41a1-9e6d-82acc8001855",
+     "chunk_number": 7,
+     "token_count": 243,
+     "qdrant_point_id": "3328cb3a-9ace-41a1-9e6d-82acc8001855",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6eff8166-e85a-408c-9832-f57fe88e9f0f",
+     "chunk_number": 8,
+     "token_count": 222,
+     "qdrant_point_id": "6eff8166-e85a-408c-9832-f57fe88e9f0f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "70370b34-71e0-410c-a99c-8042ffcaafb9",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Wall Street giants hand Nvidia $500bn to fund boom in AI projects",
+   "published_at": "2026-08-11T03:14:52+00:00",
+   "processed_at": "2026-08-17T18:24:26.860015+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "913cb7ef-ac27-4293-b8a8-2feddb8c1c02",
+    "bd2ae408-b80a-41e1-8467-8727e5e0febd",
+    "7fa1c388-be00-459c-921c-b87a2ff4596b",
+    "1bbd8ef4-4413-4795-90f9-8fac09e0a55b"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "913cb7ef-ac27-4293-b8a8-2feddb8c1c02",
+     "chunk_number": 0,
+     "token_count": 248,
+     "qdrant_point_id": "913cb7ef-ac27-4293-b8a8-2feddb8c1c02",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bd2ae408-b80a-41e1-8467-8727e5e0febd",
+     "chunk_number": 1,
+     "token_count": 244,
+     "qdrant_point_id": "bd2ae408-b80a-41e1-8467-8727e5e0febd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7fa1c388-be00-459c-921c-b87a2ff4596b",
+     "chunk_number": 2,
+     "token_count": 225,
+     "qdrant_point_id": "7fa1c388-be00-459c-921c-b87a2ff4596b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1bbd8ef4-4413-4795-90f9-8fac09e0a55b",
+     "chunk_number": 3,
+     "token_count": 75,
+     "qdrant_point_id": "1bbd8ef4-4413-4795-90f9-8fac09e0a55b",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "8d9f9bb4-c0cc-4cd5-82d1-0f41eee34883",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "AI agent hacks gym to get its user a spot in pilates class",
+   "published_at": "2026-08-11T06:39:26+00:00",
+   "processed_at": "2026-08-17T18:24:26.075307+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "a35d00f2-a550-4109-832f-9667afc19e16",
+    "ec57338c-938b-4613-ad0a-0ce7f3a21882",
+    "c76bb524-84ac-4c8a-b2fd-8e5af034ada6",
+    "d418188b-5f29-4609-a6c4-77b9da01fb74"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "a35d00f2-a550-4109-832f-9667afc19e16",
+     "chunk_number": 0,
+     "token_count": 224,
+     "qdrant_point_id": "a35d00f2-a550-4109-832f-9667afc19e16",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ec57338c-938b-4613-ad0a-0ce7f3a21882",
+     "chunk_number": 1,
+     "token_count": 221,
+     "qdrant_point_id": "ec57338c-938b-4613-ad0a-0ce7f3a21882",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c76bb524-84ac-4c8a-b2fd-8e5af034ada6",
+     "chunk_number": 2,
+     "token_count": 224,
+     "qdrant_point_id": "c76bb524-84ac-4c8a-b2fd-8e5af034ada6",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d418188b-5f29-4609-a6c4-77b9da01fb74",
+     "chunk_number": 3,
+     "token_count": 65,
+     "qdrant_point_id": "d418188b-5f29-4609-a6c4-77b9da01fb74",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "9a045c63-b9e0-470a-9377-17672c5097a4",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tech Life",
+   "published_at": "2026-08-11T14:00:00+00:00",
+   "processed_at": "2026-08-17T18:24:27.618016+00:00",
+   "language_code": "en",
+   "category_code": "other",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "bcaa1587-a875-40f7-add0-0c104698b41c"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "bcaa1587-a875-40f7-add0-0c104698b41c",
+     "chunk_number": 0,
+     "token_count": 157,
+     "qdrant_point_id": "bcaa1587-a875-40f7-add0-0c104698b41c",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "8ba45bef-1096-4dc8-b543-5479912ee9c6",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Tokenomics: Why making AI pay is tricky",
+   "published_at": "2026-08-11T17:33:52+00:00",
+   "processed_at": "2026-08-17T18:24:25.354284+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "c5ac87c9-a418-42c9-8167-eb3eadf85754",
+    "faa8fd31-67f8-4618-9762-0ceab96c4a4d",
+    "dca91999-fd60-4258-af84-15c4e2610428",
+    "739c675a-7e03-4613-bbbd-b2546ddeed51",
+    "69a2d716-73ab-4c36-8824-b143730d77f3",
+    "944550e6-7d86-4070-84ad-4ba81e34d45b"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "c5ac87c9-a418-42c9-8167-eb3eadf85754",
+     "chunk_number": 0,
+     "token_count": 254,
+     "qdrant_point_id": "c5ac87c9-a418-42c9-8167-eb3eadf85754",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "faa8fd31-67f8-4618-9762-0ceab96c4a4d",
+     "chunk_number": 1,
+     "token_count": 230,
+     "qdrant_point_id": "faa8fd31-67f8-4618-9762-0ceab96c4a4d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "dca91999-fd60-4258-af84-15c4e2610428",
+     "chunk_number": 2,
+     "token_count": 252,
+     "qdrant_point_id": "dca91999-fd60-4258-af84-15c4e2610428",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "739c675a-7e03-4613-bbbd-b2546ddeed51",
+     "chunk_number": 3,
+     "token_count": 231,
+     "qdrant_point_id": "739c675a-7e03-4613-bbbd-b2546ddeed51",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "69a2d716-73ab-4c36-8824-b143730d77f3",
+     "chunk_number": 4,
+     "token_count": 233,
+     "qdrant_point_id": "69a2d716-73ab-4c36-8824-b143730d77f3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "944550e6-7d86-4070-84ad-4ba81e34d45b",
+     "chunk_number": 5,
+     "token_count": 87,
+     "qdrant_point_id": "944550e6-7d86-4070-84ad-4ba81e34d45b",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "665e8f92-a6cc-434c-85a9-5113040a21a0",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Discord ordered to suspend livestreams in Brazil",
+   "published_at": "2026-08-12T11:40:31+00:00",
+   "processed_at": "2026-08-17T18:24:24.426286+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "8a615f5d-2b48-4b0d-9353-9d74c11f604b",
+    "eff54d84-c3c9-4ca2-95e6-25d7911ef798",
+    "621ab765-ecbb-485a-b82e-28125a42a723"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "8a615f5d-2b48-4b0d-9353-9d74c11f604b",
+     "chunk_number": 0,
+     "token_count": 243,
+     "qdrant_point_id": "8a615f5d-2b48-4b0d-9353-9d74c11f604b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "eff54d84-c3c9-4ca2-95e6-25d7911ef798",
+     "chunk_number": 1,
+     "token_count": 221,
+     "qdrant_point_id": "eff54d84-c3c9-4ca2-95e6-25d7911ef798",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "621ab765-ecbb-485a-b82e-28125a42a723",
+     "chunk_number": 2,
+     "token_count": 47,
+     "qdrant_point_id": "621ab765-ecbb-485a-b82e-28125a42a723",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "14f3eb48-0342-4433-ae8e-19543dab0d05",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Why Japanese firms are being so slow to use AI",
+   "published_at": "2026-08-12T17:30:47+00:00",
+   "processed_at": "2026-08-17T18:24:23.708777+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "82aec383-993f-4e9e-853f-ef275fbbd074",
+    "01bd5e26-ef89-4ab9-a763-92279749f7ac",
+    "fa31a4e0-d7c4-45ca-826f-dac8fb692b0e",
+    "c0535162-41dd-45ab-b506-57c6fe210d59",
+    "812f077e-f040-4f98-8529-2040bf186239",
+    "e2b5685a-2904-47d8-bdbd-c953516e084f",
+    "fcd96d22-ccd8-48b1-b292-80b2c3591268"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "82aec383-993f-4e9e-853f-ef275fbbd074",
+     "chunk_number": 0,
+     "token_count": 196,
+     "qdrant_point_id": "82aec383-993f-4e9e-853f-ef275fbbd074",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "01bd5e26-ef89-4ab9-a763-92279749f7ac",
+     "chunk_number": 1,
+     "token_count": 234,
+     "qdrant_point_id": "01bd5e26-ef89-4ab9-a763-92279749f7ac",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fa31a4e0-d7c4-45ca-826f-dac8fb692b0e",
+     "chunk_number": 2,
+     "token_count": 244,
+     "qdrant_point_id": "fa31a4e0-d7c4-45ca-826f-dac8fb692b0e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c0535162-41dd-45ab-b506-57c6fe210d59",
+     "chunk_number": 3,
+     "token_count": 228,
+     "qdrant_point_id": "c0535162-41dd-45ab-b506-57c6fe210d59",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "812f077e-f040-4f98-8529-2040bf186239",
+     "chunk_number": 4,
+     "token_count": 221,
+     "qdrant_point_id": "812f077e-f040-4f98-8529-2040bf186239",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e2b5685a-2904-47d8-bdbd-c953516e084f",
+     "chunk_number": 5,
+     "token_count": 230,
+     "qdrant_point_id": "e2b5685a-2904-47d8-bdbd-c953516e084f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fcd96d22-ccd8-48b1-b292-80b2c3591268",
+     "chunk_number": 6,
+     "token_count": 82,
+     "qdrant_point_id": "fcd96d22-ccd8-48b1-b292-80b2c3591268",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "e2d226a8-d159-492c-b2bd-ba5654c36e23",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Samsung Galaxy Z Fold 8 Ultra review: the top dog of folding Androids",
+   "published_at": "2026-08-13T00:30:50+00:00",
+   "processed_at": "2026-08-17T18:24:03.439252+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "27d0162d-00b3-4c2e-9994-f7d4495c61a6",
+    "016285d9-6fec-43e3-a5da-9de8606e02c1",
+    "e138a945-b5ad-4186-a672-0032fa99964f",
+    "5dff2d82-8456-4000-96b4-d3c7f265827d",
+    "8f7d90fe-c80f-4716-a852-de874d69444b",
+    "b34318c4-0110-4869-a181-6b0a3a2a1bcf",
+    "ce1af972-015e-45e6-923c-77ec6bef8bda",
+    "894a21f4-5514-4d9c-a0f5-7876ef99faac"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "27d0162d-00b3-4c2e-9994-f7d4495c61a6",
+     "chunk_number": 0,
+     "token_count": 234,
+     "qdrant_point_id": "27d0162d-00b3-4c2e-9994-f7d4495c61a6",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "016285d9-6fec-43e3-a5da-9de8606e02c1",
+     "chunk_number": 1,
+     "token_count": 173,
+     "qdrant_point_id": "016285d9-6fec-43e3-a5da-9de8606e02c1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e138a945-b5ad-4186-a672-0032fa99964f",
+     "chunk_number": 2,
+     "token_count": 244,
+     "qdrant_point_id": "e138a945-b5ad-4186-a672-0032fa99964f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5dff2d82-8456-4000-96b4-d3c7f265827d",
+     "chunk_number": 3,
+     "token_count": 228,
+     "qdrant_point_id": "5dff2d82-8456-4000-96b4-d3c7f265827d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8f7d90fe-c80f-4716-a852-de874d69444b",
+     "chunk_number": 4,
+     "token_count": 255,
+     "qdrant_point_id": "8f7d90fe-c80f-4716-a852-de874d69444b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b34318c4-0110-4869-a181-6b0a3a2a1bcf",
+     "chunk_number": 5,
+     "token_count": 233,
+     "qdrant_point_id": "b34318c4-0110-4869-a181-6b0a3a2a1bcf",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ce1af972-015e-45e6-923c-77ec6bef8bda",
+     "chunk_number": 6,
+     "token_count": 247,
+     "qdrant_point_id": "ce1af972-015e-45e6-923c-77ec6bef8bda",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "894a21f4-5514-4d9c-a0f5-7876ef99faac",
+     "chunk_number": 7,
+     "token_count": 213,
+     "qdrant_point_id": "894a21f4-5514-4d9c-a0f5-7876ef99faac",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "a70516a1-3f63-48ae-b79c-294ba59d2b17",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Amazon is using Twitch to train generative AI",
+   "published_at": "2026-08-13T01:34:31+00:00",
+   "processed_at": "2026-08-17T18:24:22.186981+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "summary",
+   "extractor_version": "1",
+   "extraction_quality": "low",
+   "chunk_ids": [],
+   "chunks": []
+  },
+  {
+   "article_id": "613ed62b-9f08-4214-a3a7-36c3868a787a",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Twitch users outraged as Amazon uses their content to train AI in opt-out feature",
+   "published_at": "2026-08-13T05:09:02+00:00",
+   "processed_at": "2026-08-17T18:24:20.657551+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "3ad5c9c0-c52a-4164-8b49-09a0c0748002",
+    "965f9d4b-5640-4c00-ac89-db38a9bf0b36",
+    "6dbafa0b-9ccd-4685-b1c5-63ba838f315c",
+    "563314ad-7351-4f4d-95f2-9a11ef61e4c3"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "3ad5c9c0-c52a-4164-8b49-09a0c0748002",
+     "chunk_number": 0,
+     "token_count": 222,
+     "qdrant_point_id": "3ad5c9c0-c52a-4164-8b49-09a0c0748002",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "965f9d4b-5640-4c00-ac89-db38a9bf0b36",
+     "chunk_number": 1,
+     "token_count": 243,
+     "qdrant_point_id": "965f9d4b-5640-4c00-ac89-db38a9bf0b36",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6dbafa0b-9ccd-4685-b1c5-63ba838f315c",
+     "chunk_number": 2,
+     "token_count": 248,
+     "qdrant_point_id": "6dbafa0b-9ccd-4685-b1c5-63ba838f315c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "563314ad-7351-4f4d-95f2-9a11ef61e4c3",
+     "chunk_number": 3,
+     "token_count": 120,
+     "qdrant_point_id": "563314ad-7351-4f4d-95f2-9a11ef61e4c3",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "0540756c-8a22-4055-8e37-18820140070f",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Agent 64: Spies Never Die review – licence to kill time like the 90s never ended",
+   "published_at": "2026-08-13T07:30:01+00:00",
+   "processed_at": "2026-08-17T18:24:13.892946+00:00",
+   "language_code": "en",
+   "category_code": "sports",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "983a5236-ba9b-49bd-99d0-4c9da82406b1",
+    "b8079a1d-d443-4321-92a8-af0af687bd58",
+    "a4ff6598-7893-44e2-b597-d519a5f6308b",
+    "04d3ac0a-99b3-4905-ae37-eecbba09a72f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "983a5236-ba9b-49bd-99d0-4c9da82406b1",
+     "chunk_number": 0,
+     "token_count": 221,
+     "qdrant_point_id": "983a5236-ba9b-49bd-99d0-4c9da82406b1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b8079a1d-d443-4321-92a8-af0af687bd58",
+     "chunk_number": 1,
+     "token_count": 220,
+     "qdrant_point_id": "b8079a1d-d443-4321-92a8-af0af687bd58",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a4ff6598-7893-44e2-b597-d519a5f6308b",
+     "chunk_number": 2,
+     "token_count": 234,
+     "qdrant_point_id": "a4ff6598-7893-44e2-b597-d519a5f6308b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "04d3ac0a-99b3-4905-ae37-eecbba09a72f",
+     "chunk_number": 3,
+     "token_count": 208,
+     "qdrant_point_id": "04d3ac0a-99b3-4905-ae37-eecbba09a72f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "80b721cb-fa11-4189-812f-8d79aa336e09",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Flock boss admits surveillance firm took too long to act over police abuse",
+   "published_at": "2026-08-13T07:32:24+00:00",
+   "processed_at": "2026-08-17T18:24:19.814713+00:00",
+   "language_code": "en",
+   "category_code": "other",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "9c3ca54b-24c1-434d-9e64-3069adaf0fd9",
+    "2312fc3e-3d81-450d-806f-d79a9a9d3951",
+    "36185b68-7a0d-4a4a-8648-35c4f1e9bc25",
+    "669df3cf-b03b-42f7-b07b-8f2d4dd17f0b",
+    "898997fc-8682-47ac-bb5a-adb12dc3f717",
+    "497cdc27-9eae-4ce3-b443-b4fb37fe4c2b"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "9c3ca54b-24c1-434d-9e64-3069adaf0fd9",
+     "chunk_number": 0,
+     "token_count": 228,
+     "qdrant_point_id": "9c3ca54b-24c1-434d-9e64-3069adaf0fd9",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2312fc3e-3d81-450d-806f-d79a9a9d3951",
+     "chunk_number": 1,
+     "token_count": 247,
+     "qdrant_point_id": "2312fc3e-3d81-450d-806f-d79a9a9d3951",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "36185b68-7a0d-4a4a-8648-35c4f1e9bc25",
+     "chunk_number": 2,
+     "token_count": 238,
+     "qdrant_point_id": "36185b68-7a0d-4a4a-8648-35c4f1e9bc25",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "669df3cf-b03b-42f7-b07b-8f2d4dd17f0b",
+     "chunk_number": 3,
+     "token_count": 251,
+     "qdrant_point_id": "669df3cf-b03b-42f7-b07b-8f2d4dd17f0b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "898997fc-8682-47ac-bb5a-adb12dc3f717",
+     "chunk_number": 4,
+     "token_count": 243,
+     "qdrant_point_id": "898997fc-8682-47ac-bb5a-adb12dc3f717",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "497cdc27-9eae-4ce3-b443-b4fb37fe4c2b",
+     "chunk_number": 5,
+     "token_count": 95,
+     "qdrant_point_id": "497cdc27-9eae-4ce3-b443-b4fb37fe4c2b",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "6df80ef6-063d-41e4-a895-945694dbbdef",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Bumble divides users by ditching its signature 'women-first' chat rule",
+   "published_at": "2026-08-13T08:39:05+00:00",
+   "processed_at": "2026-08-17T18:24:19.029423+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "58a43905-7781-4a4c-951f-e42002d3be83",
+    "a0b94493-0d1f-42b8-bb07-c0c38e1de52f",
+    "ced1787f-77e1-40b0-94db-642f7afb9bc6",
+    "2e7bf38f-dda9-4f12-b6b1-64ea036d4803"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "58a43905-7781-4a4c-951f-e42002d3be83",
+     "chunk_number": 0,
+     "token_count": 229,
+     "qdrant_point_id": "58a43905-7781-4a4c-951f-e42002d3be83",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a0b94493-0d1f-42b8-bb07-c0c38e1de52f",
+     "chunk_number": 1,
+     "token_count": 234,
+     "qdrant_point_id": "a0b94493-0d1f-42b8-bb07-c0c38e1de52f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ced1787f-77e1-40b0-94db-642f7afb9bc6",
+     "chunk_number": 2,
+     "token_count": 242,
+     "qdrant_point_id": "ced1787f-77e1-40b0-94db-642f7afb9bc6",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2e7bf38f-dda9-4f12-b6b1-64ea036d4803",
+     "chunk_number": 3,
+     "token_count": 153,
+     "qdrant_point_id": "2e7bf38f-dda9-4f12-b6b1-64ea036d4803",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "fec83506-63c0-4d3e-9fb8-be111d4beedf",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "IBM partners with OpenAI to bolster enterprise AI push",
+   "published_at": "2026-08-13T13:49:49+00:00",
+   "processed_at": "2026-08-17T18:23:43.092960+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "2e2041e8-027f-4888-a344-5c279f784b01",
+    "10c9517a-4ba3-433b-8e5b-f57479c10608",
+    "e06a129b-8c0b-4978-a923-34eb01eaf21f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "2e2041e8-027f-4888-a344-5c279f784b01",
+     "chunk_number": 0,
+     "token_count": 228,
+     "qdrant_point_id": "2e2041e8-027f-4888-a344-5c279f784b01",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "10c9517a-4ba3-433b-8e5b-f57479c10608",
+     "chunk_number": 1,
+     "token_count": 230,
+     "qdrant_point_id": "10c9517a-4ba3-433b-8e5b-f57479c10608",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e06a129b-8c0b-4978-a923-34eb01eaf21f",
+     "chunk_number": 2,
+     "token_count": 147,
+     "qdrant_point_id": "e06a129b-8c0b-4978-a923-34eb01eaf21f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "df5afa32-ab81-4b47-a7ac-1d44bd4f16d8",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "OpenAI introduces ‘Ultrafast,’ a new mode that makes GPT-5.6 Sol work at 14x the speed",
+   "published_at": "2026-08-13T13:52:40+00:00",
+   "processed_at": "2026-08-17T18:23:42.032961+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "9cfce75e-29df-4cd0-ae74-622e475c1149",
+    "d77fab2c-8939-4878-953e-e03b1371e077"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "9cfce75e-29df-4cd0-ae74-622e475c1149",
+     "chunk_number": 0,
+     "token_count": 233,
+     "qdrant_point_id": "9cfce75e-29df-4cd0-ae74-622e475c1149",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d77fab2c-8939-4878-953e-e03b1371e077",
+     "chunk_number": 1,
+     "token_count": 127,
+     "qdrant_point_id": "d77fab2c-8939-4878-953e-e03b1371e077",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "18da6edc-f4bd-49ea-bd1a-9a0ecc7d2352",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Databricks wanted to raise $1B, investors wanted $15B. It settled on $5B at a $190B valuation.",
+   "published_at": "2026-08-13T14:44:39+00:00",
+   "processed_at": "2026-08-17T18:23:40.769888+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "48b27248-1789-4f79-93a2-1dd1be6870d3",
+    "6221fa10-685b-481c-bff2-2164d6b271fe",
+    "8f574ecc-5348-4c1c-847d-5976ecb96936",
+    "e6c1ce7e-cbd2-41ec-b933-86b487804a98",
+    "0ef18502-8c83-4ebf-90cc-3c0525cca564"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "48b27248-1789-4f79-93a2-1dd1be6870d3",
+     "chunk_number": 0,
+     "token_count": 252,
+     "qdrant_point_id": "48b27248-1789-4f79-93a2-1dd1be6870d3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6221fa10-685b-481c-bff2-2164d6b271fe",
+     "chunk_number": 1,
+     "token_count": 255,
+     "qdrant_point_id": "6221fa10-685b-481c-bff2-2164d6b271fe",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8f574ecc-5348-4c1c-847d-5976ecb96936",
+     "chunk_number": 2,
+     "token_count": 224,
+     "qdrant_point_id": "8f574ecc-5348-4c1c-847d-5976ecb96936",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e6c1ce7e-cbd2-41ec-b933-86b487804a98",
+     "chunk_number": 3,
+     "token_count": 243,
+     "qdrant_point_id": "e6c1ce7e-cbd2-41ec-b933-86b487804a98",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0ef18502-8c83-4ebf-90cc-3c0525cca564",
+     "chunk_number": 4,
+     "token_count": 64,
+     "qdrant_point_id": "0ef18502-8c83-4ebf-90cc-3c0525cca564",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "82a0e6e8-c54d-42e7-8bfb-90e640772960",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Writer introduces new AI model and upgraded harness to contain token costs",
+   "published_at": "2026-08-13T15:43:24+00:00",
+   "processed_at": "2026-08-17T18:23:39.637926+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "27725c1d-ddc7-44e2-8231-eede2ea39112",
+    "a0872db7-3669-4e78-b417-a90d24d762ee",
+    "bd362a7d-8436-47b1-b37b-c5ee3c4de44f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "27725c1d-ddc7-44e2-8231-eede2ea39112",
+     "chunk_number": 0,
+     "token_count": 238,
+     "qdrant_point_id": "27725c1d-ddc7-44e2-8231-eede2ea39112",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a0872db7-3669-4e78-b417-a90d24d762ee",
+     "chunk_number": 1,
+     "token_count": 252,
+     "qdrant_point_id": "a0872db7-3669-4e78-b417-a90d24d762ee",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bd362a7d-8436-47b1-b37b-c5ee3c4de44f",
+     "chunk_number": 2,
+     "token_count": 94,
+     "qdrant_point_id": "bd362a7d-8436-47b1-b37b-c5ee3c4de44f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "2cdd8703-2f8e-4272-9344-7d14374ac12e",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Unemployed young people to join AI boot camps to get job-ready",
+   "published_at": "2026-08-13T17:31:10+00:00",
+   "processed_at": "2026-08-17T18:23:51.615066+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "62d5b9ad-8d61-431e-8c4f-2553c98c3b27",
+    "503e2a2b-6d90-43fd-9f41-b335a123400d",
+    "a6ecbc91-7cbf-4dd5-ac30-44c51b3464f2",
+    "ce5b589b-45ad-4464-acd0-34c0b6005b85"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "62d5b9ad-8d61-431e-8c4f-2553c98c3b27",
+     "chunk_number": 0,
+     "token_count": 242,
+     "qdrant_point_id": "62d5b9ad-8d61-431e-8c4f-2553c98c3b27",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "503e2a2b-6d90-43fd-9f41-b335a123400d",
+     "chunk_number": 1,
+     "token_count": 202,
+     "qdrant_point_id": "503e2a2b-6d90-43fd-9f41-b335a123400d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a6ecbc91-7cbf-4dd5-ac30-44c51b3464f2",
+     "chunk_number": 2,
+     "token_count": 222,
+     "qdrant_point_id": "a6ecbc91-7cbf-4dd5-ac30-44c51b3464f2",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ce5b589b-45ad-4464-acd0-34c0b6005b85",
+     "chunk_number": 3,
+     "token_count": 77,
+     "qdrant_point_id": "ce5b589b-45ad-4464-acd0-34c0b6005b85",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "d362794a-4e3f-4dcf-a287-da15d14b90c0",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Alien: Isolation 2 – another strong female protagonist stalked in a terrifying new world",
+   "published_at": "2026-08-14T06:30:27+00:00",
+   "processed_at": "2026-08-17T18:24:12.926065+00:00",
+   "language_code": "en",
+   "category_code": "science",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "8215f02a-c839-4d26-b61d-1cf13d4b1d3c",
+    "ebb00dc2-19a1-49a4-87d4-aa0c5f2624fa",
+    "b5ec6387-63f3-4ccf-af97-47634902bbae",
+    "4edfc548-783e-4842-87a3-839168555b3c"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "8215f02a-c839-4d26-b61d-1cf13d4b1d3c",
+     "chunk_number": 0,
+     "token_count": 231,
+     "qdrant_point_id": "8215f02a-c839-4d26-b61d-1cf13d4b1d3c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ebb00dc2-19a1-49a4-87d4-aa0c5f2624fa",
+     "chunk_number": 1,
+     "token_count": 222,
+     "qdrant_point_id": "ebb00dc2-19a1-49a4-87d4-aa0c5f2624fa",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b5ec6387-63f3-4ccf-af97-47634902bbae",
+     "chunk_number": 2,
+     "token_count": 255,
+     "qdrant_point_id": "b5ec6387-63f3-4ccf-af97-47634902bbae",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4edfc548-783e-4842-87a3-839168555b3c",
+     "chunk_number": 3,
+     "token_count": 86,
+     "qdrant_point_id": "4edfc548-783e-4842-87a3-839168555b3c",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "fab6f0ba-312e-4512-a9c3-da157ce136c5",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Meta’s ‘open’ AI, and a $250M deal gone very wrong",
+   "published_at": "2026-08-14T08:30:00+00:00",
+   "processed_at": "2026-08-17T18:23:38.483261+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "1065415d-2fa7-404d-a109-1b425a8edccf",
+    "1a4207b2-8dc2-4e41-9365-66db7eabfed5"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "1065415d-2fa7-404d-a109-1b425a8edccf",
+     "chunk_number": 0,
+     "token_count": 164,
+     "qdrant_point_id": "1065415d-2fa7-404d-a109-1b425a8edccf",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1a4207b2-8dc2-4e41-9365-66db7eabfed5",
+     "chunk_number": 1,
+     "token_count": 202,
+     "qdrant_point_id": "1a4207b2-8dc2-4e41-9365-66db7eabfed5",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "28ef55e9-df83-4b55-ae62-da751acdad56",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Hyperscalers might regret embracing natural gas if new forecast proves correct",
+   "published_at": "2026-08-14T08:35:00+00:00",
+   "processed_at": "2026-08-17T18:23:37.311493+00:00",
+   "language_code": "en",
+   "category_code": "science",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "263b22b8-715a-44e7-b0bb-20e807f23657",
+    "09c5ef0b-817d-4208-96b1-929a6af57371",
+    "bfce9433-045b-41f6-91a9-0e0737be6af9",
+    "ba3505a5-86e4-4763-8fd0-234ad56c5c2b",
+    "4af10a12-ba9a-40d3-8395-d82e52dfa3d2"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "263b22b8-715a-44e7-b0bb-20e807f23657",
+     "chunk_number": 0,
+     "token_count": 246,
+     "qdrant_point_id": "263b22b8-715a-44e7-b0bb-20e807f23657",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "09c5ef0b-817d-4208-96b1-929a6af57371",
+     "chunk_number": 1,
+     "token_count": 235,
+     "qdrant_point_id": "09c5ef0b-817d-4208-96b1-929a6af57371",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bfce9433-045b-41f6-91a9-0e0737be6af9",
+     "chunk_number": 2,
+     "token_count": 254,
+     "qdrant_point_id": "bfce9433-045b-41f6-91a9-0e0737be6af9",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ba3505a5-86e4-4763-8fd0-234ad56c5c2b",
+     "chunk_number": 3,
+     "token_count": 244,
+     "qdrant_point_id": "ba3505a5-86e4-4763-8fd0-234ad56c5c2b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4af10a12-ba9a-40d3-8395-d82e52dfa3d2",
+     "chunk_number": 4,
+     "token_count": 214,
+     "qdrant_point_id": "4af10a12-ba9a-40d3-8395-d82e52dfa3d2",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "bc93fcaf-612d-471e-acd5-4642647dc45f",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Kog is going deeper to squeeze more inference out of GPUs",
+   "published_at": "2026-08-14T09:20:11+00:00",
+   "processed_at": "2026-08-17T18:23:36.081497+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "52c840f2-0061-453e-bd0f-4876708e24f9",
+    "1d634565-e966-4b35-9080-3de930e5ee34",
+    "ca72dc37-d9d7-46ec-9548-6e0f009eacdd",
+    "e804abd3-9638-4034-b827-6590eb311e70",
+    "02d6e321-1186-4b6f-9961-a549e8c685ca"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "52c840f2-0061-453e-bd0f-4876708e24f9",
+     "chunk_number": 0,
+     "token_count": 248,
+     "qdrant_point_id": "52c840f2-0061-453e-bd0f-4876708e24f9",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1d634565-e966-4b35-9080-3de930e5ee34",
+     "chunk_number": 1,
+     "token_count": 244,
+     "qdrant_point_id": "1d634565-e966-4b35-9080-3de930e5ee34",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ca72dc37-d9d7-46ec-9548-6e0f009eacdd",
+     "chunk_number": 2,
+     "token_count": 250,
+     "qdrant_point_id": "ca72dc37-d9d7-46ec-9548-6e0f009eacdd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e804abd3-9638-4034-b827-6590eb311e70",
+     "chunk_number": 3,
+     "token_count": 235,
+     "qdrant_point_id": "e804abd3-9638-4034-b827-6590eb311e70",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "02d6e321-1186-4b6f-9961-a549e8c685ca",
+     "chunk_number": 4,
+     "token_count": 152,
+     "qdrant_point_id": "02d6e321-1186-4b6f-9961-a549e8c685ca",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "2cb6d150-7654-4b7a-bc16-6bcb6f05ed0a",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Does Mark Zuckerberg really believe AI is ‘for everyone’?",
+   "published_at": "2026-08-14T10:13:28+00:00",
+   "processed_at": "2026-08-17T18:23:34.832602+00:00",
+   "language_code": "en",
+   "category_code": "sports",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "316cfb7d-25ff-4e1f-af0b-b3c43569b3b8"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "316cfb7d-25ff-4e1f-af0b-b3c43569b3b8",
+     "chunk_number": 0,
+     "token_count": 194,
+     "qdrant_point_id": "316cfb7d-25ff-4e1f-af0b-b3c43569b3b8",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "8b538144-f37f-46d2-952e-90c60dd6e899",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Google will now allow users to remove visible watermark from its AI generations",
+   "published_at": "2026-08-14T10:43:40+00:00",
+   "processed_at": "2026-08-17T18:23:33.745322+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "7de05132-60fc-45c7-8739-1e328b98b874",
+    "a948361f-6b03-4a25-ab00-4410b6045d37"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "7de05132-60fc-45c7-8739-1e328b98b874",
+     "chunk_number": 0,
+     "token_count": 238,
+     "qdrant_point_id": "7de05132-60fc-45c7-8739-1e328b98b874",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a948361f-6b03-4a25-ab00-4410b6045d37",
+     "chunk_number": 1,
+     "token_count": 120,
+     "qdrant_point_id": "a948361f-6b03-4a25-ab00-4410b6045d37",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "545cb107-73fb-4496-8b0b-e3d17db17725",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Why tech bosses keep sharing their manifestos about AI",
+   "published_at": "2026-08-14T17:36:27+00:00",
+   "processed_at": "2026-08-17T18:24:17.465356+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "d189ce44-12f4-4591-864d-f597bb015b8f",
+    "00720ee3-b5b6-4031-801a-93830dfbc8ec",
+    "adaf0e75-e5ff-458d-b3a7-1181bfecfc8b",
+    "260921ea-3742-4dd1-bb21-ad168fcfab1a",
+    "8cbf75d4-e284-4eca-b24e-78715819afa6",
+    "adbb1d36-7663-40c6-9aea-8134d5f452bb"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "d189ce44-12f4-4591-864d-f597bb015b8f",
+     "chunk_number": 0,
+     "token_count": 231,
+     "qdrant_point_id": "d189ce44-12f4-4591-864d-f597bb015b8f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "00720ee3-b5b6-4031-801a-93830dfbc8ec",
+     "chunk_number": 1,
+     "token_count": 246,
+     "qdrant_point_id": "00720ee3-b5b6-4031-801a-93830dfbc8ec",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "adaf0e75-e5ff-458d-b3a7-1181bfecfc8b",
+     "chunk_number": 2,
+     "token_count": 214,
+     "qdrant_point_id": "adaf0e75-e5ff-458d-b3a7-1181bfecfc8b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "260921ea-3742-4dd1-bb21-ad168fcfab1a",
+     "chunk_number": 3,
+     "token_count": 246,
+     "qdrant_point_id": "260921ea-3742-4dd1-bb21-ad168fcfab1a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8cbf75d4-e284-4eca-b24e-78715819afa6",
+     "chunk_number": 4,
+     "token_count": 234,
+     "qdrant_point_id": "8cbf75d4-e284-4eca-b24e-78715819afa6",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "adbb1d36-7663-40c6-9aea-8134d5f452bb",
+     "chunk_number": 5,
+     "token_count": 88,
+     "qdrant_point_id": "adbb1d36-7663-40c6-9aea-8134d5f452bb",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "625e528d-efaa-4c35-8319-bf012fcdade3",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "No 10’s ads for a TikTok team show why social media is a smart career move",
+   "published_at": "2026-08-15T02:31:11+00:00",
+   "processed_at": "2026-08-17T18:24:01.419041+00:00",
+   "language_code": "en",
+   "category_code": "world",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "d1b2f5e4-419f-4192-9aef-7fa60be13447",
+    "baa57d22-9d29-44f5-8f78-3642d03a201d",
+    "978114a9-ee57-4105-b0fd-6c5bdc66daf8",
+    "4ef3708b-099d-4c92-bad0-6be04c944452",
+    "109ab6ff-670f-412d-92e6-4e9d8857c769"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "d1b2f5e4-419f-4192-9aef-7fa60be13447",
+     "chunk_number": 0,
+     "token_count": 235,
+     "qdrant_point_id": "d1b2f5e4-419f-4192-9aef-7fa60be13447",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "baa57d22-9d29-44f5-8f78-3642d03a201d",
+     "chunk_number": 1,
+     "token_count": 246,
+     "qdrant_point_id": "baa57d22-9d29-44f5-8f78-3642d03a201d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "978114a9-ee57-4105-b0fd-6c5bdc66daf8",
+     "chunk_number": 2,
+     "token_count": 211,
+     "qdrant_point_id": "978114a9-ee57-4105-b0fd-6c5bdc66daf8",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4ef3708b-099d-4c92-bad0-6be04c944452",
+     "chunk_number": 3,
+     "token_count": 231,
+     "qdrant_point_id": "4ef3708b-099d-4c92-bad0-6be04c944452",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "109ab6ff-670f-412d-92e6-4e9d8857c769",
+     "chunk_number": 4,
+     "token_count": 95,
+     "qdrant_point_id": "109ab6ff-670f-412d-92e6-4e9d8857c769",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "921498db-fcc7-470f-97e8-c02a68e49c00",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Gen Z flocks to BirdTok as birding takes flight: ‘It’s a craving for something real’",
+   "published_at": "2026-08-15T03:30:53+00:00",
+   "processed_at": "2026-08-17T18:24:00.428756+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "17fedabc-fb87-40e6-8877-35d56f2c8f59",
+    "7a49438a-f04e-4c48-a055-5af089564889",
+    "88da6987-4c3b-463f-9738-eaefdf8a2396",
+    "89939f95-8f3d-4272-bcac-baeec1d252d3",
+    "b07082f3-adfd-4345-8a95-ba1b0d6f0991"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "17fedabc-fb87-40e6-8877-35d56f2c8f59",
+     "chunk_number": 0,
+     "token_count": 237,
+     "qdrant_point_id": "17fedabc-fb87-40e6-8877-35d56f2c8f59",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7a49438a-f04e-4c48-a055-5af089564889",
+     "chunk_number": 1,
+     "token_count": 255,
+     "qdrant_point_id": "7a49438a-f04e-4c48-a055-5af089564889",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "88da6987-4c3b-463f-9738-eaefdf8a2396",
+     "chunk_number": 2,
+     "token_count": 240,
+     "qdrant_point_id": "88da6987-4c3b-463f-9738-eaefdf8a2396",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "89939f95-8f3d-4272-bcac-baeec1d252d3",
+     "chunk_number": 3,
+     "token_count": 251,
+     "qdrant_point_id": "89939f95-8f3d-4272-bcac-baeec1d252d3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b07082f3-adfd-4345-8a95-ba1b0d6f0991",
+     "chunk_number": 4,
+     "token_count": 148,
+     "qdrant_point_id": "b07082f3-adfd-4345-8a95-ba1b0d6f0991",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "7f42db7b-4ae2-4107-bfe7-34c52338f7eb",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Secondhand book sales are booming. Is it because of AI?",
+   "published_at": "2026-08-15T05:55:32+00:00",
+   "processed_at": "2026-08-17T18:24:16.721712+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "fbdb5ce0-b3e5-4f27-94b1-fd9ff019305c",
+    "b6519275-adbc-4039-a236-623f238bbc38",
+    "83a18bef-ab4b-4b2f-95c2-b914ec75b939",
+    "f5c82348-b259-44a0-b3db-581b49ee2db0",
+    "2b8789d2-02dc-42df-b74c-f52d5038ada2"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "fbdb5ce0-b3e5-4f27-94b1-fd9ff019305c",
+     "chunk_number": 0,
+     "token_count": 250,
+     "qdrant_point_id": "fbdb5ce0-b3e5-4f27-94b1-fd9ff019305c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b6519275-adbc-4039-a236-623f238bbc38",
+     "chunk_number": 1,
+     "token_count": 248,
+     "qdrant_point_id": "b6519275-adbc-4039-a236-623f238bbc38",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "83a18bef-ab4b-4b2f-95c2-b914ec75b939",
+     "chunk_number": 2,
+     "token_count": 217,
+     "qdrant_point_id": "83a18bef-ab4b-4b2f-95c2-b914ec75b939",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "f5c82348-b259-44a0-b3db-581b49ee2db0",
+     "chunk_number": 3,
+     "token_count": 255,
+     "qdrant_point_id": "f5c82348-b259-44a0-b3db-581b49ee2db0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2b8789d2-02dc-42df-b74c-f52d5038ada2",
+     "chunk_number": 4,
+     "token_count": 159,
+     "qdrant_point_id": "2b8789d2-02dc-42df-b74c-f52d5038ada2",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "e25bc682-f642-49f2-b0f7-629d7a0851bb",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "‘Once I started zooming in, I never stopped’: the mesmerising art of macro photography",
+   "published_at": "2026-08-15T08:30:01+00:00",
+   "processed_at": "2026-08-17T18:23:53.539362+00:00",
+   "language_code": "en",
+   "category_code": "science",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "80bc5d80-cfff-473e-941e-05f125847faf",
+    "7d0b7c44-5754-42fb-a701-deca7b2ea0ab",
+    "d529febf-3c56-49f4-9dbb-4454b380c316",
+    "ff14e934-ca35-40af-8800-662315a52357",
+    "b4492348-1c9f-4bb9-b51b-a8586d03305b",
+    "c714c107-91b5-489e-9ff7-3bb2a10b4894",
+    "52280cf7-3a37-49fb-816b-69dab9f53cdb",
+    "0afb94d6-7ef4-4ba9-ae57-1e55b681769e"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "80bc5d80-cfff-473e-941e-05f125847faf",
+     "chunk_number": 0,
+     "token_count": 234,
+     "qdrant_point_id": "80bc5d80-cfff-473e-941e-05f125847faf",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7d0b7c44-5754-42fb-a701-deca7b2ea0ab",
+     "chunk_number": 1,
+     "token_count": 246,
+     "qdrant_point_id": "7d0b7c44-5754-42fb-a701-deca7b2ea0ab",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d529febf-3c56-49f4-9dbb-4454b380c316",
+     "chunk_number": 2,
+     "token_count": 242,
+     "qdrant_point_id": "d529febf-3c56-49f4-9dbb-4454b380c316",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ff14e934-ca35-40af-8800-662315a52357",
+     "chunk_number": 3,
+     "token_count": 235,
+     "qdrant_point_id": "ff14e934-ca35-40af-8800-662315a52357",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b4492348-1c9f-4bb9-b51b-a8586d03305b",
+     "chunk_number": 4,
+     "token_count": 240,
+     "qdrant_point_id": "b4492348-1c9f-4bb9-b51b-a8586d03305b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c714c107-91b5-489e-9ff7-3bb2a10b4894",
+     "chunk_number": 5,
+     "token_count": 231,
+     "qdrant_point_id": "c714c107-91b5-489e-9ff7-3bb2a10b4894",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "52280cf7-3a37-49fb-816b-69dab9f53cdb",
+     "chunk_number": 6,
+     "token_count": 251,
+     "qdrant_point_id": "52280cf7-3a37-49fb-816b-69dab9f53cdb",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0afb94d6-7ef4-4ba9-ae57-1e55b681769e",
+     "chunk_number": 7,
+     "token_count": 110,
+     "qdrant_point_id": "0afb94d6-7ef4-4ba9-ae57-1e55b681769e",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "7f61b235-f21e-4b18-9dd4-f7cb24bce6f4",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "How to tell if your AI platforms’ accounts have been hacked",
+   "published_at": "2026-08-15T10:40:00+00:00",
+   "processed_at": "2026-08-17T18:23:32.658146+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "b6e3dc20-7393-420f-8a24-67607760463d",
+    "e6a841d8-dbc7-45c6-a375-c781d8b22308",
+    "fdb61379-6c34-48e4-a991-d5cd4f1ea434",
+    "a8d94566-d057-4ede-ac55-be294331d4e4"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "b6e3dc20-7393-420f-8a24-67607760463d",
+     "chunk_number": 0,
+     "token_count": 229,
+     "qdrant_point_id": "b6e3dc20-7393-420f-8a24-67607760463d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e6a841d8-dbc7-45c6-a375-c781d8b22308",
+     "chunk_number": 1,
+     "token_count": 247,
+     "qdrant_point_id": "e6a841d8-dbc7-45c6-a375-c781d8b22308",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fdb61379-6c34-48e4-a991-d5cd4f1ea434",
+     "chunk_number": 2,
+     "token_count": 200,
+     "qdrant_point_id": "fdb61379-6c34-48e4-a991-d5cd4f1ea434",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a8d94566-d057-4ede-ac55-be294331d4e4",
+     "chunk_number": 3,
+     "token_count": 136,
+     "qdrant_point_id": "a8d94566-d057-4ede-ac55-be294331d4e4",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "b84e1fbd-9c6f-4890-9c66-d313ff87d581",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "SpaceX officially closes its Cursor acquisition",
+   "published_at": "2026-08-15T11:00:00+00:00",
+   "processed_at": "2026-08-17T18:23:31.458288+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "636d1b29-b996-4355-b792-c0771bc9c1d1"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "636d1b29-b996-4355-b792-c0771bc9c1d1",
+     "chunk_number": 0,
+     "token_count": 225,
+     "qdrant_point_id": "636d1b29-b996-4355-b792-c0771bc9c1d1",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "3dbcd4f9-6bf9-4acd-9cdc-ae3460ec8e10",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Anthropic shares more details about how Claude’s new watermarks will work",
+   "published_at": "2026-08-15T13:28:39+00:00",
+   "processed_at": "2026-08-17T18:23:30.047208+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "24a3b082-7bff-4e51-b935-56e0c6bb81ae",
+    "b4c48788-b64d-4389-b67c-c2affd8773c3",
+    "86f82a3c-025a-4b15-a8c3-04f9be2825d8",
+    "bb1b9cee-706c-42f0-a387-0c4c37beea2f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "24a3b082-7bff-4e51-b935-56e0c6bb81ae",
+     "chunk_number": 0,
+     "token_count": 195,
+     "qdrant_point_id": "24a3b082-7bff-4e51-b935-56e0c6bb81ae",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b4c48788-b64d-4389-b67c-c2affd8773c3",
+     "chunk_number": 1,
+     "token_count": 222,
+     "qdrant_point_id": "b4c48788-b64d-4389-b67c-c2affd8773c3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "86f82a3c-025a-4b15-a8c3-04f9be2825d8",
+     "chunk_number": 2,
+     "token_count": 228,
+     "qdrant_point_id": "86f82a3c-025a-4b15-a8c3-04f9be2825d8",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bb1b9cee-706c-42f0-a387-0c4c37beea2f",
+     "chunk_number": 3,
+     "token_count": 62,
+     "qdrant_point_id": "bb1b9cee-706c-42f0-a387-0c4c37beea2f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "48cc93a3-562f-438b-9576-fce94836124c",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Woman claims her stepfather used Grok to transform childhood photo into explicit imagery",
+   "published_at": "2026-08-15T15:59:19+00:00",
+   "processed_at": "2026-08-17T18:23:28.833693+00:00",
+   "language_code": "en",
+   "category_code": "sports",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "a0ddbcc2-1153-4aab-b82f-64b43ec0b19a"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "a0ddbcc2-1153-4aab-b82f-64b43ec0b19a",
+     "chunk_number": 0,
+     "token_count": 282,
+     "qdrant_point_id": "a0ddbcc2-1153-4aab-b82f-64b43ec0b19a",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "0ffded1d-e3ce-4da8-9ace-f49ae68100ec",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "I survived two years as prime minister in a hit new game - then my cabinet deserted me",
+   "published_at": "2026-08-15T18:15:44+00:00",
+   "processed_at": "2026-08-17T18:24:15.833303+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "a09de24e-2ea8-46e2-bda8-2bbfd33d05b3",
+    "3859ac80-4aec-4206-a6c6-4f5af3441ad4",
+    "844d5dab-fbf9-4d88-8fd0-511b98205c79",
+    "3ba71f83-1e3d-4395-a3f2-362ad574e50d",
+    "da16c8b0-1b09-48a2-b718-61ffc6631499"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "a09de24e-2ea8-46e2-bda8-2bbfd33d05b3",
+     "chunk_number": 0,
+     "token_count": 243,
+     "qdrant_point_id": "a09de24e-2ea8-46e2-bda8-2bbfd33d05b3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3859ac80-4aec-4206-a6c6-4f5af3441ad4",
+     "chunk_number": 1,
+     "token_count": 225,
+     "qdrant_point_id": "3859ac80-4aec-4206-a6c6-4f5af3441ad4",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "844d5dab-fbf9-4d88-8fd0-511b98205c79",
+     "chunk_number": 2,
+     "token_count": 231,
+     "qdrant_point_id": "844d5dab-fbf9-4d88-8fd0-511b98205c79",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3ba71f83-1e3d-4395-a3f2-362ad574e50d",
+     "chunk_number": 3,
+     "token_count": 235,
+     "qdrant_point_id": "3ba71f83-1e3d-4395-a3f2-362ad574e50d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "da16c8b0-1b09-48a2-b718-61ffc6631499",
+     "chunk_number": 4,
+     "token_count": 244,
+     "qdrant_point_id": "da16c8b0-1b09-48a2-b718-61ffc6631499",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "11dc8de8-f895-470e-a020-4dc2f6b8d3f2",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "‘We detected unusual activity’: the scam that uses AI to exploit your holiday photos",
+   "published_at": "2026-08-16T00:30:17+00:00",
+   "processed_at": "2026-08-17T18:23:52.541957+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "d7c8fa14-515c-4d3d-ad6e-884765b811f6",
+    "18139298-65c3-4820-9d2a-21694628c13e",
+    "5eaf5dfa-21ed-4cf4-895e-6d111a275591",
+    "c52851bc-6486-4e1c-9119-d31c04805125"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "d7c8fa14-515c-4d3d-ad6e-884765b811f6",
+     "chunk_number": 0,
+     "token_count": 225,
+     "qdrant_point_id": "d7c8fa14-515c-4d3d-ad6e-884765b811f6",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "18139298-65c3-4820-9d2a-21694628c13e",
+     "chunk_number": 1,
+     "token_count": 248,
+     "qdrant_point_id": "18139298-65c3-4820-9d2a-21694628c13e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5eaf5dfa-21ed-4cf4-895e-6d111a275591",
+     "chunk_number": 2,
+     "token_count": 254,
+     "qdrant_point_id": "5eaf5dfa-21ed-4cf4-895e-6d111a275591",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c52851bc-6486-4e1c-9119-d31c04805125",
+     "chunk_number": 3,
+     "token_count": 162,
+     "qdrant_point_id": "c52851bc-6486-4e1c-9119-d31c04805125",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "f6e9ba5a-f9f8-47bf-be3f-04878d1197a2",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "AI cheating, leaked papers and marking errors: how exam protests went global",
+   "published_at": "2026-08-16T01:30:19+00:00",
+   "processed_at": "2026-08-17T18:23:59.482552+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "b41c5b31-cde6-4569-aecb-5b3a804e8277",
+    "5fbe9f53-e560-4f5e-ac7f-d3b3fabaf902",
+    "c934542e-871a-48a4-8286-df3eb98cc3b9",
+    "8cc8287f-0241-400d-8f26-3f291db5065c",
+    "ac482b77-25e3-4a4f-9a42-b209cf8c726a",
+    "be173818-4b84-4e7e-af68-752df2fc9963"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "b41c5b31-cde6-4569-aecb-5b3a804e8277",
+     "chunk_number": 0,
+     "token_count": 250,
+     "qdrant_point_id": "b41c5b31-cde6-4569-aecb-5b3a804e8277",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5fbe9f53-e560-4f5e-ac7f-d3b3fabaf902",
+     "chunk_number": 1,
+     "token_count": 217,
+     "qdrant_point_id": "5fbe9f53-e560-4f5e-ac7f-d3b3fabaf902",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c934542e-871a-48a4-8286-df3eb98cc3b9",
+     "chunk_number": 2,
+     "token_count": 240,
+     "qdrant_point_id": "c934542e-871a-48a4-8286-df3eb98cc3b9",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8cc8287f-0241-400d-8f26-3f291db5065c",
+     "chunk_number": 3,
+     "token_count": 251,
+     "qdrant_point_id": "8cc8287f-0241-400d-8f26-3f291db5065c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ac482b77-25e3-4a4f-9a42-b209cf8c726a",
+     "chunk_number": 4,
+     "token_count": 247,
+     "qdrant_point_id": "ac482b77-25e3-4a4f-9a42-b209cf8c726a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "be173818-4b84-4e7e-af68-752df2fc9963",
+     "chunk_number": 5,
+     "token_count": 70,
+     "qdrant_point_id": "be173818-4b84-4e7e-af68-752df2fc9963",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "b4f8f0af-eb54-49a7-bbcf-0701dd1b9a1f",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "‘Our children are less cognitively capable,’ says neuroscientist who wants to cut screen use in schools",
+   "published_at": "2026-08-16T01:30:20+00:00",
+   "processed_at": "2026-08-17T18:23:58.441701+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "2459b814-409f-4b0e-bbdc-4f4b0dadf3d0",
+    "df567fb6-d6d9-4845-baf1-5e60d1e95cda",
+    "6d9074bc-544b-4603-bcf5-9b62a6307c2e",
+    "80d1edfd-ef04-41d7-ba95-c524fba8bedc",
+    "bff2d9eb-b138-4a81-8d73-5d7fa3e8e79d"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "2459b814-409f-4b0e-bbdc-4f4b0dadf3d0",
+     "chunk_number": 0,
+     "token_count": 222,
+     "qdrant_point_id": "2459b814-409f-4b0e-bbdc-4f4b0dadf3d0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "df567fb6-d6d9-4845-baf1-5e60d1e95cda",
+     "chunk_number": 1,
+     "token_count": 255,
+     "qdrant_point_id": "df567fb6-d6d9-4845-baf1-5e60d1e95cda",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6d9074bc-544b-4603-bcf5-9b62a6307c2e",
+     "chunk_number": 2,
+     "token_count": 235,
+     "qdrant_point_id": "6d9074bc-544b-4603-bcf5-9b62a6307c2e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "80d1edfd-ef04-41d7-ba95-c524fba8bedc",
+     "chunk_number": 3,
+     "token_count": 237,
+     "qdrant_point_id": "80d1edfd-ef04-41d7-ba95-c524fba8bedc",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bff2d9eb-b138-4a81-8d73-5d7fa3e8e79d",
+     "chunk_number": 4,
+     "token_count": 216,
+     "qdrant_point_id": "bff2d9eb-b138-4a81-8d73-5d7fa3e8e79d",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "209d484e-f893-4d18-88d2-dd3be847547f",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "The first anti-AI protester to be jailed has a message for OpenAI, Anthropic and Meta: ‘Regain your humanity’",
+   "published_at": "2026-08-16T02:30:20+00:00",
+   "processed_at": "2026-08-17T18:23:57.549502+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "32db8037-1b55-4602-a047-857a496f278d",
+    "6a62bc9a-6c77-43cb-a393-7f08839754eb",
+    "8251fd05-78a1-4a64-9ed3-935006874b81",
+    "57db4ae0-074e-48ae-9fe6-0c5b28781a58",
+    "131fc2e9-903a-4673-91a6-3f240b83065e",
+    "8d55fdd5-a466-4086-b610-20c1ded98658",
+    "11aa81c0-8bb8-4734-b164-99a770c49bad"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "32db8037-1b55-4602-a047-857a496f278d",
+     "chunk_number": 0,
+     "token_count": 205,
+     "qdrant_point_id": "32db8037-1b55-4602-a047-857a496f278d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6a62bc9a-6c77-43cb-a393-7f08839754eb",
+     "chunk_number": 1,
+     "token_count": 255,
+     "qdrant_point_id": "6a62bc9a-6c77-43cb-a393-7f08839754eb",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8251fd05-78a1-4a64-9ed3-935006874b81",
+     "chunk_number": 2,
+     "token_count": 255,
+     "qdrant_point_id": "8251fd05-78a1-4a64-9ed3-935006874b81",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "57db4ae0-074e-48ae-9fe6-0c5b28781a58",
+     "chunk_number": 3,
+     "token_count": 233,
+     "qdrant_point_id": "57db4ae0-074e-48ae-9fe6-0c5b28781a58",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "131fc2e9-903a-4673-91a6-3f240b83065e",
+     "chunk_number": 4,
+     "token_count": 234,
+     "qdrant_point_id": "131fc2e9-903a-4673-91a6-3f240b83065e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8d55fdd5-a466-4086-b610-20c1ded98658",
+     "chunk_number": 5,
+     "token_count": 244,
+     "qdrant_point_id": "8d55fdd5-a466-4086-b610-20c1ded98658",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "11aa81c0-8bb8-4734-b164-99a770c49bad",
+     "chunk_number": 6,
+     "token_count": 82,
+     "qdrant_point_id": "11aa81c0-8bb8-4734-b164-99a770c49bad",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "9fb68f25-5202-4f0b-a734-513355a65507",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "‘I see the incredible promise’: on set of an AI film shoot as new studios embrace controversial tech",
+   "published_at": "2026-08-16T06:30:25+00:00",
+   "processed_at": "2026-08-17T18:23:50.659718+00:00",
+   "language_code": "en",
+   "category_code": "entertainment",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "42daeb68-1cb6-49ed-8ce2-6b2e8c76f00f",
+    "7381c2df-81be-4d43-b480-491be1c6ae8b",
+    "e3972e74-226e-4353-9778-5729d3d3e823",
+    "973dcea0-efe7-4b98-acd7-0e25cd9a5250",
+    "fac55f69-4f06-464e-8a85-07cf5f341e81",
+    "15460913-54cc-4d6a-85fd-8cc2675d598c",
+    "d26fab6b-565b-4593-adc7-7bf33dd2de01",
+    "09a85a15-4ff9-4d10-837f-a857e11575ad"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "42daeb68-1cb6-49ed-8ce2-6b2e8c76f00f",
+     "chunk_number": 0,
+     "token_count": 213,
+     "qdrant_point_id": "42daeb68-1cb6-49ed-8ce2-6b2e8c76f00f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7381c2df-81be-4d43-b480-491be1c6ae8b",
+     "chunk_number": 1,
+     "token_count": 226,
+     "qdrant_point_id": "7381c2df-81be-4d43-b480-491be1c6ae8b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e3972e74-226e-4353-9778-5729d3d3e823",
+     "chunk_number": 2,
+     "token_count": 251,
+     "qdrant_point_id": "e3972e74-226e-4353-9778-5729d3d3e823",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "973dcea0-efe7-4b98-acd7-0e25cd9a5250",
+     "chunk_number": 3,
+     "token_count": 248,
+     "qdrant_point_id": "973dcea0-efe7-4b98-acd7-0e25cd9a5250",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fac55f69-4f06-464e-8a85-07cf5f341e81",
+     "chunk_number": 4,
+     "token_count": 239,
+     "qdrant_point_id": "fac55f69-4f06-464e-8a85-07cf5f341e81",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "15460913-54cc-4d6a-85fd-8cc2675d598c",
+     "chunk_number": 5,
+     "token_count": 209,
+     "qdrant_point_id": "15460913-54cc-4d6a-85fd-8cc2675d598c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d26fab6b-565b-4593-adc7-7bf33dd2de01",
+     "chunk_number": 6,
+     "token_count": 177,
+     "qdrant_point_id": "d26fab6b-565b-4593-adc7-7bf33dd2de01",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "09a85a15-4ff9-4d10-837f-a857e11575ad",
+     "chunk_number": 7,
+     "token_count": 231,
+     "qdrant_point_id": "09a85a15-4ff9-4d10-837f-a857e11575ad",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "e4c44d2a-9659-4a16-962f-4efac2bdb21e",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Deepfake Anthony Albanese used in celebrity scams duping Australians out of $7.4m, Asic warns",
+   "published_at": "2026-08-16T08:31:27+00:00",
+   "processed_at": "2026-08-17T18:23:56.662220+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "df85f47e-65b4-469e-aa8b-4162ac8a4e38",
+    "6e222191-131c-49d2-a0a9-d5f59d7d59bb",
+    "223b7df9-2ac6-421a-a85e-70bcb6c09005",
+    "f5f62ab0-6637-43b8-b55b-9e24a315e081"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "df85f47e-65b4-469e-aa8b-4162ac8a4e38",
+     "chunk_number": 0,
+     "token_count": 221,
+     "qdrant_point_id": "df85f47e-65b4-469e-aa8b-4162ac8a4e38",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "6e222191-131c-49d2-a0a9-d5f59d7d59bb",
+     "chunk_number": 1,
+     "token_count": 216,
+     "qdrant_point_id": "6e222191-131c-49d2-a0a9-d5f59d7d59bb",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "223b7df9-2ac6-421a-a85e-70bcb6c09005",
+     "chunk_number": 2,
+     "token_count": 255,
+     "qdrant_point_id": "223b7df9-2ac6-421a-a85e-70bcb6c09005",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "f5f62ab0-6637-43b8-b55b-9e24a315e081",
+     "chunk_number": 3,
+     "token_count": 126,
+     "qdrant_point_id": "f5f62ab0-6637-43b8-b55b-9e24a315e081",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "cc0b4d14-d638-4861-a1fa-abd5dea397ad",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "‘The kids were right’: 30 years of Pokémon, from school-wide bans to multimillion-dollar trading cards",
+   "published_at": "2026-08-16T09:30:29+00:00",
+   "processed_at": "2026-08-17T18:24:12.039009+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "7fe1217d-0212-4703-86ce-55696dfe3e56",
+    "cd90f62a-630c-434e-8bf4-31e91e9b3f89",
+    "86a00c73-95ce-4386-94b0-7fff758bdd39",
+    "2b628e1b-2d05-4ca8-a878-b4df2497fb08",
+    "483ac945-d1f2-4ede-8701-5e874a9260a0",
+    "fda982de-4721-4c36-8409-524a7aa0f995",
+    "284139e8-73be-4570-996f-9ce472568a37"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "7fe1217d-0212-4703-86ce-55696dfe3e56",
+     "chunk_number": 0,
+     "token_count": 250,
+     "qdrant_point_id": "7fe1217d-0212-4703-86ce-55696dfe3e56",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "cd90f62a-630c-434e-8bf4-31e91e9b3f89",
+     "chunk_number": 1,
+     "token_count": 240,
+     "qdrant_point_id": "cd90f62a-630c-434e-8bf4-31e91e9b3f89",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "86a00c73-95ce-4386-94b0-7fff758bdd39",
+     "chunk_number": 2,
+     "token_count": 252,
+     "qdrant_point_id": "86a00c73-95ce-4386-94b0-7fff758bdd39",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2b628e1b-2d05-4ca8-a878-b4df2497fb08",
+     "chunk_number": 3,
+     "token_count": 211,
+     "qdrant_point_id": "2b628e1b-2d05-4ca8-a878-b4df2497fb08",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "483ac945-d1f2-4ede-8701-5e874a9260a0",
+     "chunk_number": 4,
+     "token_count": 239,
+     "qdrant_point_id": "483ac945-d1f2-4ede-8701-5e874a9260a0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fda982de-4721-4c36-8409-524a7aa0f995",
+     "chunk_number": 5,
+     "token_count": 243,
+     "qdrant_point_id": "fda982de-4721-4c36-8409-524a7aa0f995",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "284139e8-73be-4570-996f-9ce472568a37",
+     "chunk_number": 6,
+     "token_count": 114,
+     "qdrant_point_id": "284139e8-73be-4570-996f-9ce472568a37",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "b5da185f-5a23-4bdc-8e13-05b532783958",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Anthropic CEO says AI backlash is ‘fundamentally a crisis of trust’",
+   "published_at": "2026-08-16T11:23:51+00:00",
+   "processed_at": "2026-08-17T18:23:27.717902+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "f39296eb-e0d9-4b34-b334-095fd76dd080",
+    "cfbc9117-821b-4485-a496-c077e0fabb83",
+    "cd1631e2-b90b-458c-b0a1-2a221a39be44",
+    "3ea3d9f6-6a4e-43d4-8e86-c0e27a86b7fe"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "f39296eb-e0d9-4b34-b334-095fd76dd080",
+     "chunk_number": 0,
+     "token_count": 234,
+     "qdrant_point_id": "f39296eb-e0d9-4b34-b334-095fd76dd080",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "cfbc9117-821b-4485-a496-c077e0fabb83",
+     "chunk_number": 1,
+     "token_count": 234,
+     "qdrant_point_id": "cfbc9117-821b-4485-a496-c077e0fabb83",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "cd1631e2-b90b-458c-b0a1-2a221a39be44",
+     "chunk_number": 2,
+     "token_count": 228,
+     "qdrant_point_id": "cd1631e2-b90b-458c-b0a1-2a221a39be44",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3ea3d9f6-6a4e-43d4-8e86-c0e27a86b7fe",
+     "chunk_number": 3,
+     "token_count": 230,
+     "qdrant_point_id": "3ea3d9f6-6a4e-43d4-8e86-c0e27a86b7fe",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "58daab41-3ba8-4413-906f-5db7e7c90782",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Why people aren’t buying Mark Zuckerberg’s AI future",
+   "published_at": "2026-08-16T15:02:01+00:00",
+   "processed_at": "2026-08-17T18:23:26.410146+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "7e2252d1-8df9-4e00-b318-83b03d64da5b",
+    "45a090c3-cd65-425b-b9ed-aa6db382df4e",
+    "0ee86cac-0f44-4f80-b3a6-a820a9186c65",
+    "57a74971-f5bf-4af8-ab85-54e8c90fae00",
+    "11bacf1c-b3ef-4dd6-b2e7-36e900d72b12",
+    "9066fa33-a7fb-49f9-890f-1c6ee16e368e",
+    "0078a151-c1b2-484c-93a0-085a47ed54fe",
+    "2d32c569-4e38-4d60-b535-8526cc5b0d15"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "7e2252d1-8df9-4e00-b318-83b03d64da5b",
+     "chunk_number": 0,
+     "token_count": 231,
+     "qdrant_point_id": "7e2252d1-8df9-4e00-b318-83b03d64da5b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "45a090c3-cd65-425b-b9ed-aa6db382df4e",
+     "chunk_number": 1,
+     "token_count": 213,
+     "qdrant_point_id": "45a090c3-cd65-425b-b9ed-aa6db382df4e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0ee86cac-0f44-4f80-b3a6-a820a9186c65",
+     "chunk_number": 2,
+     "token_count": 229,
+     "qdrant_point_id": "0ee86cac-0f44-4f80-b3a6-a820a9186c65",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "57a74971-f5bf-4af8-ab85-54e8c90fae00",
+     "chunk_number": 3,
+     "token_count": 226,
+     "qdrant_point_id": "57a74971-f5bf-4af8-ab85-54e8c90fae00",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "11bacf1c-b3ef-4dd6-b2e7-36e900d72b12",
+     "chunk_number": 4,
+     "token_count": 243,
+     "qdrant_point_id": "11bacf1c-b3ef-4dd6-b2e7-36e900d72b12",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9066fa33-a7fb-49f9-890f-1c6ee16e368e",
+     "chunk_number": 5,
+     "token_count": 244,
+     "qdrant_point_id": "9066fa33-a7fb-49f9-890f-1c6ee16e368e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0078a151-c1b2-484c-93a0-085a47ed54fe",
+     "chunk_number": 6,
+     "token_count": 240,
+     "qdrant_point_id": "0078a151-c1b2-484c-93a0-085a47ed54fe",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2d32c569-4e38-4d60-b535-8526cc5b0d15",
+     "chunk_number": 7,
+     "token_count": 214,
+     "qdrant_point_id": "2d32c569-4e38-4d60-b535-8526cc5b0d15",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "9d4156e0-a819-4a78-a365-aaf40f93317a",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Stripe will reportedly acquire AI gateway startup OpenRouter for $7B+",
+   "published_at": "2026-08-16T15:27:04+00:00",
+   "processed_at": "2026-08-17T18:23:25.750726+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "093cfe4e-f920-4ea4-8707-99344c7106b4"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "093cfe4e-f920-4ea4-8707-99344c7106b4",
+     "chunk_number": 0,
+     "token_count": 221,
+     "qdrant_point_id": "093cfe4e-f920-4ea4-8707-99344c7106b4",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "de7f4d35-6e1d-42d9-b4ef-47605ddb5815",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Report supporting Australia’s teen social media ban appears to contain AI hallucinations, Senate hears",
+   "published_at": "2026-08-16T21:28:05+00:00",
+   "processed_at": "2026-08-17T18:23:55.636495+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "eb363285-d515-4b3e-9f55-d0d34a82eda0",
+    "0fb94498-1faa-4d95-b4b4-414a24726ffb",
+    "a128cfd0-c091-41a8-8f5e-76fa4e1091cf",
+    "5882fa4e-3a3c-4832-81ac-5aae6f966d01",
+    "a8758d00-8976-446f-91cc-e967bcbc8d5f",
+    "7e9bb90b-8c09-425d-85f8-b3fec3659115",
+    "51704a72-4084-4e30-a553-bec4ab8c07a0"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "eb363285-d515-4b3e-9f55-d0d34a82eda0",
+     "chunk_number": 0,
+     "token_count": 238,
+     "qdrant_point_id": "eb363285-d515-4b3e-9f55-d0d34a82eda0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0fb94498-1faa-4d95-b4b4-414a24726ffb",
+     "chunk_number": 1,
+     "token_count": 177,
+     "qdrant_point_id": "0fb94498-1faa-4d95-b4b4-414a24726ffb",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a128cfd0-c091-41a8-8f5e-76fa4e1091cf",
+     "chunk_number": 2,
+     "token_count": 216,
+     "qdrant_point_id": "a128cfd0-c091-41a8-8f5e-76fa4e1091cf",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5882fa4e-3a3c-4832-81ac-5aae6f966d01",
+     "chunk_number": 3,
+     "token_count": 235,
+     "qdrant_point_id": "5882fa4e-3a3c-4832-81ac-5aae6f966d01",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a8758d00-8976-446f-91cc-e967bcbc8d5f",
+     "chunk_number": 4,
+     "token_count": 246,
+     "qdrant_point_id": "a8758d00-8976-446f-91cc-e967bcbc8d5f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7e9bb90b-8c09-425d-85f8-b3fec3659115",
+     "chunk_number": 5,
+     "token_count": 225,
+     "qdrant_point_id": "7e9bb90b-8c09-425d-85f8-b3fec3659115",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "51704a72-4084-4e30-a553-bec4ab8c07a0",
+     "chunk_number": 6,
+     "token_count": 57,
+     "qdrant_point_id": "51704a72-4084-4e30-a553-bec4ab8c07a0",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "d0d549a7-2b37-438a-92bc-30999e45679e",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Are Microsoft’s AI plans being held back by a shortage of chips?",
+   "published_at": "2026-08-16T22:30:46+00:00",
+   "processed_at": "2026-08-17T18:23:49.028866+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "6c00c80f-8894-42cc-a2ea-519121d5d40f",
+    "178a7c15-c3a4-4109-897e-3faed58fc371",
+    "349a71c2-3f69-414f-a50d-eea9613746af",
+    "82c26e71-c913-4ac7-9a79-d4fa340a6395",
+    "4d4d1382-bf05-45ce-9710-3c7866da2543",
+    "e55b526d-a5fb-4700-a2e7-c2d09cd7e716",
+    "23ddef30-abc6-4c19-aaf1-63bfbf8cd53a",
+    "c110e7d0-f7de-490d-b65b-23e9859e1ec0",
+    "ad681c0f-0293-475e-88eb-c1365aeb8c66",
+    "d4e532be-e4df-4207-a359-61c90bcbabdc",
+    "dfad2247-2dd5-4c36-81bc-a38c68e57e2f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "6c00c80f-8894-42cc-a2ea-519121d5d40f",
+     "chunk_number": 0,
+     "token_count": 234,
+     "qdrant_point_id": "6c00c80f-8894-42cc-a2ea-519121d5d40f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "178a7c15-c3a4-4109-897e-3faed58fc371",
+     "chunk_number": 1,
+     "token_count": 255,
+     "qdrant_point_id": "178a7c15-c3a4-4109-897e-3faed58fc371",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "349a71c2-3f69-414f-a50d-eea9613746af",
+     "chunk_number": 2,
+     "token_count": 255,
+     "qdrant_point_id": "349a71c2-3f69-414f-a50d-eea9613746af",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "82c26e71-c913-4ac7-9a79-d4fa340a6395",
+     "chunk_number": 3,
+     "token_count": 252,
+     "qdrant_point_id": "82c26e71-c913-4ac7-9a79-d4fa340a6395",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4d4d1382-bf05-45ce-9710-3c7866da2543",
+     "chunk_number": 4,
+     "token_count": 242,
+     "qdrant_point_id": "4d4d1382-bf05-45ce-9710-3c7866da2543",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e55b526d-a5fb-4700-a2e7-c2d09cd7e716",
+     "chunk_number": 5,
+     "token_count": 237,
+     "qdrant_point_id": "e55b526d-a5fb-4700-a2e7-c2d09cd7e716",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "23ddef30-abc6-4c19-aaf1-63bfbf8cd53a",
+     "chunk_number": 6,
+     "token_count": 251,
+     "qdrant_point_id": "23ddef30-abc6-4c19-aaf1-63bfbf8cd53a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c110e7d0-f7de-490d-b65b-23e9859e1ec0",
+     "chunk_number": 7,
+     "token_count": 247,
+     "qdrant_point_id": "c110e7d0-f7de-490d-b65b-23e9859e1ec0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ad681c0f-0293-475e-88eb-c1365aeb8c66",
+     "chunk_number": 8,
+     "token_count": 235,
+     "qdrant_point_id": "ad681c0f-0293-475e-88eb-c1365aeb8c66",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d4e532be-e4df-4207-a359-61c90bcbabdc",
+     "chunk_number": 9,
+     "token_count": 217,
+     "qdrant_point_id": "d4e532be-e4df-4207-a359-61c90bcbabdc",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "dfad2247-2dd5-4c36-81bc-a38c68e57e2f",
+     "chunk_number": 10,
+     "token_count": 78,
+     "qdrant_point_id": "dfad2247-2dd5-4c36-81bc-a38c68e57e2f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "d6b758cb-37ca-4c93-94a8-c6fc8db924b7",
+   "source_id": "51a5773f-fcb4-4593-83f4-37eec9ef81a1",
+   "source_name": "BBC Science & Tech",
+   "title": "Instagram and Facebook could change forever if Meta loses child privacy trial",
+   "published_at": "2026-08-16T23:30:25+00:00",
+   "processed_at": "2026-08-17T18:24:14.366590+00:00",
+   "language_code": "en",
+   "category_code": "health",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "c48eca9b-61ba-42fd-802e-e1b8181e2539",
+    "88dbd75f-baf5-4254-86cb-d21d675414de",
+    "b3e7ec50-a40e-4029-9bd1-bfe2639fef95",
+    "1f70bd29-1078-42f6-8449-a8330009aaea",
+    "7e5668d8-5a3a-41fd-a36c-60c380f11504",
+    "85609227-26be-4de5-b296-bdb2651b3a8d"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "c48eca9b-61ba-42fd-802e-e1b8181e2539",
+     "chunk_number": 0,
+     "token_count": 247,
+     "qdrant_point_id": "c48eca9b-61ba-42fd-802e-e1b8181e2539",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "88dbd75f-baf5-4254-86cb-d21d675414de",
+     "chunk_number": 1,
+     "token_count": 238,
+     "qdrant_point_id": "88dbd75f-baf5-4254-86cb-d21d675414de",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b3e7ec50-a40e-4029-9bd1-bfe2639fef95",
+     "chunk_number": 2,
+     "token_count": 247,
+     "qdrant_point_id": "b3e7ec50-a40e-4029-9bd1-bfe2639fef95",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1f70bd29-1078-42f6-8449-a8330009aaea",
+     "chunk_number": 3,
+     "token_count": 235,
+     "qdrant_point_id": "1f70bd29-1078-42f6-8449-a8330009aaea",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7e5668d8-5a3a-41fd-a36c-60c380f11504",
+     "chunk_number": 4,
+     "token_count": 251,
+     "qdrant_point_id": "7e5668d8-5a3a-41fd-a36c-60c380f11504",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "85609227-26be-4de5-b296-bdb2651b3a8d",
+     "chunk_number": 5,
+     "token_count": 240,
+     "qdrant_point_id": "85609227-26be-4de5-b296-bdb2651b3a8d",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "7ba3a0b0-f4af-4c2b-b2b7-ebd35fdb8cdb",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "How to take better photos of your pets",
+   "published_at": "2026-08-17T05:30:00+00:00",
+   "processed_at": "2026-08-17T18:23:47.488457+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "f4a673ca-34d5-4beb-b523-942a4fea125d",
+    "342e90f1-0f86-4bcb-83dc-bcf5bcc1d101",
+    "9a99252c-e5f7-4585-b780-f8e40dab5127",
+    "dfd9cb3f-97df-45b6-aa49-79df42046999",
+    "b9bb1818-17c4-4eca-92f5-95ce7c694b6c",
+    "4d194978-cef5-495a-97f4-1802f3974273",
+    "622d4516-f105-4a14-8f00-1c236f7a38ce",
+    "7d09f2ca-a00e-4496-bff9-4e04d1d11c42"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "f4a673ca-34d5-4beb-b523-942a4fea125d",
+     "chunk_number": 0,
+     "token_count": 228,
+     "qdrant_point_id": "f4a673ca-34d5-4beb-b523-942a4fea125d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "342e90f1-0f86-4bcb-83dc-bcf5bcc1d101",
+     "chunk_number": 1,
+     "token_count": 218,
+     "qdrant_point_id": "342e90f1-0f86-4bcb-83dc-bcf5bcc1d101",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9a99252c-e5f7-4585-b780-f8e40dab5127",
+     "chunk_number": 2,
+     "token_count": 251,
+     "qdrant_point_id": "9a99252c-e5f7-4585-b780-f8e40dab5127",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "dfd9cb3f-97df-45b6-aa49-79df42046999",
+     "chunk_number": 3,
+     "token_count": 214,
+     "qdrant_point_id": "dfd9cb3f-97df-45b6-aa49-79df42046999",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b9bb1818-17c4-4eca-92f5-95ce7c694b6c",
+     "chunk_number": 4,
+     "token_count": 234,
+     "qdrant_point_id": "b9bb1818-17c4-4eca-92f5-95ce7c694b6c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4d194978-cef5-495a-97f4-1802f3974273",
+     "chunk_number": 5,
+     "token_count": 250,
+     "qdrant_point_id": "4d194978-cef5-495a-97f4-1802f3974273",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "622d4516-f105-4a14-8f00-1c236f7a38ce",
+     "chunk_number": 6,
+     "token_count": 240,
+     "qdrant_point_id": "622d4516-f105-4a14-8f00-1c236f7a38ce",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7d09f2ca-a00e-4496-bff9-4e04d1d11c42",
+     "chunk_number": 7,
+     "token_count": 196,
+     "qdrant_point_id": "7d09f2ca-a00e-4496-bff9-4e04d1d11c42",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "cf970ec7-3243-489c-9796-41ab6994866a",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "Whisker’s AI-powered litter robot thinks my cats swapped bodies",
+   "published_at": "2026-08-17T05:30:00+00:00",
+   "processed_at": "2026-08-17T18:23:47.987955+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "ad432654-3c9e-4f4d-89fa-f7b6d0e96386",
+    "fd97a464-c97c-4e5c-a862-45b63e6e119d",
+    "61b5119f-edf1-4a98-b752-79a1daca6fb4",
+    "7bcbdad7-00ea-4171-b90d-505c70fac7b3",
+    "12cc1938-e28e-42dc-a62e-df8523e98e2e",
+    "4408a389-8ce6-4229-87b9-4ba67c0ffb9c",
+    "366634e4-b650-4980-bdf4-69314f3b0f2f",
+    "0e65435e-c465-4264-9d74-294623105ab5",
+    "4571de26-bca6-4a85-9e8a-a25c417861f8",
+    "1b5a38ca-6ada-4e00-955e-9c66c4be43a5",
+    "5777895b-2115-4d89-aa61-2715954e2f9c",
+    "e804098e-ef02-4e7c-87b3-c3ff3e9a544e"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "ad432654-3c9e-4f4d-89fa-f7b6d0e96386",
+     "chunk_number": 0,
+     "token_count": 252,
+     "qdrant_point_id": "ad432654-3c9e-4f4d-89fa-f7b6d0e96386",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fd97a464-c97c-4e5c-a862-45b63e6e119d",
+     "chunk_number": 1,
+     "token_count": 240,
+     "qdrant_point_id": "fd97a464-c97c-4e5c-a862-45b63e6e119d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "61b5119f-edf1-4a98-b752-79a1daca6fb4",
+     "chunk_number": 2,
+     "token_count": 250,
+     "qdrant_point_id": "61b5119f-edf1-4a98-b752-79a1daca6fb4",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "7bcbdad7-00ea-4171-b90d-505c70fac7b3",
+     "chunk_number": 3,
+     "token_count": 239,
+     "qdrant_point_id": "7bcbdad7-00ea-4171-b90d-505c70fac7b3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "12cc1938-e28e-42dc-a62e-df8523e98e2e",
+     "chunk_number": 4,
+     "token_count": 231,
+     "qdrant_point_id": "12cc1938-e28e-42dc-a62e-df8523e98e2e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4408a389-8ce6-4229-87b9-4ba67c0ffb9c",
+     "chunk_number": 5,
+     "token_count": 209,
+     "qdrant_point_id": "4408a389-8ce6-4229-87b9-4ba67c0ffb9c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "366634e4-b650-4980-bdf4-69314f3b0f2f",
+     "chunk_number": 6,
+     "token_count": 248,
+     "qdrant_point_id": "366634e4-b650-4980-bdf4-69314f3b0f2f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0e65435e-c465-4264-9d74-294623105ab5",
+     "chunk_number": 7,
+     "token_count": 233,
+     "qdrant_point_id": "0e65435e-c465-4264-9d74-294623105ab5",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4571de26-bca6-4a85-9e8a-a25c417861f8",
+     "chunk_number": 8,
+     "token_count": 239,
+     "qdrant_point_id": "4571de26-bca6-4a85-9e8a-a25c417861f8",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1b5a38ca-6ada-4e00-955e-9c66c4be43a5",
+     "chunk_number": 9,
+     "token_count": 251,
+     "qdrant_point_id": "1b5a38ca-6ada-4e00-955e-9c66c4be43a5",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5777895b-2115-4d89-aa61-2715954e2f9c",
+     "chunk_number": 10,
+     "token_count": 230,
+     "qdrant_point_id": "5777895b-2115-4d89-aa61-2715954e2f9c",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e804098e-ef02-4e7c-87b3-c3ff3e9a544e",
+     "chunk_number": 11,
+     "token_count": 166,
+     "qdrant_point_id": "e804098e-ef02-4e7c-87b3-c3ff3e9a544e",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "521e313b-7757-4ef5-88e2-ff63e7e8db4f",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Temperatures to fall across Europe as substantial rain heading for parts of UK",
+   "published_at": "2026-08-17T07:14:58+00:00",
+   "processed_at": "2026-08-17T18:23:50.097742+00:00",
+   "language_code": "en",
+   "category_code": "other",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "db182b5b-bd79-40a4-aa6b-c6427a1aed62",
+    "627138ee-3109-4e80-ac6f-f080e29f392d",
+    "ad69d66f-a1d2-4b1b-ac9c-ce93da2472b1"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "db182b5b-bd79-40a4-aa6b-c6427a1aed62",
+     "chunk_number": 0,
+     "token_count": 238,
+     "qdrant_point_id": "db182b5b-bd79-40a4-aa6b-c6427a1aed62",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "627138ee-3109-4e80-ac6f-f080e29f392d",
+     "chunk_number": 1,
+     "token_count": 231,
+     "qdrant_point_id": "627138ee-3109-4e80-ac6f-f080e29f392d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ad69d66f-a1d2-4b1b-ac9c-ce93da2472b1",
+     "chunk_number": 2,
+     "token_count": 108,
+     "qdrant_point_id": "ad69d66f-a1d2-4b1b-ac9c-ce93da2472b1",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "973dc718-da3c-4170-984e-efda6dcca2f9",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Ithaca: a scintillating eco-thriller RPG that aims to confront our violent moment",
+   "published_at": "2026-08-17T07:30:55+00:00",
+   "processed_at": "2026-08-17T18:24:10.929180+00:00",
+   "language_code": "en",
+   "category_code": "science",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "7209f885-224a-4b20-81dd-ebe60ed18a4d",
+    "c10559be-186b-42d8-bf6a-1ad922e4e05f",
+    "4b24c538-2b2f-4ece-8bd1-c44f0af57b24",
+    "0254ebe4-eac3-4b24-b3dd-66c95b2116b0"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "7209f885-224a-4b20-81dd-ebe60ed18a4d",
+     "chunk_number": 0,
+     "token_count": 237,
+     "qdrant_point_id": "7209f885-224a-4b20-81dd-ebe60ed18a4d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c10559be-186b-42d8-bf6a-1ad922e4e05f",
+     "chunk_number": 1,
+     "token_count": 233,
+     "qdrant_point_id": "c10559be-186b-42d8-bf6a-1ad922e4e05f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4b24c538-2b2f-4ece-8bd1-c44f0af57b24",
+     "chunk_number": 2,
+     "token_count": 239,
+     "qdrant_point_id": "4b24c538-2b2f-4ece-8bd1-c44f0af57b24",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0254ebe4-eac3-4b24-b3dd-66c95b2116b0",
+     "chunk_number": 3,
+     "token_count": 246,
+     "qdrant_point_id": "0254ebe4-eac3-4b24-b3dd-66c95b2116b0",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "6baa5924-961f-4a42-8162-2dea7fb0d7d3",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Wispr raises $280M at $2B valuation as it looks beyond dictation",
+   "published_at": "2026-08-17T07:40:05+00:00",
+   "processed_at": "2026-08-17T18:23:24.567850+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "a026f784-d201-47cd-b8a1-2a98a83441bd",
+    "f44b6aa6-b75e-42c9-89b9-59a50b66ef26"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "a026f784-d201-47cd-b8a1-2a98a83441bd",
+     "chunk_number": 0,
+     "token_count": 255,
+     "qdrant_point_id": "a026f784-d201-47cd-b8a1-2a98a83441bd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "f44b6aa6-b75e-42c9-89b9-59a50b66ef26",
+     "chunk_number": 1,
+     "token_count": 213,
+     "qdrant_point_id": "f44b6aa6-b75e-42c9-89b9-59a50b66ef26",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "1210f847-795b-4d8e-8bd7-7643d337fd05",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Sainsbury’s store pauses AI scanning after false shoplifting accusation",
+   "published_at": "2026-08-17T07:51:25+00:00",
+   "processed_at": "2026-08-17T18:23:48.504876+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "38cc2cb0-1a6b-4965-81ca-c744feefa7e2",
+    "10c04804-4885-4cc0-96ae-6e68a3b707d9",
+    "d8502080-10ff-4ced-9cb2-5739be658251",
+    "41d89a2d-51c1-41ad-8cd9-cf7e43011739",
+    "95b9b81c-0d89-44b3-84e7-42076143efff"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "38cc2cb0-1a6b-4965-81ca-c744feefa7e2",
+     "chunk_number": 0,
+     "token_count": 238,
+     "qdrant_point_id": "38cc2cb0-1a6b-4965-81ca-c744feefa7e2",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "10c04804-4885-4cc0-96ae-6e68a3b707d9",
+     "chunk_number": 1,
+     "token_count": 247,
+     "qdrant_point_id": "10c04804-4885-4cc0-96ae-6e68a3b707d9",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d8502080-10ff-4ced-9cb2-5739be658251",
+     "chunk_number": 2,
+     "token_count": 233,
+     "qdrant_point_id": "d8502080-10ff-4ced-9cb2-5739be658251",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "41d89a2d-51c1-41ad-8cd9-cf7e43011739",
+     "chunk_number": 3,
+     "token_count": 243,
+     "qdrant_point_id": "41d89a2d-51c1-41ad-8cd9-cf7e43011739",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "95b9b81c-0d89-44b3-84e7-42076143efff",
+     "chunk_number": 4,
+     "token_count": 49,
+     "qdrant_point_id": "95b9b81c-0d89-44b3-84e7-42076143efff",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "ee5a716d-8ed1-49ad-bc67-55c24504196f",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "It’s about ethics in journalism, with Ben Smith",
+   "published_at": "2026-08-17T08:30:00+00:00",
+   "processed_at": "2026-08-17T18:23:46.959717+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "e5ce47f6-084b-4754-b37d-2b8fa192c323",
+    "8a813db0-c92f-4e74-ae31-dd14c6ab303f",
+    "1bee4d23-6c50-4762-a793-0c94505799a8",
+    "56168125-15b4-4fed-bfe6-270a759ee00b",
+    "a5b9b810-97c0-4814-b965-dbc6b5868248",
+    "30080a07-c323-4cfe-b97b-f9021359ed15",
+    "cc265740-cd81-4717-b3cc-939207d931d7",
+    "ef9b350c-5d70-434a-93c2-515b98cb0623",
+    "90c75337-afe7-4167-9728-c3d7404f2126",
+    "2a37da39-7611-4090-85d6-c475629470a1",
+    "8dbbc60f-ee15-4648-ba3e-019cce49e594",
+    "0f895c8c-c04d-4bcd-97d3-d2bf1fc27242",
+    "0b4bca13-4eb2-4ea8-a2a7-5f82928b0889",
+    "2e3eb856-357c-4324-93d6-ea069a1958c1",
+    "a5a8739a-28ec-436c-a5e2-158116d9158f",
+    "1772f30d-3766-40df-9d87-4d13175da4ea",
+    "4115bd96-1db8-4cfe-b054-28883a545f6b",
+    "96d8ba66-5ef3-4d92-bda3-7a2235c58c56",
+    "91bf654f-7e8c-4def-8f77-a554a6cdf35b",
+    "d9b27e91-30d5-4d38-99ed-6021f6e4edbe",
+    "dee6e24e-0ea5-4b46-a2ca-dbbee2e0e11d",
+    "09dd665d-e86d-47a1-9c0d-944b7a905b37",
+    "20c2b207-92cc-47ca-81a5-00c64c5b25a8",
+    "29c4beb7-8235-4e3d-b81a-3f2f9b68d446",
+    "8bf85c3b-e24f-4651-962e-5e1ebfa09a41",
+    "5b441248-4cce-4443-b85c-cf5312198f65",
+    "4c409913-a0d9-469f-a4da-258138223dd3",
+    "79df486c-ffef-4930-8a4d-5a1d763644fd",
+    "aba2a9cf-f0d5-4012-a545-12b425630737",
+    "dda87715-dc1e-4a27-85b8-841d480a2677",
+    "50121185-9264-47a7-8449-923fdf3aa9f5",
+    "306633a8-02d0-4149-a8b3-fa62d490c7d8",
+    "ba91fa14-e764-43cc-b4c7-30196ab243eb",
+    "1cbbf7ce-a7c6-414a-8767-af40cc4bd3d4",
+    "b9f8c393-68a2-40b8-b549-6224d2d547b5",
+    "b65db2c9-6b68-4d91-8434-6e26b3530672",
+    "d20b7cdf-05c5-49fd-87c2-b2f03028e9dc",
+    "42dd31a9-8e33-43b1-815c-e8037f32c8cd",
+    "45df0855-d52a-464b-8f30-5287d1b989b1",
+    "9c7b0bf8-e354-4cf6-a19c-1ccb48909c70",
+    "5870ef22-e4f9-462c-9f52-9ee7d98134a0",
+    "d9d1e04e-874b-41a7-add3-7c992d1516a0",
+    "9f91c688-e912-4de8-b385-62d9596c65cd",
+    "bcdf8500-61f7-40fc-bb82-418a14a4665b",
+    "70fc7011-1224-43d0-a30a-622168eebc64",
+    "b420a74e-9074-41a0-b058-576e2af9bf07",
+    "c40b3f1c-5986-4bec-9956-b57770d128d5",
+    "c969fb83-ac93-459f-b14f-845bc8439b44",
+    "1a05acef-b333-4ee5-88ab-dcd145c0d1d3",
+    "144b826b-cca5-4e63-9c1f-f5962ebbe782",
+    "fa7367c3-86fe-406e-ab15-4d88df2f4c79",
+    "07a408c7-0578-4add-a583-2b821542c89f",
+    "2f94e7aa-9a0f-46c4-a22a-b9a265b973d1",
+    "d66f8bfe-52a6-4001-9731-986dbfc1eabe"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "e5ce47f6-084b-4754-b37d-2b8fa192c323",
+     "chunk_number": 0,
+     "token_count": 254,
+     "qdrant_point_id": "e5ce47f6-084b-4754-b37d-2b8fa192c323",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8a813db0-c92f-4e74-ae31-dd14c6ab303f",
+     "chunk_number": 1,
+     "token_count": 252,
+     "qdrant_point_id": "8a813db0-c92f-4e74-ae31-dd14c6ab303f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1bee4d23-6c50-4762-a793-0c94505799a8",
+     "chunk_number": 2,
+     "token_count": 190,
+     "qdrant_point_id": "1bee4d23-6c50-4762-a793-0c94505799a8",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "56168125-15b4-4fed-bfe6-270a759ee00b",
+     "chunk_number": 3,
+     "token_count": 247,
+     "qdrant_point_id": "56168125-15b4-4fed-bfe6-270a759ee00b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a5b9b810-97c0-4814-b965-dbc6b5868248",
+     "chunk_number": 4,
+     "token_count": 252,
+     "qdrant_point_id": "a5b9b810-97c0-4814-b965-dbc6b5868248",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "30080a07-c323-4cfe-b97b-f9021359ed15",
+     "chunk_number": 5,
+     "token_count": 252,
+     "qdrant_point_id": "30080a07-c323-4cfe-b97b-f9021359ed15",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "cc265740-cd81-4717-b3cc-939207d931d7",
+     "chunk_number": 6,
+     "token_count": 230,
+     "qdrant_point_id": "cc265740-cd81-4717-b3cc-939207d931d7",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ef9b350c-5d70-434a-93c2-515b98cb0623",
+     "chunk_number": 7,
+     "token_count": 230,
+     "qdrant_point_id": "ef9b350c-5d70-434a-93c2-515b98cb0623",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "90c75337-afe7-4167-9728-c3d7404f2126",
+     "chunk_number": 8,
+     "token_count": 226,
+     "qdrant_point_id": "90c75337-afe7-4167-9728-c3d7404f2126",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2a37da39-7611-4090-85d6-c475629470a1",
+     "chunk_number": 9,
+     "token_count": 209,
+     "qdrant_point_id": "2a37da39-7611-4090-85d6-c475629470a1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8dbbc60f-ee15-4648-ba3e-019cce49e594",
+     "chunk_number": 10,
+     "token_count": 246,
+     "qdrant_point_id": "8dbbc60f-ee15-4648-ba3e-019cce49e594",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0f895c8c-c04d-4bcd-97d3-d2bf1fc27242",
+     "chunk_number": 11,
+     "token_count": 251,
+     "qdrant_point_id": "0f895c8c-c04d-4bcd-97d3-d2bf1fc27242",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0b4bca13-4eb2-4ea8-a2a7-5f82928b0889",
+     "chunk_number": 12,
+     "token_count": 251,
+     "qdrant_point_id": "0b4bca13-4eb2-4ea8-a2a7-5f82928b0889",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2e3eb856-357c-4324-93d6-ea069a1958c1",
+     "chunk_number": 13,
+     "token_count": 240,
+     "qdrant_point_id": "2e3eb856-357c-4324-93d6-ea069a1958c1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "a5a8739a-28ec-436c-a5e2-158116d9158f",
+     "chunk_number": 14,
+     "token_count": 251,
+     "qdrant_point_id": "a5a8739a-28ec-436c-a5e2-158116d9158f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1772f30d-3766-40df-9d87-4d13175da4ea",
+     "chunk_number": 15,
+     "token_count": 243,
+     "qdrant_point_id": "1772f30d-3766-40df-9d87-4d13175da4ea",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4115bd96-1db8-4cfe-b054-28883a545f6b",
+     "chunk_number": 16,
+     "token_count": 226,
+     "qdrant_point_id": "4115bd96-1db8-4cfe-b054-28883a545f6b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "96d8ba66-5ef3-4d92-bda3-7a2235c58c56",
+     "chunk_number": 17,
+     "token_count": 237,
+     "qdrant_point_id": "96d8ba66-5ef3-4d92-bda3-7a2235c58c56",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "91bf654f-7e8c-4def-8f77-a554a6cdf35b",
+     "chunk_number": 18,
+     "token_count": 240,
+     "qdrant_point_id": "91bf654f-7e8c-4def-8f77-a554a6cdf35b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d9b27e91-30d5-4d38-99ed-6021f6e4edbe",
+     "chunk_number": 19,
+     "token_count": 248,
+     "qdrant_point_id": "d9b27e91-30d5-4d38-99ed-6021f6e4edbe",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "dee6e24e-0ea5-4b46-a2ca-dbbee2e0e11d",
+     "chunk_number": 20,
+     "token_count": 252,
+     "qdrant_point_id": "dee6e24e-0ea5-4b46-a2ca-dbbee2e0e11d",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "09dd665d-e86d-47a1-9c0d-944b7a905b37",
+     "chunk_number": 21,
+     "token_count": 216,
+     "qdrant_point_id": "09dd665d-e86d-47a1-9c0d-944b7a905b37",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "20c2b207-92cc-47ca-81a5-00c64c5b25a8",
+     "chunk_number": 22,
+     "token_count": 250,
+     "qdrant_point_id": "20c2b207-92cc-47ca-81a5-00c64c5b25a8",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "29c4beb7-8235-4e3d-b81a-3f2f9b68d446",
+     "chunk_number": 23,
+     "token_count": 247,
+     "qdrant_point_id": "29c4beb7-8235-4e3d-b81a-3f2f9b68d446",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8bf85c3b-e24f-4651-962e-5e1ebfa09a41",
+     "chunk_number": 24,
+     "token_count": 248,
+     "qdrant_point_id": "8bf85c3b-e24f-4651-962e-5e1ebfa09a41",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5b441248-4cce-4443-b85c-cf5312198f65",
+     "chunk_number": 25,
+     "token_count": 235,
+     "qdrant_point_id": "5b441248-4cce-4443-b85c-cf5312198f65",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4c409913-a0d9-469f-a4da-258138223dd3",
+     "chunk_number": 26,
+     "token_count": 243,
+     "qdrant_point_id": "4c409913-a0d9-469f-a4da-258138223dd3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "79df486c-ffef-4930-8a4d-5a1d763644fd",
+     "chunk_number": 27,
+     "token_count": 240,
+     "qdrant_point_id": "79df486c-ffef-4930-8a4d-5a1d763644fd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "aba2a9cf-f0d5-4012-a545-12b425630737",
+     "chunk_number": 28,
+     "token_count": 243,
+     "qdrant_point_id": "aba2a9cf-f0d5-4012-a545-12b425630737",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "dda87715-dc1e-4a27-85b8-841d480a2677",
+     "chunk_number": 29,
+     "token_count": 244,
+     "qdrant_point_id": "dda87715-dc1e-4a27-85b8-841d480a2677",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "50121185-9264-47a7-8449-923fdf3aa9f5",
+     "chunk_number": 30,
+     "token_count": 217,
+     "qdrant_point_id": "50121185-9264-47a7-8449-923fdf3aa9f5",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "306633a8-02d0-4149-a8b3-fa62d490c7d8",
+     "chunk_number": 31,
+     "token_count": 250,
+     "qdrant_point_id": "306633a8-02d0-4149-a8b3-fa62d490c7d8",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ba91fa14-e764-43cc-b4c7-30196ab243eb",
+     "chunk_number": 32,
+     "token_count": 238,
+     "qdrant_point_id": "ba91fa14-e764-43cc-b4c7-30196ab243eb",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1cbbf7ce-a7c6-414a-8767-af40cc4bd3d4",
+     "chunk_number": 33,
+     "token_count": 218,
+     "qdrant_point_id": "1cbbf7ce-a7c6-414a-8767-af40cc4bd3d4",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b9f8c393-68a2-40b8-b549-6224d2d547b5",
+     "chunk_number": 34,
+     "token_count": 213,
+     "qdrant_point_id": "b9f8c393-68a2-40b8-b549-6224d2d547b5",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b65db2c9-6b68-4d91-8434-6e26b3530672",
+     "chunk_number": 35,
+     "token_count": 247,
+     "qdrant_point_id": "b65db2c9-6b68-4d91-8434-6e26b3530672",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d20b7cdf-05c5-49fd-87c2-b2f03028e9dc",
+     "chunk_number": 36,
+     "token_count": 247,
+     "qdrant_point_id": "d20b7cdf-05c5-49fd-87c2-b2f03028e9dc",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "42dd31a9-8e33-43b1-815c-e8037f32c8cd",
+     "chunk_number": 37,
+     "token_count": 235,
+     "qdrant_point_id": "42dd31a9-8e33-43b1-815c-e8037f32c8cd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "45df0855-d52a-464b-8f30-5287d1b989b1",
+     "chunk_number": 38,
+     "token_count": 228,
+     "qdrant_point_id": "45df0855-d52a-464b-8f30-5287d1b989b1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9c7b0bf8-e354-4cf6-a19c-1ccb48909c70",
+     "chunk_number": 39,
+     "token_count": 229,
+     "qdrant_point_id": "9c7b0bf8-e354-4cf6-a19c-1ccb48909c70",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "5870ef22-e4f9-462c-9f52-9ee7d98134a0",
+     "chunk_number": 40,
+     "token_count": 198,
+     "qdrant_point_id": "5870ef22-e4f9-462c-9f52-9ee7d98134a0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d9d1e04e-874b-41a7-add3-7c992d1516a0",
+     "chunk_number": 41,
+     "token_count": 252,
+     "qdrant_point_id": "d9d1e04e-874b-41a7-add3-7c992d1516a0",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "9f91c688-e912-4de8-b385-62d9596c65cd",
+     "chunk_number": 42,
+     "token_count": 234,
+     "qdrant_point_id": "9f91c688-e912-4de8-b385-62d9596c65cd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bcdf8500-61f7-40fc-bb82-418a14a4665b",
+     "chunk_number": 43,
+     "token_count": 250,
+     "qdrant_point_id": "bcdf8500-61f7-40fc-bb82-418a14a4665b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "70fc7011-1224-43d0-a30a-622168eebc64",
+     "chunk_number": 44,
+     "token_count": 192,
+     "qdrant_point_id": "70fc7011-1224-43d0-a30a-622168eebc64",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b420a74e-9074-41a0-b058-576e2af9bf07",
+     "chunk_number": 45,
+     "token_count": 246,
+     "qdrant_point_id": "b420a74e-9074-41a0-b058-576e2af9bf07",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c40b3f1c-5986-4bec-9956-b57770d128d5",
+     "chunk_number": 46,
+     "token_count": 254,
+     "qdrant_point_id": "c40b3f1c-5986-4bec-9956-b57770d128d5",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "c969fb83-ac93-459f-b14f-845bc8439b44",
+     "chunk_number": 47,
+     "token_count": 229,
+     "qdrant_point_id": "c969fb83-ac93-459f-b14f-845bc8439b44",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "1a05acef-b333-4ee5-88ab-dcd145c0d1d3",
+     "chunk_number": 48,
+     "token_count": 243,
+     "qdrant_point_id": "1a05acef-b333-4ee5-88ab-dcd145c0d1d3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "144b826b-cca5-4e63-9c1f-f5962ebbe782",
+     "chunk_number": 49,
+     "token_count": 250,
+     "qdrant_point_id": "144b826b-cca5-4e63-9c1f-f5962ebbe782",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "fa7367c3-86fe-406e-ab15-4d88df2f4c79",
+     "chunk_number": 50,
+     "token_count": 254,
+     "qdrant_point_id": "fa7367c3-86fe-406e-ab15-4d88df2f4c79",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "07a408c7-0578-4add-a583-2b821542c89f",
+     "chunk_number": 51,
+     "token_count": 231,
+     "qdrant_point_id": "07a408c7-0578-4add-a583-2b821542c89f",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "2f94e7aa-9a0f-46c4-a22a-b9a265b973d1",
+     "chunk_number": 52,
+     "token_count": 244,
+     "qdrant_point_id": "2f94e7aa-9a0f-46c4-a22a-b9a265b973d1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d66f8bfe-52a6-4001-9731-986dbfc1eabe",
+     "chunk_number": 53,
+     "token_count": 151,
+     "qdrant_point_id": "d66f8bfe-52a6-4001-9731-986dbfc1eabe",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "934921f6-0d1b-4c0a-ba55-fb292881c320",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "Uber partners with Zipline on Eats drone deliveries",
+   "published_at": "2026-08-17T08:54:35+00:00",
+   "processed_at": "2026-08-17T18:23:46.380634+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "a5311380-0aad-47b6-aa36-7e63cd0b5545",
+    "0a289082-e63c-456d-ac5a-e6611dfad45d"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "a5311380-0aad-47b6-aa36-7e63cd0b5545",
+     "chunk_number": 0,
+     "token_count": 247,
+     "qdrant_point_id": "a5311380-0aad-47b6-aa36-7e63cd0b5545",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0a289082-e63c-456d-ac5a-e6611dfad45d",
+     "chunk_number": 1,
+     "token_count": 228,
+     "qdrant_point_id": "0a289082-e63c-456d-ac5a-e6611dfad45d",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "b7f28690-c690-4050-bb56-411b923a658c",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "WiiM’s capable HomePod-esque smart speaker is almost $50 off",
+   "published_at": "2026-08-17T09:05:25+00:00",
+   "processed_at": "2026-08-17T18:23:45.932313+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "7f2b71ec-4ae5-44ca-b974-b0d577287aef",
+    "14cae1d5-93dc-4ede-81f9-537b131befe3",
+    "28508922-49e1-4122-8621-c904268e584a",
+    "31490f18-e42c-43c2-bec1-9244ea559986"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "7f2b71ec-4ae5-44ca-b974-b0d577287aef",
+     "chunk_number": 0,
+     "token_count": 248,
+     "qdrant_point_id": "7f2b71ec-4ae5-44ca-b974-b0d577287aef",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "14cae1d5-93dc-4ede-81f9-537b131befe3",
+     "chunk_number": 1,
+     "token_count": 252,
+     "qdrant_point_id": "14cae1d5-93dc-4ede-81f9-537b131befe3",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "28508922-49e1-4122-8621-c904268e584a",
+     "chunk_number": 2,
+     "token_count": 230,
+     "qdrant_point_id": "28508922-49e1-4122-8621-c904268e584a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "31490f18-e42c-43c2-bec1-9244ea559986",
+     "chunk_number": 3,
+     "token_count": 86,
+     "qdrant_point_id": "31490f18-e42c-43c2-bec1-9244ea559986",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "2fa17772-65f4-499a-8c3e-5e1c3efcf29d",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "The Sinking City 2 review – Ukrainian cosmic horror, come hell or high water",
+   "published_at": "2026-08-17T09:30:01+00:00",
+   "processed_at": "2026-08-17T18:24:10.485081+00:00",
+   "language_code": "en",
+   "category_code": "science",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "3a8d461a-2a9e-4979-9ba7-05201e848efe",
+    "eb488c0c-1761-4120-9bac-74e3e9e3c204",
+    "8641b8a4-3fd2-4f9f-89aa-6b4cbab653e1",
+    "092fc3a1-4c4b-4552-9947-5db9c537e462"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "3a8d461a-2a9e-4979-9ba7-05201e848efe",
+     "chunk_number": 0,
+     "token_count": 244,
+     "qdrant_point_id": "3a8d461a-2a9e-4979-9ba7-05201e848efe",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "eb488c0c-1761-4120-9bac-74e3e9e3c204",
+     "chunk_number": 1,
+     "token_count": 226,
+     "qdrant_point_id": "eb488c0c-1761-4120-9bac-74e3e9e3c204",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8641b8a4-3fd2-4f9f-89aa-6b4cbab653e1",
+     "chunk_number": 2,
+     "token_count": 255,
+     "qdrant_point_id": "8641b8a4-3fd2-4f9f-89aa-6b4cbab653e1",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "092fc3a1-4c4b-4552-9947-5db9c537e462",
+     "chunk_number": 3,
+     "token_count": 157,
+     "qdrant_point_id": "092fc3a1-4c4b-4552-9947-5db9c537e462",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "b05795af-c140-42a3-9ffe-9312fc3a7050",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "Apple ordered to stop scaring iPhone and iPad users away from third-party apps",
+   "published_at": "2026-08-17T09:40:25+00:00",
+   "processed_at": "2026-08-17T18:23:45.468968+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "9dd1bad7-22af-4498-8d02-90179bcd81cb",
+    "bf59614d-f40d-4074-9758-1ed0948ce38f"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "9dd1bad7-22af-4498-8d02-90179bcd81cb",
+     "chunk_number": 0,
+     "token_count": 250,
+     "qdrant_point_id": "9dd1bad7-22af-4498-8d02-90179bcd81cb",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "bf59614d-f40d-4074-9758-1ed0948ce38f",
+     "chunk_number": 1,
+     "token_count": 161,
+     "qdrant_point_id": "bf59614d-f40d-4074-9758-1ed0948ce38f",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "d585a13e-22fd-48c2-83cd-b9fbe0616d42",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Nvidia investing $1.5B in SoftBank data center developer behind OpenAI project",
+   "published_at": "2026-08-17T09:46:24+00:00",
+   "processed_at": "2026-08-17T18:23:23.461081+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "c174b564-fa02-4553-870f-418a536cac03"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "c174b564-fa02-4553-870f-418a536cac03",
+     "chunk_number": 0,
+     "token_count": 299,
+     "qdrant_point_id": "c174b564-fa02-4553-870f-418a536cac03",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "02114a98-b34f-4716-8fa3-a8a8148d8ba8",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Groq raises $350M to fuel its pivot from AI chips to neocloud",
+   "published_at": "2026-08-17T10:45:12+00:00",
+   "processed_at": "2026-08-17T18:23:22.182282+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "d1a8734f-1dda-4aa0-b158-c2829fc6a52b",
+    "d9b1b19b-56c6-4b78-b4e6-5b0772046736",
+    "e475e941-b4fe-4b8d-a5cf-00e04ad9fc53"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "d1a8734f-1dda-4aa0-b158-c2829fc6a52b",
+     "chunk_number": 0,
+     "token_count": 254,
+     "qdrant_point_id": "d1a8734f-1dda-4aa0-b158-c2829fc6a52b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d9b1b19b-56c6-4b78-b4e6-5b0772046736",
+     "chunk_number": 1,
+     "token_count": 247,
+     "qdrant_point_id": "d9b1b19b-56c6-4b78-b4e6-5b0772046736",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "e475e941-b4fe-4b8d-a5cf-00e04ad9fc53",
+     "chunk_number": 2,
+     "token_count": 143,
+     "qdrant_point_id": "e475e941-b4fe-4b8d-a5cf-00e04ad9fc53",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "46378ad5-6a90-4f1b-b4a3-eba289c32392",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "Trump’s dumb border wall",
+   "published_at": "2026-08-17T11:00:00+00:00",
+   "processed_at": "2026-08-17T18:23:44.981374+00:00",
+   "language_code": "en",
+   "category_code": "politics",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "29f6f9f8-de02-43c2-8a2b-3632541e34bf",
+    "3d324e01-8a67-4da2-aab7-f0468dcb43ee",
+    "4dd996ec-7a08-48a2-842f-4e2d8de8afdd",
+    "ff3d4356-c1ca-40cc-a2d6-53225191390a",
+    "55ae8493-5657-4ccc-a7d5-cac784bf850e",
+    "f396d51f-dbfe-4706-b7af-eeb41e9d941b",
+    "8643172f-5146-455f-b8f2-b277c4f9ae3b",
+    "723ac382-d85d-45d2-93ed-5218e3701426",
+    "21d1c23e-e12c-427a-921d-a23ef99b92ba",
+    "18c0cd2c-ff4e-4f8b-984a-ed46915bcfee",
+    "4b330f64-6c9e-482a-94a1-ffad4e09c9fe",
+    "32d35725-d8b5-4d08-8373-4768cdbe17f3"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "29f6f9f8-de02-43c2-8a2b-3632541e34bf",
+     "chunk_number": 0,
+     "token_count": 242,
+     "qdrant_point_id": "29f6f9f8-de02-43c2-8a2b-3632541e34bf",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "3d324e01-8a67-4da2-aab7-f0468dcb43ee",
+     "chunk_number": 1,
+     "token_count": 246,
+     "qdrant_point_id": "3d324e01-8a67-4da2-aab7-f0468dcb43ee",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4dd996ec-7a08-48a2-842f-4e2d8de8afdd",
+     "chunk_number": 2,
+     "token_count": 225,
+     "qdrant_point_id": "4dd996ec-7a08-48a2-842f-4e2d8de8afdd",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "ff3d4356-c1ca-40cc-a2d6-53225191390a",
+     "chunk_number": 3,
+     "token_count": 250,
+     "qdrant_point_id": "ff3d4356-c1ca-40cc-a2d6-53225191390a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "55ae8493-5657-4ccc-a7d5-cac784bf850e",
+     "chunk_number": 4,
+     "token_count": 251,
+     "qdrant_point_id": "55ae8493-5657-4ccc-a7d5-cac784bf850e",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "f396d51f-dbfe-4706-b7af-eeb41e9d941b",
+     "chunk_number": 5,
+     "token_count": 244,
+     "qdrant_point_id": "f396d51f-dbfe-4706-b7af-eeb41e9d941b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "8643172f-5146-455f-b8f2-b277c4f9ae3b",
+     "chunk_number": 6,
+     "token_count": 200,
+     "qdrant_point_id": "8643172f-5146-455f-b8f2-b277c4f9ae3b",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "723ac382-d85d-45d2-93ed-5218e3701426",
+     "chunk_number": 7,
+     "token_count": 202,
+     "qdrant_point_id": "723ac382-d85d-45d2-93ed-5218e3701426",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "21d1c23e-e12c-427a-921d-a23ef99b92ba",
+     "chunk_number": 8,
+     "token_count": 216,
+     "qdrant_point_id": "21d1c23e-e12c-427a-921d-a23ef99b92ba",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "18c0cd2c-ff4e-4f8b-984a-ed46915bcfee",
+     "chunk_number": 9,
+     "token_count": 251,
+     "qdrant_point_id": "18c0cd2c-ff4e-4f8b-984a-ed46915bcfee",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "4b330f64-6c9e-482a-94a1-ffad4e09c9fe",
+     "chunk_number": 10,
+     "token_count": 231,
+     "qdrant_point_id": "4b330f64-6c9e-482a-94a1-ffad4e09c9fe",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "32d35725-d8b5-4d08-8373-4768cdbe17f3",
+     "chunk_number": 11,
+     "token_count": 183,
+     "qdrant_point_id": "32d35725-d8b5-4d08-8373-4768cdbe17f3",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "df0407f4-983c-4e4b-add6-5313c970aad4",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "Sonos finally added Live Activities controls for your iPhone lockscreen",
+   "published_at": "2026-08-17T11:08:35+00:00",
+   "processed_at": "2026-08-17T18:23:44.438711+00:00",
+   "language_code": "en",
+   "category_code": "entertainment",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "3cc8cc6d-746a-4932-87c5-ad6a6e1e7e41",
+    "d0385723-8419-495d-a89e-09dd4ca01edd"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "3cc8cc6d-746a-4932-87c5-ad6a6e1e7e41",
+     "chunk_number": 0,
+     "token_count": 212,
+     "qdrant_point_id": "3cc8cc6d-746a-4932-87c5-ad6a6e1e7e41",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d0385723-8419-495d-a89e-09dd4ca01edd",
+     "chunk_number": 1,
+     "token_count": 220,
+     "qdrant_point_id": "d0385723-8419-495d-a89e-09dd4ca01edd",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "dd493cb0-3494-4f17-985b-7b15291978f5",
+   "source_id": "6d7a3cd8-e7d0-4c9c-8bf1-cc356e5ce998",
+   "source_name": "TechCrunch AI",
+   "title": "Amazon, which started off selling books, is destroying rare texts to train AI",
+   "published_at": "2026-08-17T11:08:44+00:00",
+   "processed_at": "2026-08-17T18:23:19.184290+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "77abccb7-e6bc-4e47-b8f8-d6119e7ed762"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "77abccb7-e6bc-4e47-b8f8-d6119e7ed762",
+     "chunk_number": 0,
+     "token_count": 252,
+     "qdrant_point_id": "77abccb7-e6bc-4e47-b8f8-d6119e7ed762",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "7a2e539c-8228-4580-854a-f9c13fc2509f",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "The Analogue Pocket gets a Supreme makeover in red or gold",
+   "published_at": "2026-08-17T11:10:32+00:00",
+   "processed_at": "2026-08-17T18:23:43.986105+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "b7869de5-33d6-42c7-b693-2b41a4a203fd"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "b7869de5-33d6-42c7-b693-2b41a4a203fd",
+     "chunk_number": 0,
+     "token_count": 238,
+     "qdrant_point_id": "b7869de5-33d6-42c7-b693-2b41a4a203fd",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "9b74f391-8295-40b4-8977-407923be479a",
+   "source_id": "d164575a-0678-46af-95ea-d5e9033fc3ae",
+   "source_name": "The Guardian Technology",
+   "title": "Claude to start watermarking AI-generated text – but will it make quality worse?",
+   "published_at": "2026-08-17T11:22:04+00:00",
+   "processed_at": "2026-08-17T18:23:54.583331+00:00",
+   "language_code": "en",
+   "category_code": "technology",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "05e73309-6967-4e74-b1aa-52c263fa1a4a",
+    "b94eb89d-a4e6-488d-83d4-babecfff8acb",
+    "d0a1eaba-7283-4ba4-8767-b15bd5759183",
+    "22fc4631-5c9e-497e-8910-c5d8083b2a62"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "05e73309-6967-4e74-b1aa-52c263fa1a4a",
+     "chunk_number": 0,
+     "token_count": 234,
+     "qdrant_point_id": "05e73309-6967-4e74-b1aa-52c263fa1a4a",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "b94eb89d-a4e6-488d-83d4-babecfff8acb",
+     "chunk_number": 1,
+     "token_count": 226,
+     "qdrant_point_id": "b94eb89d-a4e6-488d-83d4-babecfff8acb",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "d0a1eaba-7283-4ba4-8767-b15bd5759183",
+     "chunk_number": 2,
+     "token_count": 214,
+     "qdrant_point_id": "d0a1eaba-7283-4ba4-8767-b15bd5759183",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "22fc4631-5c9e-497e-8910-c5d8083b2a62",
+     "chunk_number": 3,
+     "token_count": 198,
+     "qdrant_point_id": "22fc4631-5c9e-497e-8910-c5d8083b2a62",
+     "embedding_status": "embedded"
+    }
+   ]
+  },
+  {
+   "article_id": "f552a07c-2bc7-48b1-be9d-263fa50872af",
+   "source_id": "f951e848-83db-46e0-858a-327b5b698dd8",
+   "source_name": "The Verge",
+   "title": "YouTube is changing how it counts views to give the numbers a boost",
+   "published_at": "2026-08-17T11:43:03+00:00",
+   "processed_at": "2026-08-17T18:23:43.614953+00:00",
+   "language_code": "en",
+   "category_code": "business",
+   "extractor": "trafilatura",
+   "extractor_version": "1",
+   "extraction_quality": "ok",
+   "chunk_ids": [
+    "622d0ef9-3134-46fb-9a05-d4dfe93b1333",
+    "0868b4d5-c7f2-409a-bf12-f848d089efaf"
+   ],
+   "chunks": [
+    {
+     "chunk_id": "622d0ef9-3134-46fb-9a05-d4dfe93b1333",
+     "chunk_number": 0,
+     "token_count": 212,
+     "qdrant_point_id": "622d0ef9-3134-46fb-9a05-d4dfe93b1333",
+     "embedding_status": "embedded"
+    },
+    {
+     "chunk_id": "0868b4d5-c7f2-409a-bf12-f848d089efaf",
+     "chunk_number": 1,
+     "token_count": 231,
+     "qdrant_point_id": "0868b4d5-c7f2-409a-bf12-f848d089efaf",
+     "embedding_status": "embedded"
+    }
+   ]
+  }
+ ]
+}
