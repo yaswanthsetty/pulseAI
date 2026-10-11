@@ -2,11 +2,11 @@
 
 Date: 2026-10-09 — Commit: see git history for the Phase 1.2 series.
 
-Scope: validate the boilerplate chunk classifier against hand labels (precision-first),
+Scope: pin the boilerplate chunk classifier to hand labels as a regression guard (precision-first),
 re-extract the corpus through trafilatura with a hardened fallback, re-ingest safely
 with `pulseai-reingest`, and re-measure retrieval smoke quality.
 
-## 1. Classifier validation (precision-first)
+## 1. Classifier regression fixture (in-sample — NOT validated accuracy)
 
 **Fixture:** `tests/fixtures/boilerplate_labels.jsonl` — 102 hand-labelled rows (65 junk / 37 clean),
 stratified across all four sources and the 0.40–0.60 score band. A unit test asserts the row and
@@ -21,6 +21,7 @@ class counts and the exact confusion matrix, so any threshold/weight change is m
 
 - **Precision = 0.984** (≥ 0.95 constraint met) — losing real body text is bounded to 1 in 64 deletions.
 - **Recall = 0.969**.
+- **In-sample caveat:** the threshold weights and `STRONG_MARKERS` were grid-searched and expanded on these same 102 labels, so these numbers are an upper bound, not validated accuracy. The fixture + test are a **regression guard** (no silent degradation). An honest held-out measurement — freshly labelled chunks from a new ingest the classifier has never seen — is scheduled in Phase 2 (`docs/plans/phase2_eval.md`, §2.4).
 - The single FP is a Samsung Galaxy Z Fold review specs chunk that repeats a 5-gram ≥3×; it sits on the
   deliberate span-repetition boundary (raising the bar to ≥4× would let 12 markerless TechCrunch card
   rails through, which is worse).

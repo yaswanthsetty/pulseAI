@@ -1,10 +1,14 @@
 # PulseAI — Project Status & Roadmap
 
-> Last updated: October 8, 2026
+> Last updated: October 11, 2026 (verified against commit `c3fc039`)
 
-## Status
+## Status — original build milestones
 
-| Phase | Description | Status |
+These are the *build-out* milestones of the initial spec, kept for history. The
+authoritative phase list for remaining work is the **Coding Agent Upgrade Plan**
+at the bottom of this document.
+
+| Milestone | Description | Status |
 |---|---|---|
 | Phase 1 | Core infra, ingestion, schema | Complete |
 | Phase 1.5 | Auth & RBAC | Complete |
@@ -13,9 +17,9 @@
 | Phase 4 | Temporal ranking | Complete |
 | Phase 5 | Chat & reports | Complete |
 | Phase 6 | Frontend | Complete |
-| Phase 7 | Hardening | In progress |
+| Phase 7 | Hardening | Complete |
 
-**Overall: Phases 1-6 complete. Phase 7 (hardening) remaining.**
+**Overall: original build milestones Phases 1-7 complete. Remaining work is tracked in the upgrade plan below.**
 
 ---
 
@@ -59,7 +63,7 @@
 - Docker Compose (Postgres, Qdrant, Redis) + production compose with frontend image, migrate runner, nightly backups, Prometheus + Grafana
 - GitHub Actions CI (ruff, import-linter, pytest, pip-audit, npm audit)
 - Import-linter module boundary enforcement
-- 80% test coverage gate (358 tests in the backend test suite)
+- 80% test coverage gate — **386 tests, coverage 80.87%**, verified 2026-10-11 at commit `c3fc039` (`uv run pytest -q --cov=backend`)
 - k6 load-test scripts for search and read endpoints
 
 ---
@@ -112,7 +116,24 @@ docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ## Coding Agent Upgrade Plan
-- **Phase 1**: Ground every answer in real text (Completed).
-- **Phase 2**: Evaluation harness (Pending).
-- **Phase 3**: Improve chunking & ranking (Pending).
-- **Phase 4**: Agent tools & tool calling (Pending).
+
+Authoritative phase list — order matters, do not renumber. (Numbers here refer to
+the *upgrade* plan, not the build milestones above.)
+
+| Phase | Description | Status |
+|---|---|---|
+| 1 | Ground every answer in real text — incl. **1.1** grounding pipeline and **1.2** chunk-filter refit, trafilatura extraction, safe re-ingest CLI, corpus cleanup | **DONE** (1.1 and 1.2 complete; CI green on `c3fc039`) |
+| 2 | Evaluation harness (frozen dataset, retrieval/RAG/clustering/content-quality suites, CI regression gate) | Plan written — `docs/plans/phase2_eval.md`, awaiting approval; no code yet |
+| 3 | NLI verification of claims against retrieved evidence | Pending |
+| 4 | Real tool-using agent loop (replaces the fixed planner->retriever->reasoner->synthesizer pipeline) | Pending |
+| 5 | Ranking / eval tuning (driven by Phase 2 ablation numbers) | Pending |
+| 6 | Multilingual / data breadth | Pending |
+| 7 | Product polish + frontend tests | Pending |
+| 8 | Deployment, OpenTelemetry, load testing | Pending |
+| 9 | README | Pending |
+
+Known limitations that constrain all of the above (evidence agreement is
+title-Jaccard only, deep-planner sub-question hallucination, synthesizer
+refusals despite evidence, in-sample classifier metrics, 5 summary-only
+articles, dependency-audit exceptions, no deployment/OTel) are listed in the
+**KNOWN LIMITATIONS** section of `AGENTS.md`.

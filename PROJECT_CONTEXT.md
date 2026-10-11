@@ -1,7 +1,9 @@
 # PulseAI — Complete Project & Architecture Context
 
 > **Target Audience:** AI models, coding agents, and software engineers working on PulseAI.
-> This document provides an exhaustive, code-verified explanation of the architecture, data flow, features, database schemas, APIs, configuration, background workers, and conventions so that any AI model can immediately understand and modify the codebase without prior re-analysis.
+> This document is the architecture reference for the codebase.
+> It was **verified against commit `c3fc039` on 2026-10-11** and is a point-in-time snapshot, not a live mirror of the code — re-verify against the current commit before relying on details.
+> Agent working rules, the phase list, and the **KNOWN LIMITATIONS** section live in `AGENTS.md`; this document does not repeat them.
 
 ---
 
@@ -22,7 +24,7 @@
    - **Event Lifecycle:** Inactive events (>72h with no new articles) are automatically marked `closed` and their centroids are purged from Qdrant.
 8. **Interactive AI Agents & Reporting:**
    - **Fast-Path RAG Chat:** Server-Sent Events (SSE) streaming answers with cited article evidence `[#1]`, `[#2]` and evidence agreement scores.
-   - **Deep-Path Multi-Step Reasoning:** Planner -> Multi-Retriever -> Reasoner -> Synthesizer pipeline with live `thinking` progress events for complex analytical questions.
+   - **Deep-Path Multi-Step Reasoning:** Planner -> Multi-Retriever -> Reasoner -> Synthesizer pipeline with live `thinking` progress events for complex analytical questions. This is a **fixed pipeline on a single `qwen2.5:3b` model — not independent agents** and not tool-calling.
    - **Executive Reports:** Synthesizes structured intelligence reports on specific topics and timeframes, downloadable as CSV.
 9. **User Library & Alerting:** Saved searches, bookmarks, notification alert rules (by keyword or category), and multi-channel delivery (in-app inbox, webhooks, SMTP email).
 10. **Operations & Observability:** Prometheus metrics (`/metrics`), health probes (`/healthz`, `/readyz`), database migrations, and audit trails.
@@ -42,7 +44,7 @@
 | **Embeddings & Reranking** | `BAAI/bge-m3` via `FlagEmbedding` (1024 dense + sparse), `BAAI/bge-reranker-base` via `sentence-transformers.CrossEncoder` |
 | **Clustering Algorithms** | `umap-learn` (0.5.7+), `hdbscan` (0.8.40+), `numpy` |
 | **LLM Inference** | Ollama (local server at `http://localhost:11434`), default model: `qwen2.5:3b` |
-| **Web Scraping & Extraction** | `httpx`, `feedparser`, `beautifulsoup4`, `langdetect` |
+| **Web Scraping & Extraction** | `httpx`, `feedparser`, `trafilatura` (primary extraction), `beautifulsoup4` (fallback), `langdetect` |
 | **Security & Auth** | `bcrypt`, `pyjwt[crypto]`, API keys (`pls_` prefix SHA-256 hashed), double-submit CSRF, SSRF validator |
 | **Frontend Framework** | Next.js 16 (App Router, Turbopack), React 19, TypeScript 5 |
 | **Styling & UI** | Tailwind CSS v4 (`@theme inline` in `globals.css`), `cmdk` (Command Palette), `framer-motion`, `sonner` (toasts) |
@@ -88,7 +90,7 @@ pulseai/
 │   │   │   ├── service.py          # Source CRUD, poll_source, ingest_entries, process_article
 │   │   │   ├── jobs.py             # RQ jobs: poll_source_job, process_article_job
 │   │   │   ├── fetcher.py          # Safe HTTP client with timeout, user-agent, SSRF checks
-│   │   │   ├── parser.py           # Feed parsing (feedparser) and HTML content extraction (BS4)
+│   │   │   ├── parser.py           # Feed parsing (feedparser); extraction: trafilatura -> hardened BS4 fallback
 │   │   │   ├── classifier.py       # Rule/keyword category classifier and langdetect wrapper
 │   │   │   ├── dedupe.py           # URL normalization, SHA-256 hashing, fuzzy Levenshtein title dedupe
 │   │   │   ├── schemas.py          # Source and Article Pydantic schemas
@@ -125,7 +127,8 @@ pulseai/
 │   └── workers/                    # Long-running background processes and CLIs
 │       ├── worker.py               # pulseai-worker: RQ worker consuming ingest, embed, cluster queues
 │       ├── scheduler.py            # pulseai-scheduler: 30s tick polling sources + embedding & event reconciliation
-│       └── backfill.py             # pulseai-backfill-embeddings and pulseai-backfill-clusters CLI runners
+│       ├── backfill.py             # pulseai-backfill-embeddings and pulseai-backfill-clusters CLI runners
+│   │       └── reingest.py             # pulseai-reingest: safe re-extraction CLI (--dry-run, --limit)
 ├── frontend/                       # Next.js 16 Web Application
 │   ├── src/
 │   │   ├── app/                    # App Router pages
@@ -246,7 +249,8 @@ The codebase strictly adheres to 4 architectural contracts enforced on every CI 
    - **Fuzzy Dedupe:** Normalized title checked against same-source articles published in a 6-hour window using `SequenceMatcher` ratio >= 0.92.
 4. **Article Persistence:** If unique, `Article` is inserted into PostgreSQL.
 5. **Process Job (`ingest` queue):** Worker executes `process_article_job(article_id)`:
-   - Fetches full HTML article body, extracts text using BeautifulSoup4 (`extract_main_content`).
+   - Fetches the full HTML article body and extracts text with **trafilatura** (`favor_precision`), falling back to a hardened BeautifulSoup extractor when trafilatura finds no usable prose; which path won is recorded per article in `articles.extractor` / `articles.extractor_version` (migration `c9f4a2e71b38`). If neither extractor finds prose the article converges to a summary-only record (`extractor=summary`, `extraction_quality=low`).
+   - Chunk-time quality gate (`backend/core/content_quality.py`): each chunk is classified prose vs boilerplate (nav rails, card lists, promo tails); rejected chunks never reach Qdrant. Existing corpora are cleaned with `uv run pulseai-reingest --dry-run` (diffs only) then for real — embed-then-swap, with old vectors pruned only when every old chunk of an article is classifier-confirmed junk.
    - Writes body to Object Storage (`articles/{article_id}.txt`). Inline `content_preview` is trimmed to 500 characters.
    - Detects language (`langdetect`) and classifies category using taxonomy keywords.
    - Enqueues `embed_article_job` to the `embed` queue.
@@ -366,7 +370,7 @@ When `POST /api/v1/search` is called:
 
 ### 4. Interactive RAG Chat
 - **Fast Path:** For questions <= 30 words without comparative clauses. Retrieves 5 relevant articles, feeds context to Ollama, and streams response tokens via SSE.
-- **Deep Path:** Automatically activated for complex queries (>30 words or containing "compare", "analyze", "why", "difference between").
+- **Deep Path:** Automatically activated for complex queries (>30 words or containing "compare", "analyze", "why", "difference between"). All four stages call the **same single `qwen2.5:3b` model** in a fixed sequence — this is not a multi-agent system and nothing calls tools.
   1. *Planner:* Breaks user query into 2-4 sub-questions.
   2. *Retriever:* Performs separate searches for each sub-question.
   3. *Reasoner:* Generates grounded answers with citations for each sub-question.
@@ -837,7 +841,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 4. **Ollama Thinking Models:**
    - Always pass `"think": false` in JSON request payloads when calling Ollama models (such as Qwen 3.5). Otherwise, internal reasoning tokens will consume the entire output token limit before generating a response.
 5. **Windows OS Adaptations:**
-   - Port 8000 is frequently reserved by Hyper-V on Windows. The local development environment uses port `8090` for the backend API.
+   - Hyper-V reserves *shifting* TCP port ranges across reboots on Windows, so any hardcoded port can become unbindable (`WinError 10013`). Backend API, Postgres and Ollama ports are all env-configurable (`APP_PORT`, `POSTGRES_PORT`, `OLLAMA_URL`) — never assume a fixed port. See the Hyper-V entry in `AGENTS.md`.
    - Python-RQ forks processes using `os.fork` on POSIX systems, which is unsupported on Windows. `backend/workers/worker.py` dynamically selects `SimpleWorker` on Windows (`os.name == "nt"`).
    - RQ's built-in delayed job scheduler requires POSIX. PulseAI uses Redis key expiration TTLs (`retry:{source_id}`, `reconcile:embeddings`) polled by `pulseai-scheduler` to ensure seamless operation on both Windows and Linux.
 6. **Database Migration Rules:**
@@ -859,4 +863,5 @@ docker compose -f docker-compose.prod.yml up -d --build
 - **WebSocket Push (Planned):** Events currently refresh via client polling. A real-time WebSocket push stream for live event updates is on the project roadmap.
 - **TLS Termination:** The production compose file intentionally omits TLS; a reverse proxy (e.g., Caddy, Nginx, or Cloudflare Tunnel) should terminate SSL in front of ports 8000 and 3000.
 - **Cross-Source Comparison:** `compare_sources` currently requires matching search results across both outlets; sparse news coverage on niche topics may return insufficient comparative data.
+- **Grounding & quality limitations** (evidence agreement is title-Jaccard only, deep-planner sub-question hallucination, synthesizer refusals despite evidence, in-sample classifier metrics, summary-only articles, dependency-audit exceptions, no deployment/OTel) are tracked in the **KNOWN LIMITATIONS** section of `AGENTS.md`.
 
