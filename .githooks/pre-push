@@ -1,0 +1,16 @@
+#!/bin/sh
+# Guard: never force-push main. Fix forward with new commits instead.
+#
+# Rejects a push to refs/heads/main whenever the remote tip is not an
+# ancestor of the local tip (i.e. the push would rewrite history).
+
+while read local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ] &&
+     [ "$remote_sha" != "0000000000000000000000000000000000000000" ] &&
+     ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+    echo "Refusing force-push to main ($remote_sha is not an ancestor of $local_sha)." >&2
+    echo "Fix forward: rebase/cherry-pick onto main and push a new commit." >&2
+    exit 1
+  fi
+done
+exit 0

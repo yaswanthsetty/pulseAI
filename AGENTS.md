@@ -93,7 +93,8 @@ Authoritative phase list (order matters; do not renumber):
 
 ## Git rules
 - **Never force-push `main`.** Fix forward with new commits.
-- Do NOT add "Generated with Codebuff" / Codebuff co-author trailers to commit messages: the Freebuff client amends such commits after creation to strip the trailer, which rewrites the SHA and forces a force-push to update the remote (this is what rewrote `a0947e5`/`f44a37f` -> `f11746d`/`c3fc039`). A repo-local commit-msg hook also strips these lines as a guard.
+- Do NOT add "Generated with Codebuff" / Codebuff co-author trailers to commit messages: the Freebuff client amends such commits after creation to strip the trailer, which rewrites the SHA and forces a force-push to update the remote (this is what rewrote `a0947e5`/`f44a37f` -> `f11746d`/`c3fc039`).
+- The guards are version-controlled in **`.githooks/`**: `commit-msg` strips those trailer lines before the commit object exists, and `pre-push` rejects any non-fast-forward push to `main`. **One-time setup per clone:** `git config core.hooksPath .githooks` (already set in this working copy; git ignores `.git/hooks` once `core.hooksPath` is set).
 
 ## Next steps
 - Phase 2 (evaluation harness): get `docs/plans/phase2_eval.md` approved, then implement in the order given there. Do not start Phase 2 code before approval.

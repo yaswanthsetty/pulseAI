@@ -1,0 +1,16 @@
+#!/bin/sh
+# Guard: strip Codebuff trailer lines from the commit message BEFORE the
+# commit object is created.
+#
+# Why: the Freebuff client amends commits that carry its "Generated with
+# Codebuff" / "Co-Authored-By: Codebuff" trailer immediately after creation.
+# That amend rewrites the SHA, and since the original SHA was already pushed,
+# syncing requires a force-push of main (this is what rewrote a0947e5 ->
+# f11746d and f44a37f -> c3fc039). Editing the message pre-commit means the
+# trailer never exists and no amend ever happens.
+
+msg="$1"
+if grep -q -e "Generated with Codebuff" -e "Co-Authored-By: Codebuff" "$msg" 2>/dev/null; then
+  sed -i -e '/Generated with Codebuff/d' -e '/Co-Authored-By: Codebuff/d' "$msg"
+fi
+exit 0
