@@ -11,6 +11,10 @@ Flags: --snapshot <id>, --queries <path> (informational; the suites read
 eval/queries.jsonl), --limit N, --mock (no Ollama/Qdrant network calls),
 --baseline <path> (compare against a committed results file: exact equality
 for --mock, report-only for real runs).
+
+A real run also refreshes the baseline under ``eval/results/`` (json + md +
+``latest.json``), merging the suites that just ran over the newest on-disk
+results for the others. Mocked runs and the CI subset never write it.
 """
 
 from __future__ import annotations
@@ -137,6 +141,13 @@ def main(argv: list[str] | None = None) -> int:
     for suite in suites:
         print(f"=== suite: {suite} ===")
         combined["suites"][suite] = run_suite(suite, snapshot_id, args.limit, args.mock)
+
+    if not combined["mock"]:
+        # Real runs assemble the committed baseline (plan §4/§6). Mocked runs
+        # never touch it: CI numbers are not quality numbers.
+        from eval import report
+
+        report.write_baseline(report.merge_with_existing(combined["suites"]))
 
     if args.baseline:
         exact = combined["mock"]
