@@ -85,45 +85,87 @@ def purity(true_labels: list[str], predicted_labels: list[int]) -> float:
 
 
 def run(snapshot_id: str) -> dict[str, Any]:
-    from backend.modules.events import service as events_service
-    from backend.modules.events.service import _cluster_labels  # noqa: PLC2701 - the real path
-
-    ids, true_labels = load_true_labels(snapshot_id)
-    client = events_service.get_qdrant_client()
-
-    vectors: list[list[float]] = []
-    missing: list[str] = []
-    for article_id in ids:
-        vector = events_service.article_vector(client, article_id)
-        if vector is None:
-            missing.append(article_id)
-        else:
-            vectors.append(vector)
-
     import numpy as np
-    from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-
-    kept_labels = [
-        label
-        for label, article_id in zip(true_labels, ids, strict=True)
-        if article_id not in missing
-    ]
-    predicted = list(_cluster_labels(np.asarray(vectors, dtype=float)))
-    ari = float(adjusted_rand_score(kept_labels, predicted))
-    nmi = float(normalized_mutual_info_score(kept_labels, predicted))
-    purity_value = purity(kept_labels, predicted)
-    n_noise = sum(1 for p in predicted if p == -1)
-
-    # Fast path: match every labelled article against the live centroids.
+    from backend.core.config import settings
     from backend.core.database import SessionLocal
     from backend.db.models import Article
+    from backend.modules.events import service as events_service
+    from backend.modules.events.service import _cluster_labels  # noqa: PLC2701 - the real path
+    from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+
+    ids, true_labels = load_true_labels(snapshot_id)
+    label_by_id = dict(zip(ids, true_labels, strict=True))
+    client = events_service.get_qdrant_client()
 
     db = SessionLocal()
-    judgeable_total = 0
-    judgeable_correct = 0
-    matched_unjudgeable = 0
-    unmatched = 0
     try:
+        # ── Slow path: exactly the production input ────────────────────────
+        # The real slow path clusters the unmatched articles' vectors with
+        # _cluster_labels. Clustering only the labelled handful would measure a
+        # different task, so the suite runs the production function over the
+        # production input and then scores the labelled members of it.
+        pairs = events_service.list_unmatched_articles(db, client=client)
+        input_ids = [str(article.id) for article, _vector in pairs]
+        labels_all = (
+            list(_cluster_labels(np.asarray([v for _, v in pairs], dtype=float))) if pairs else []
+        )
+        cluster_of = dict(zip(input_ids, labels_all, strict=True))
+
+        scored_ids = [article_id for article_id in ids if article_id in cluster_of]
+        slow_true = [label_by_id[article_id] for article_id in scored_ids]
+        slow_pred = [cluster_of[article_id] for article_id in scored_ids]
+        # With <2 labelled members the indices are degenerate (a single label
+        # scores 1.0 by definition), so they are reported as unscoreable rather
+        # than as a perfect result.
+        scoreable = len(scored_ids) >= 2
+        ari = float(adjusted_rand_score(slow_true, slow_pred)) if scoreable else None
+        nmi = float(normalized_mutual_info_score(slow_true, slow_pred)) if scoreable else None
+        purity_value = purity(slow_true, slow_pred) if scoreable else None
+        slow_note = (
+            None
+            if scoreable
+            else "fewer than 2 labelled articles were in the slow-path input; "
+            "ARI/NMI/purity are unscoreable (not 1.0)"
+        )
+
+        # ── Combined partition, the grouping the system actually assigns ────
+        # Fast-path members carry a live event; the rest carry their slow-path
+        # cluster. This is the full, comparable partition over the label set.
+        articles = {
+            str(article.id): article
+            for article in db.query(Article).filter(Article.id.in_([_uuid(i) for i in ids]))
+        }
+        combined_keys: list[str] = []
+        combined_true: list[str] = []
+        for article_id in ids:
+            article = articles.get(article_id)
+            if article is None:
+                continue
+            if article.event_id is not None:
+                combined_keys.append(f"event:{article.event_id}")
+            elif article_id in cluster_of and cluster_of[article_id] >= 0:
+                combined_keys.append(f"slow:{cluster_of[article_id]}")
+            else:
+                combined_keys.append(f"unmatched:{article_id}")  # its own group, stated
+            combined_true.append(label_by_id[article_id])
+        key_index = {key: index for index, key in enumerate(sorted(set(combined_keys)))}
+        combined_pred = [key_index[key] for key in combined_keys]
+        combined = {
+            "n_labelled": len(combined_true),
+            "n_groups": len(set(combined_keys)),
+            "n_fast_path_events": sum(1 for key in combined_keys if key.startswith("event:")),
+            "n_slow_path_clusters": sum(1 for key in combined_keys if key.startswith("slow:")),
+            "n_unmatched": sum(1 for key in combined_keys if key.startswith("unmatched:")),
+            "ari": float(adjusted_rand_score(combined_true, combined_pred)),
+            "nmi": float(normalized_mutual_info_score(combined_true, combined_pred)),
+            "purity": purity(combined_true, combined_pred),
+        }
+
+        # ── Fast path: match every labelled article against the live centroids
+        judgeable_total = 0
+        judgeable_correct = 0
+        matched_unjudgeable = 0
+        unmatched = 0
         event_members: dict[Any, list[str]] = {}
         # Map live events -> their labelled members via the join table, so a
         # match into an event containing a labelled article can be judged.
@@ -138,16 +180,14 @@ def run(snapshot_id: str) -> dict[str, Any]:
         for event_id, article_id in rows:
             event_members.setdefault(event_id, []).append(str(article_id))
 
-        label_by_id = dict(zip(ids, true_labels, strict=True))
         for article_id in ids:
-            article = db.get(Article, _uuid(article_id))
-            if article is None:
+            if db.get(Article, _uuid(article_id)) is None:
                 continue
-            hit = events_service.match_article_to_event(db, client, article)
+            hit = events_service.match_article_to_event(db, _uuid(article_id), client=client)
             if hit is None:
                 unmatched += 1
                 continue
-            event_id = hit if not hasattr(hit, "id") else hit.id
+            event_id = hit.id
             members = event_members.get(event_id, [])
             member_labels = [label_by_id[m] for m in members if m in label_by_id]
             if len(member_labels) < 1:
@@ -176,18 +216,23 @@ def run(snapshot_id: str) -> dict[str, Any]:
             "ari": ari,
             "nmi": nmi,
             "purity": purity_value,
-            "n_labelled_scored": len(kept_labels),
-            "missing_vectors": missing,
-            "noise_cluster_size": n_noise,
-            "n_clusters_found": len(set(predicted) - {-1}),
+            "n_labelled_scored": len(scored_ids),
+            "n_labelled_outside_input": len(ids) - len(scored_ids),
+            "n_input_articles": len(input_ids),
+            "noise_cluster_size": sum(1 for label in labels_all if label == -1),
+            "n_clusters_found": len(set(labels_all) - {-1}),
+            "note": slow_note,
         },
+        "combined_partition": combined,
         "fast_path": {
             "judgeable_matches": judgeable_total,
             "judgeable_correct": judgeable_correct,
             "precision": judgeable_correct / judgeable_total if judgeable_total else None,
             "matched_into_unlabelled_events": matched_unjudgeable,
             "unmatched": unmatched,
-            "threshold": 0.72,
+            # The knob this suite measures: the live centroid-match threshold.
+            "threshold": settings.event_match_threshold,
+            "plan_reference_threshold": 0.72,
         },
     }
 
@@ -218,6 +263,7 @@ def _fmt(value: Any) -> str:
 def _render_md(results: dict[str, Any]) -> str:
     slow = results["slow_path"]
     fast = results["fast_path"]
+    combined = results["combined_partition"]
     labels = results["label_set"]
     return "\n".join(
         [
@@ -226,21 +272,45 @@ def _render_md(results: dict[str, Any]) -> str:
             f"Label set: {labels['file']} ({labels['status']}) — {labels['n_articles']} articles "
             f"in {labels['n_events']} true events, {labels['cross_source_events']} cross-source.",
             "",
+            "## Slow path (UMAP + HDBSCAN over the production input)",
+            "",
             "| metric | value |",
             "|---|---|",
-            f"| ARI (slow path, UMAP+HDBSCAN) | {_fmt(slow['ari'])} |",
-            f"| NMI | {_fmt(slow['nmi'])} |",
-            f"| purity | {_fmt(slow['purity'])} |",
+            f"| articles clustered (unmatched, the real input) | {slow['n_input_articles']} |",
             f"| clusters found (noise excluded) | {slow['n_clusters_found']} |",
-            f"| noise points (-1) | {slow['noise_cluster_size']} / {slow['n_labelled_scored']} |",
-            f"| fast-path centroid precision (judgeable) | {_fmt(fast['precision'])} "
-            f"({fast['judgeable_correct']}/{fast['judgeable_matches']}) |",
+            f"| noise points (-1) | {slow['noise_cluster_size']} / {slow['n_input_articles']} |",
+            f"| labelled articles inside that input | {slow['n_labelled_scored']} of "
+            f"{labels['n_articles']} |",
+            f"| ARI / NMI / purity (labelled members) | {_fmt(slow['ari'])} / "
+            f"{_fmt(slow['nmi'])} / {_fmt(slow['purity'])} |",
+            *([f"| note | {slow['note']} |"] if slow.get("note") else []),
+            "",
+            "## Combined partition (fast-path event, else slow-path cluster)",
+            "",
+            "| metric | value |",
+            "|---|---|",
+            f"| labelled articles placed | {combined['n_labelled']} |",
+            f"| groups (events {combined['n_fast_path_events']} / clusters "
+            f"{combined['n_slow_path_clusters']} / unmatched {combined['n_unmatched']}) "
+            f"| {combined['n_groups']} |",
+            f"| ARI / NMI / purity | {_fmt(combined['ari'])} / {_fmt(combined['nmi'])} / "
+            f"{_fmt(combined['purity'])} |",
+            "",
+            "## Fast path (centroid matching)",
+            "",
+            "| metric | value |",
+            "|---|---|",
+            f"| precision over judgeable matches (threshold {fast['threshold']}) "
+            f"| {_fmt(fast['precision'])} ({fast['judgeable_correct']}/"
+            f"{fast['judgeable_matches']}) |",
             f"| matched into unlabelled events | {fast['matched_into_unlabelled_events']} |",
             f"| unmatched | {fast['unmatched']} |",
             "",
-            "Noise points count as their own cluster in ARI/NMI (stated, not hidden). "
-            "Fast-path precision is only over matches into events with at least one "
-            "other labelled article; the rest are reported as unjudgeable.",
+            "Noise points count as their own cluster in ARI/NMI (stated, not hidden); "
+            "labelled articles that already sit in an event are not part of the slow-path "
+            "input and are excluded from the slow-path rows. Fast-path precision is only "
+            "over matches into events holding at least one other labelled article — the "
+            "rest are reported as unjudgeable, never as correct.",
             "",
         ]
     )
