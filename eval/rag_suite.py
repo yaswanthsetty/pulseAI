@@ -40,6 +40,7 @@ LABELS_PATH = EVAL_DIR / "labels.jsonl"
 
 CITATION_RE = re.compile(r"\[#(\d+)\]")
 FAST_LIMIT = 5  # router wiring: fast path retrieves top-5
+EVAL_USER_EMAIL = "eval@pulseai.local"  # fixed eval user: empty history, no cross-talk
 
 
 def _git_sha() -> str:
@@ -169,19 +170,21 @@ def run(snapshot_id: str, limit: int | None = None, mock: bool = False) -> Path:
         user_id = "00000000-0000-0000-0000-000000000000"
     else:
         from backend.core.database import SessionLocal
+        from backend.db.models import User
         from backend.modules.agents import service as agent_service
         from backend.modules.agents.schemas import ChatRequest
         from backend.modules.auth import service as auth_service
         from backend.modules.retrieval import service as retrieval
+        from sqlalchemy import select
 
         makers = None
         eval_db = SessionLocal()
         try:
-            user = auth_service.get_user_by_email(eval_db, "eval@pulseai.local")
+            user = eval_db.scalar(select(User).where(User.email == EVAL_USER_EMAIL))
             if user is None:
                 user = auth_service.register_user(
                     eval_db,
-                    email="eval@pulseai.local",
+                    email=EVAL_USER_EMAIL,
                     password="eval-harness-not-a-login",
                     display_name="eval harness",
                 )
@@ -220,8 +223,10 @@ def run(snapshot_id: str, limit: int | None = None, mock: bool = False) -> Path:
                     else:
                         retrieved = []
 
-                        def _search(q: str, limit: int, _acc: list[str] = retrieved):
-                            hits = retrieval.search(query=q, limit=limit)
+                        def _search(  # noqa: F811 - injected as the deep path's search_fn
+                            query: str, limit: int, _acc: list[str] = retrieved
+                        ):
+                            hits = retrieval.search(query=query, limit=limit)
                             _acc.extend(str(h.chunk_id) for h in hits if h.chunk_id)
                             for h in hits:
                                 _acc.extend(str(e.chunk_id) for e in h.extra_chunks)
@@ -319,16 +324,17 @@ def _metric_set(
     judge_routed = False
     refusal = verdict == "refusal"
     judge_score: int | None = None
+    judge_item: dict[str, Any] | None = None
     if verdict == "borderline" and judge is not None:
         judge_routed = True
-        result = judge.judge(
-            "implicit_refusal",
-            {"QUESTION": record["message"], "ANSWER": answer or "(empty)"},
-        )
+        items = {"QUESTION": record["message"], "ANSWER": answer or "(empty)"}
+        result = judge.judge("implicit_refusal", items)
         judge_score = result["score"]
         refusal = bool(judge_score is not None and judge_score >= 1)
+        judge_item = {"items": items, "result": result}
 
     return {
+        "judge_item": judge_item,
         "citation_precision": citation_precision,
         "citation_coverage": citation_coverage,
         "required_fact_recall": fact_recall,
@@ -376,6 +382,9 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
     subq_scores: list[float] = []
     subq_judged = 0
     subq_errors = 0
+    # Every LLM judgment, kept for the audit trail and the human agreement
+    # sample (plan §3): the results file records what the judge was asked.
+    judge_items: list[dict[str, Any]] = []
     latencies: dict[str, list[float]] = {"fast": [], "deep": []}
     cold: dict[str, float | None] = {"fast": None, "deep": None}
     refusal_counts = {"fast": 0, "deep": 0}
@@ -386,12 +395,24 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
         grades = labels.get(record["query_id"], {})
         facts = list(query["required_facts"])
         metrics_row = _metric_set(record, grades, facts, judge)
+        refusal_item = metrics_row.pop("judge_item")
+        if refusal_item is not None:
+            judge_items.append(
+                _judged_item(
+                    record,
+                    "implicit_refusal",
+                    refusal_item["items"],
+                    refusal_item["result"],
+                    record["message"],
+                )
+            )
 
         if record["path"] == "deep" and record.get("sub_questions") and judge is not None:
             for sub_q in record["sub_questions"]:
-                result = judge.judge(
-                    "sub_question_relevance",
-                    {"USER QUERY": record["message"], "SUB-QUESTION": sub_q},
+                items = {"USER QUERY": record["message"], "SUB-QUESTION": sub_q}
+                result = judge.judge("sub_question_relevance", items)
+                judge_items.append(
+                    _judged_item(record, "sub_question_relevance", items, result, sub_q)
                 )
                 if result["score"] is None:
                     subq_errors += 1
@@ -458,6 +479,7 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
             "judged": subq_judged,
             "errors": subq_errors,
         },
+        "judge_items": judge_items,
         "aggregates": aggregates,
         "per_query": per_path,
     }
@@ -473,6 +495,27 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
     print(_render_md(results))
     print(f"written     : {json_path}\n              {md_path}")
     return json_path, md_path
+
+
+def _judged_item(
+    record: dict[str, Any],
+    task: str,
+    items: dict[str, str],
+    result: dict[str, Any],
+    subject: str,
+) -> dict[str, Any]:
+    """One auditable judge record (input text in, score + reason out)."""
+    return {
+        "query_id": record["query_id"],
+        "path": record["path"],
+        "task": task,
+        "subject": subject,
+        "items": items,
+        "score": result.get("score"),
+        "reason": result.get("reason"),
+        "model": result.get("model"),
+        "latency_ms": result.get("latency_ms"),
+    }
 
 
 def _fmt(value: Any) -> str:

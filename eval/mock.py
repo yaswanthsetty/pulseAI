@@ -96,6 +96,21 @@ def fixture_queries() -> list[dict[str, Any]]:
     return queries
 
 
+def load_fixture_queries() -> list[dict[str, Any]]:
+    """The committed CI query fixture: the frozen input the CI subset runs on.
+
+    Reading the file (rather than calling ``fixture_queries()``) is what makes
+    ``tests/fixtures/eval/`` a load-bearing part of the gate: a query-set edit
+    shows up as a reviewed diff in the fixture, not as a silent code change.
+    """
+    path = FIXTURES_DIR / "queries.jsonl"
+    if not path.exists():
+        raise SystemExit(f"missing CI fixture {path} — run: uv run python -m eval.mock")
+    return [
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
+
+
 def write_mock_dataset() -> None:
     """(Re)write the committed mock fixtures: queries + pool texts + labels."""
     queries = fixture_queries()

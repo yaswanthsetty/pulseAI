@@ -1,0 +1,72 @@
+{
+ "04c0a643-4706-e926-9ab2-0c5df9c158da": {
+  "article_id": "art-alpha",
+  "title": "Alpha Corp ships the X1 chip",
+  "source_name": "TechCrunch",
+  "chunk_number": 0,
+  "text": "The X1 chip delivers 45% better efficiency."
+ },
+ "5d5e209f-d48a-9693-0a25-687ccbbeeb2c": {
+  "article_id": "art-alpha",
+  "title": "Alpha Corp ships the X1 chip",
+  "source_name": "TechCrunch",
+  "chunk_number": 1,
+  "text": "Alpha Corp also sells laptop bags and stickers."
+ },
+ "5d934d11-97dd-7c04-3a89-766a9552a308": {
+  "article_id": "art-beta",
+  "title": "Beta Labs benchmarks the X1",
+  "source_name": "BBC",
+  "chunk_number": 0,
+  "text": "Benchmarks confirmed the 45% efficiency claim under load."
+ },
+ "bdf9163e-8e79-b1a9-cfb9-95b419841638": {
+  "article_id": "art-beta",
+  "title": "Beta Labs benchmarks the X1",
+  "source_name": "BBC",
+  "chunk_number": 1,
+  "text": "Beta Labs is hiring a marketing intern in Manchester."
+ },
+ "43d2a7f3-b966-8ee7-a49f-b94aed14fb46": {
+  "article_id": "art-gamma",
+  "title": "Gamma University studies chip thermals",
+  "source_name": "The Verge",
+  "chunk_number": 0,
+  "text": "Thermal throttling begins at 82C on open-frame rigs."
+ },
+ "621da15d-5540-9ce7-f15b-386c7225efd9": {
+  "article_id": "art-gamma",
+  "title": "Gamma University studies chip thermals",
+  "source_name": "The Verge",
+  "chunk_number": 1,
+  "text": "Gamma University's mascot is a river otter."
+ },
+ "144b16af-6932-213c-80a1-54b8d4e679c5": {
+  "article_id": "art-delta",
+  "title": "Delta Motors switches to in-house silicon",
+  "source_name": "The Guardian Technology",
+  "chunk_number": 0,
+  "text": "Delta Motors will use X1 modules in its 2027 models."
+ },
+ "f45a7185-74d3-8493-7762-597e9e4f9274": {
+  "article_id": "art-delta",
+  "title": "Delta Motors switches to in-house silicon",
+  "source_name": "The Guardian Technology",
+  "chunk_number": 1,
+  "text": "Delta Motors' cafeteria serves trout on Fridays."
+ },
+ "ea161b1a-fde8-6a4e-9283-4bcc0267c129": {
+  "article_id": "art-noise",
+  "title": "Weekend roundup: gadgets we liked",
+  "source_name": "TechCrunch",
+  "chunk_number": 0,
+  "text": "Staff picked a kettle as gadget of the week."
+ },
+ "4eb6747b-ace8-f2f1-efe6-6132d83fabd3": {
+  "article_id": "art-noise",
+  "title": "Weekend roundup: gadgets we liked",
+  "source_name": "TechCrunch",
+  "chunk_number": 1,
+  "text": "The kettle holds 1.7 litres and costs $39."
+ }
+}

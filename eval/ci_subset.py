@@ -9,6 +9,10 @@ no Qdrant, no network, no DB.
 reproducible, so CI asserts EXACT equality against the committed
 ``eval/results/baseline_ci.json``. A deviation means the *harness* changed.
 
+The query set is read from the committed fixture
+``tests/fixtures/eval/queries.jsonl`` (regenerate with ``python -m eval.mock``),
+so editing the CI subset is a visible diff, not a silent code change.
+
 Usage:
     uv run python -m eval.ci_subset                 # print summary
     uv run python -m eval.ci_subset --write-baseline  # (re)generate the baseline
@@ -28,7 +32,7 @@ from eval.mock import (
     canned_chat_deep,
     canned_chat_fast,
     canned_judge,
-    fixture_queries,
+    load_fixture_queries,
     make_fake_searcher,
 )
 from eval.pooling import build_blinded_pool, pool_stats
@@ -42,7 +46,7 @@ FIXTURES_DIR = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "eva
 
 def run(limit: int | None = None) -> dict[str, Any]:
     """Produce the full deterministic metric dict for the 12-query subset."""
-    queries = fixture_queries()
+    queries = load_fixture_queries()
     if limit:
         queries = queries[:limit]
     search = make_fake_searcher()

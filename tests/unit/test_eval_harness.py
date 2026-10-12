@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+import pytest
 from eval.grading import draft_grade
 from eval.judge import Judge, parse_judgment
 from eval.pooling import build_blinded_pool, pool_stats
@@ -225,6 +226,130 @@ def test_ci_subset_is_deterministic_and_complete():
     assert first["sub_question_relevance"] is not None
 
 
+# --- judge human agreement (kappa) -----------------------------------------
+
+
+def _fake_rag_results(n_items: int = 10) -> dict:
+    return {
+        "judge_items": [
+            {
+                "query_id": f"q{index:03d}",
+                "path": "deep",
+                "task": "sub_question_relevance",
+                "subject": f"sub-question {index}",
+                "items": {"USER QUERY": f"query {index}", "SUB-QUESTION": f"sub-question {index}"},
+                "score": index % 3,
+                "reason": "because",
+                "model": "qwen2.5:7b",
+                "latency_ms": 1234,
+            }
+            for index in range(n_items)
+        ]
+    }
+
+
+def test_agreement_export_is_deterministic_and_blinded(tmp_path, monkeypatch):
+    from eval import judge_agreement as JA
+
+    results_path = tmp_path / "rag.json"
+    results_path.write_text(json.dumps(_fake_rag_results(10)), encoding="utf-8")
+    sample_path = tmp_path / "judge_agreement.jsonl"
+    monkeypatch.setattr(JA, "SAMPLE_PATH", sample_path)
+
+    JA.export(results_path, percent=20)
+    first = sample_path.read_text(encoding="utf-8")
+    rows = [json.loads(line) for line in first.splitlines()]
+    assert len(rows) == 2  # 20% of 10
+    assert all(row["human_score"] is None for row in rows)  # unlabelled on purpose
+    assert all(row["judge_score"] in (0, 1, 2) for row in rows)
+
+    JA.export(results_path, percent=20)
+    assert sample_path.read_text(encoding="utf-8") == first  # same sample every run
+
+
+def test_agreement_report_blocks_on_unlabelled_rows(tmp_path, monkeypatch):
+    from eval import judge_agreement as JA
+
+    sample_path = tmp_path / "judge_agreement.jsonl"
+    monkeypatch.setattr(JA, "SAMPLE_PATH", sample_path)
+    sample_path.write_text(
+        json.dumps({"id": "j000", "task": "t", "judge_score": 2, "human_score": None}) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="unlabelled"):
+        JA.report(sample_path)
+
+
+def test_agreement_report_computes_kappa_and_fails_the_gate(tmp_path, monkeypatch):
+    from eval import judge_agreement as JA
+
+    monkeypatch.setattr(JA, "RESULTS_DIR", tmp_path)
+    sample_path = tmp_path / "judge_agreement.jsonl"
+
+    # Perfect agreement -> kappa 1.0, gate passed.
+    agree = [
+        {"id": f"j{i:03d}", "task": "t", "judge_score": i % 3, "human_score": i % 3}
+        for i in range(12)
+    ]
+    sample_path.write_text("\n".join(json.dumps(row) for row in agree) + "\n", encoding="utf-8")
+    passed = JA.report(sample_path)
+    assert passed["overall"]["kappa"] == 1.0
+    assert passed["gate"]["passed"] is True
+    assert passed["by_task"]["t"]["n"] == 12
+    assert list(tmp_path.glob("*_judge_agreement.json"))  # results file written
+
+    # Systematic disagreement -> kappa at/below zero, gate failed and reported.
+    disagree = [
+        {
+            "id": f"j{i:03d}",
+            "task": "t",
+            "judge_score": 2,
+            "human_score": 0 if i % 2 else 2,
+        }
+        for i in range(12)
+    ]
+    sample_path.write_text("\n".join(json.dumps(row) for row in disagree) + "\n", encoding="utf-8")
+    failed = JA.report(sample_path)
+    assert failed["overall"]["kappa"] < JA.KAPPA_GATE
+    assert failed["gate"]["passed"] is False
+
+
+def test_agreement_report_rejects_out_of_range_labels(tmp_path, monkeypatch):
+    from eval import judge_agreement as JA
+
+    monkeypatch.setattr(JA, "RESULTS_DIR", tmp_path)
+    sample_path = tmp_path / "judge_agreement.jsonl"
+    sample_path.write_text(
+        json.dumps({"id": "j000", "task": "t", "judge_score": 1, "human_score": 7}) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="0/1/2"):
+        JA.report(sample_path)
+
+
+def test_committed_ci_fixtures_match_the_generator(tmp_path, monkeypatch):
+    """tests/fixtures/eval must be exactly what `python -m eval.mock` writes.
+
+    The CI subset reads the committed fixture, so a drifted fixture would
+    silently change what CI runs on.
+    """
+    from eval import mock
+
+    committed_dir = mock.FIXTURES_DIR
+    monkeypatch.setattr(mock, "FIXTURES_DIR", tmp_path)
+    mock.write_mock_dataset()
+    for name in ("queries.jsonl", "pool_text.json", "labels.jsonl"):
+        regenerated = (tmp_path / name).read_text(encoding="utf-8")
+        committed = (committed_dir / name).read_text(encoding="utf-8")
+        assert regenerated == committed, f"{name} drifted from the generator"
+    # The fixture is the CI input: 12 queries, and the in-code generator agrees.
+    from eval.mock import fixture_queries, load_fixture_queries
+
+    fixture = load_fixture_queries()
+    assert len(fixture) == 12
+    assert fixture == fixture_queries()
+
+
 def test_ci_baseline_is_current():
     """The committed baseline must match the harness output exactly.
 
@@ -235,3 +360,25 @@ def test_ci_baseline_is_current():
 
     baseline = json.loads(ci_subset.BASELINE_PATH.read_text(encoding="utf-8"))
     assert ci_subset.run() == baseline
+
+
+def test_ci_cli_gate_passes_against_the_committed_baseline(capsys):
+    """The exact command CI runs must exit 0 — this is the gate's real interface."""
+    from eval import ci_subset, run
+
+    code = run.main(["--suite", "ci", "--baseline", str(ci_subset.BASELINE_PATH)])
+    assert code == 0, capsys.readouterr().out
+    assert "EXACT match" in capsys.readouterr().out
+
+
+def test_ci_cli_gate_fails_when_the_harness_drifts(tmp_path, monkeypatch, capsys):
+    """Any deviation (even an improvement) fails: CI tests the harness, not quality."""
+    from eval import ci_subset, run
+
+    baseline = json.loads(ci_subset.BASELINE_PATH.read_text(encoding="utf-8"))
+    baseline["rag"]["fast"]["required_fact_recall"] += 0.01
+    drifted = tmp_path / "baseline_ci.json"
+    drifted.write_text(json.dumps(baseline), encoding="utf-8")
+    code = run.main(["--suite", "ci", "--baseline", str(drifted)])
+    assert code == 1
+    assert "MISMATCH" in capsys.readouterr().out

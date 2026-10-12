@@ -79,6 +79,11 @@ def run_ci_subset(snapshot_id: str, limit: int | None = None) -> dict[str, Any]:
     return ci_subset.run(limit=limit)
 
 
+def ci_baseline_payload(combined: dict[str, Any]) -> dict[str, Any]:
+    """What `--suite ci --baseline` compares: the ci payload, not the wrapper."""
+    return combined["suites"]["ci"]
+
+
 def compare_baseline(results: dict[str, Any], baseline_path: Path, exact: bool) -> bool:
     """Compare a run against a committed baseline. Exact equality when mocked."""
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
@@ -135,7 +140,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.baseline:
         exact = combined["mock"]
-        if not compare_baseline(combined, Path(args.baseline), exact=exact):
+        # The committed CI baseline is the ci-suite payload itself, so that is
+        # what the exact-equality gate must compare against.
+        measured = ci_baseline_payload(combined) if args.suite == "ci" else combined
+        if not compare_baseline(measured, Path(args.baseline), exact=exact):
             return 1
     return 0
 
