@@ -17,9 +17,12 @@ a candidate, whether or not the classifier would have kept it.
 Phases:
 
 * ``collect`` — poll each active source once (new URLs only; dedupe keeps the
-  corpus honest), synchronously process *and embed* the new articles so the
-  corpus stays consistent, then sample a stratified held-out set of
-  pre-filter pieces into ``eval/work/heldout_set.json``.
+  corpus honest) and synchronously process *and embed* the new articles, so
+  the corpus stays consistent. The new article ids are recorded in
+  ``eval/work/ingest_log.json`` and the held-out set is sampled from them.
+* ``sample``  — (re)build the stratified held-out set of pre-filter pieces in
+  ``eval/work/heldout_set.json`` from the recorded ingest, without touching
+  the network.
 * ``score``  — chunk-level precision/recall of ``is_boilerplate`` vs the
   final human labels, with 95% Wilson intervals (never hidden). Trigger for
   revisiting the threshold: held-out precision < 0.95.
@@ -46,6 +49,7 @@ EVAL_DIR = Path(__file__).resolve().parent
 WORK_DIR = EVAL_DIR / "work"
 RESULTS_DIR = EVAL_DIR / "results"
 HELDOUT_PATH = WORK_DIR / "heldout_set.json"
+INGEST_LOG_PATH = WORK_DIR / "ingest_log.json"
 LABELS_PATH = EVAL_DIR / "heldout_labels.json"
 
 TARGET_SIZE = 50
@@ -94,24 +98,39 @@ def _piece_candidates(article: Any, source_name: str, chunk_text, estimate_token
     ]
 
 
+def _is_junk_heavy(source_name: str) -> bool:
+    lowered = source_name.lower()
+    return "techcrunch" in lowered or "bbc" in lowered
+
+
 def _stratified_sample(by_source: dict[str, list[dict]], rng: random.Random) -> list[dict]:
     """>=15 TechCrunch and >=15 BBC pieces, then fill to the target size.
 
     Seeded shuffle per source, so the sample is reproducible and not chosen by
-    whoever ran the suite.
+    whoever ran the suite. The junk-heavy floor is per source: piling both
+    sources into one list and slicing the first 50 fills the sample from
+    whichever source happens to sort first, which is how a run can silently
+    end up with zero TechCrunch chunks.
     """
-    junk_heavy: list[dict] = []
-    others: list[dict] = []
-    for name, pieces in sorted(by_source.items()):
-        shuffled = list(pieces)
-        rng.shuffle(shuffled)
-        if "techcrunch" in name.lower() or "bbc" in name.lower():
-            junk_heavy.extend(shuffled)
-        else:
-            others.extend(shuffled)
-    sample = junk_heavy[:TARGET_SIZE]
-    if len(sample) < TARGET_SIZE:
-        sample.extend(others[: TARGET_SIZE - len(sample)])
+    shuffled_by_source = {name: list(pieces) for name, pieces in by_source.items()}
+    for pieces in shuffled_by_source.values():
+        rng.shuffle(pieces)
+
+    junk_heavy = sorted(name for name in shuffled_by_source if _is_junk_heavy(name))
+    taken: dict[str, int] = {}
+    sample: list[dict] = []
+    for name in junk_heavy:
+        take = min(JUNK_HEAVY_MIN, len(shuffled_by_source[name]))
+        sample.extend(shuffled_by_source[name][:take])
+        taken[name] = take
+
+    leftovers = [
+        piece
+        for name, pieces in shuffled_by_source.items()
+        for piece in pieces[taken.get(name, 0) :]
+    ]
+    rng.shuffle(leftovers)
+    sample.extend(leftovers[: max(0, TARGET_SIZE - len(sample))])
     return sample[:TARGET_SIZE]
 
 
@@ -121,7 +140,6 @@ def collect() -> Path:
     from backend.db.models import Article, Source
     from backend.modules.ingestion import service as ingestion
     from backend.modules.retrieval import service as retrieval
-    from backend.modules.retrieval.chunker import chunk_text, estimate_tokens
     from sqlalchemy import select
 
     db = SessionLocal()
@@ -153,13 +171,15 @@ def collect() -> Path:
             # Process + embed synchronously (fetch + extract + chunk + embed) so
             # the suite does not depend on the RQ worker, and the corpus is left
             # in the state a real poll would leave it in.
-            for article_id in added:
+            for index, article_id in enumerate(added, start=1):
                 try:
-                    ingestion.process_article(db, article_id)
+                    ingestion.process_article(db, _uuid(article_id))
                     retrieval.embed_article(db, _uuid(article_id))
                 except Exception as exc:  # noqa: BLE001 - one bad article must not sink the run
                     poll_log[-1]["errors"] = poll_log[-1].get("errors", 0) + 1
-                    print(f"  ingest failed for {article_id}: {exc}")
+                    print(f"  ingest failed for {article_id}: {exc}", flush=True)
+                if index % 10 == 0:
+                    print(f"  {source.name}: ingested {index}/{len(added)}", flush=True)
 
         if not new_ids:
             raise SystemExit(
@@ -167,6 +187,39 @@ def collect() -> Path:
                 f"poll log: {poll_log}"
             )
 
+        ingest_log = {
+            "created_at": dt.datetime.now(dt.UTC).isoformat(),
+            "git_sha": _git_sha(),
+            "poll_log": poll_log,
+            "new_article_ids": new_ids,
+            "n_new_articles": len(new_ids),
+        }
+        WORK_DIR.mkdir(parents=True, exist_ok=True)
+        INGEST_LOG_PATH.write_text(json.dumps(ingest_log, indent=1), encoding="utf-8")
+        print(f"ingest log   : {INGEST_LOG_PATH} ({len(new_ids)} new articles)")
+    finally:
+        db.close()
+
+    # Sampling is a separate step: the sample can be rebuilt (a rule change, a
+    # bug in the stratification) without re-polling feeds that no longer have
+    # unseen URLs.
+    return sample_from_log()
+
+
+def sample_from_log(ingest_log_path: Path = INGEST_LOG_PATH) -> Path:
+    """Build the stratified held-out set from a recorded ingest."""
+    from backend.core.database import SessionLocal
+    from backend.db.models import Article, Source
+    from backend.modules.retrieval.chunker import chunk_text, estimate_tokens
+    from sqlalchemy import select
+
+    ingest_log = json.loads(ingest_log_path.read_text(encoding="utf-8"))
+    new_ids = list(ingest_log["new_article_ids"])
+    if not new_ids:
+        raise SystemExit(f"{ingest_log_path} records no new articles")
+
+    db = SessionLocal()
+    try:
         # Pre-filter pieces: the classifier's real input (see module docstring).
         by_source: dict[str, list[dict]] = {}
         rows = db.execute(
@@ -174,36 +227,42 @@ def collect() -> Path:
             .join(Source, Article.source_id == Source.id)
             .where(Article.id.in_([_uuid(i) for i in new_ids]))
         ).all()
+        if not rows:
+            raise SystemExit("no articles found for the recorded ingest ids")
         for article, source in rows:
             pieces = _piece_candidates(article, source.name, chunk_text, estimate_tokens)
             by_source.setdefault(source.name, []).extend(pieces)
-
-        sample = _stratified_sample(by_source, random.Random(SAMPLE_SEED))
-        tc = sum(1 for piece in sample if "techcrunch" in piece["source_name"].lower())
-        bbc = sum(1 for piece in sample if "bbc" in piece["source_name"].lower())
-        if tc < JUNK_HEAVY_MIN or bbc < JUNK_HEAVY_MIN:
-            print(f"WARNING: stratification below target (techcrunch={tc}, bbc={bbc})")
-
-        payload = {
-            "created_at": dt.datetime.now(dt.UTC).isoformat(),
-            "git_sha": _git_sha(),
-            "sample_seed": SAMPLE_SEED,
-            "sampling_unit": "pre-filter chunks (every piece the classifier sees)",
-            "poll_log": poll_log,
-            "n_new_articles": len(new_ids),
-            "n_candidate_chunks": sum(len(pieces) for pieces in by_source.values()),
-            "sample": sample,
-            "stratification": {"techcrunch": tc, "bbc": bbc, "total": len(sample)},
-        }
-        WORK_DIR.mkdir(parents=True, exist_ok=True)
-        HELDOUT_PATH.write_text(json.dumps(payload, indent=1), encoding="utf-8")
-        print(
-            f"held-out set : {HELDOUT_PATH} ({len(sample)} chunks of "
-            f"{payload['n_candidate_chunks']} candidates; tc={tc}, bbc={bbc})"
-        )
-        return HELDOUT_PATH
     finally:
         db.close()
+
+    sample = _stratified_sample(by_source, random.Random(SAMPLE_SEED))
+    tc = sum(1 for piece in sample if "techcrunch" in piece["source_name"].lower())
+    bbc = sum(1 for piece in sample if "bbc" in piece["source_name"].lower())
+    if tc < JUNK_HEAVY_MIN or bbc < JUNK_HEAVY_MIN:
+        raise SystemExit(
+            f"stratification below target (techcrunch={tc}, bbc={bbc}); a sample that "
+            "cannot honour the plan's floor is not written"
+        )
+
+    payload = {
+        "created_at": dt.datetime.now(dt.UTC).isoformat(),
+        "git_sha": _git_sha(),
+        "sample_seed": SAMPLE_SEED,
+        "sampling_unit": "pre-filter chunks (every piece the classifier sees)",
+        "ingest_log": ingest_log_path.name,
+        "poll_log": ingest_log["poll_log"],
+        "n_new_articles": ingest_log["n_new_articles"],
+        "n_candidate_chunks": sum(len(pieces) for pieces in by_source.values()),
+        "sample": sample,
+        "stratification": {"techcrunch": tc, "bbc": bbc, "total": len(sample)},
+    }
+    WORK_DIR.mkdir(parents=True, exist_ok=True)
+    HELDOUT_PATH.write_text(json.dumps(payload, indent=1), encoding="utf-8")
+    print(
+        f"held-out set : {HELDOUT_PATH} ({len(sample)} chunks of "
+        f"{payload['n_candidate_chunks']} candidates; tc={tc}, bbc={bbc})"
+    )
+    return HELDOUT_PATH
 
 
 def score() -> dict[str, Any]:
@@ -276,6 +335,7 @@ def score() -> dict[str, Any]:
             "n_chunks": len(sample),
             "n_candidate_chunks": heldout.get("n_candidate_chunks"),
             "stratification": heldout["stratification"],
+            "sample_ids": ids,
             "poll_log": heldout["poll_log"],
         },
         "labels": {
@@ -352,10 +412,12 @@ def _uuid(value: str):
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("phase", choices=["collect", "score"])
+    parser.add_argument("phase", choices=["collect", "sample", "score"])
     args = parser.parse_args(argv)
     if args.phase == "collect":
         collect()
+    elif args.phase == "sample":
+        sample_from_log()
     else:
         score()
     return 0

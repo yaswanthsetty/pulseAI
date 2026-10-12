@@ -419,6 +419,13 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
                 else:
                     subq_judged += 1
                     subq_scores.append(result["score"])
+                if subq_judged % 20 == 0:
+                    print(
+                        f"  judged {subq_judged} sub-questions "
+                        f"({subq_errors} errors, mean "
+                        f"{sum(subq_scores) / len(subq_scores):.3f})",
+                        flush=True,
+                    )
             judge_info["calls"] = getattr(judge, "calls", None)
             judge_info["errors"] = len(getattr(judge, "errors", []))
 
