@@ -7,17 +7,25 @@ the same classifier on **freshly ingested chunks it has never seen** (plan
 drafted by the coding agent in two passes with a cool-off (self-consistency,
 not inter-annotator agreement) and reviewed by Yaswanth.
 
+**What is sampled matters.** The pipeline filters boilerplate *before* chunks
+are persisted, so the chunks that reach the database are, by construction,
+chunks the classifier already accepted — scoring those would measure nothing.
+The held-out set is therefore sampled from the **pre-filter pieces**: the
+article text is chunked exactly as the pipeline chunks it, and every piece is
+a candidate, whether or not the classifier would have kept it.
+
 Phases:
 
 * ``collect`` — poll each active source once (new URLs only; dedupe keeps the
-  corpus honest), synchronously process the new articles, then sample a
-  stratified ~50-chunk held-out set into ``eval/work/heldout_set.json``.
+  corpus honest), synchronously process *and embed* the new articles so the
+  corpus stays consistent, then sample a stratified held-out set of
+  pre-filter pieces into ``eval/work/heldout_set.json``.
 * ``score``  — chunk-level precision/recall of ``is_boilerplate`` vs the
   final human labels, with 95% Wilson intervals (never hidden). Trigger for
   revisiting the threshold: held-out precision < 0.95.
 
 The two labelling passes live in ``eval/heldout_labels.json``; the score
-phase refuses to run until both passes exist for every chunk.
+phase refuses to run until both passes exist for every sample.
 
 Usage:
     uv run python -m eval.quality_suite collect
@@ -29,6 +37,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import random
 import sys
 from pathlib import Path
 from typing import Any
@@ -41,6 +50,8 @@ LABELS_PATH = EVAL_DIR / "heldout_labels.json"
 
 TARGET_SIZE = 50
 JUNK_HEAVY_MIN = 15  # >=15 TechCrunch and >=15 BBC chunks (plan §2.4)
+SAMPLE_SEED = 20261012  # deterministic sample: reviewable in git, not hand-picked
+CHUNK_TEXT_CHARS = 1500  # enough to judge boilerplate; keeps the label file small
 
 
 def _git_sha() -> str:
@@ -55,11 +66,62 @@ def _git_sha() -> str:
     ).stdout.strip()
 
 
+def _piece_candidates(article: Any, source_name: str, chunk_text, estimate_tokens) -> list[dict]:
+    """Chunk one article the way the pipeline does, keeping every piece."""
+    from backend.core.config import settings
+    from backend.modules.retrieval.service import _article_text  # noqa: PLC2701 - the real text
+
+    pieces = chunk_text(
+        _article_text(article),
+        target_tokens=settings.chunk_target_tokens,
+        overlap_tokens=settings.chunk_overlap_tokens,
+        single_chunk_max_tokens=settings.single_chunk_max_tokens,
+    )
+    return [
+        {
+            "sample_id": f"{article.id}#{number}",
+            "article_id": str(article.id),
+            "source_name": source_name,
+            "title": article.title,
+            "extractor": article.extractor,
+            "extraction_quality": article.extraction_quality,
+            "chunk_number": number,
+            "token_count": estimate_tokens(piece),
+            "text": piece[:CHUNK_TEXT_CHARS],
+        }
+        for number, piece in enumerate(pieces)
+        if piece.strip()
+    ]
+
+
+def _stratified_sample(by_source: dict[str, list[dict]], rng: random.Random) -> list[dict]:
+    """>=15 TechCrunch and >=15 BBC pieces, then fill to the target size.
+
+    Seeded shuffle per source, so the sample is reproducible and not chosen by
+    whoever ran the suite.
+    """
+    junk_heavy: list[dict] = []
+    others: list[dict] = []
+    for name, pieces in sorted(by_source.items()):
+        shuffled = list(pieces)
+        rng.shuffle(shuffled)
+        if "techcrunch" in name.lower() or "bbc" in name.lower():
+            junk_heavy.extend(shuffled)
+        else:
+            others.extend(shuffled)
+    sample = junk_heavy[:TARGET_SIZE]
+    if len(sample) < TARGET_SIZE:
+        sample.extend(others[: TARGET_SIZE - len(sample)])
+    return sample[:TARGET_SIZE]
+
+
 def collect() -> Path:
     """Poll every active source once; sample a stratified held-out chunk set."""
     from backend.core.database import SessionLocal
-    from backend.db.models import Article, ArticleChunk, Source
+    from backend.db.models import Article, Source
     from backend.modules.ingestion import service as ingestion
+    from backend.modules.retrieval import service as retrieval
+    from backend.modules.retrieval.chunker import chunk_text, estimate_tokens
     from sqlalchemy import select
 
     db = SessionLocal()
@@ -88,14 +150,16 @@ def collect() -> Path:
             poll_log.append(
                 {"source": source.name, "status": outcome.status, "new_articles": len(added)}
             )
-            # Process synchronously (fetch + extract + chunk + classify) so the
-            # suite does not depend on the RQ worker being alive.
+            # Process + embed synchronously (fetch + extract + chunk + embed) so
+            # the suite does not depend on the RQ worker, and the corpus is left
+            # in the state a real poll would leave it in.
             for article_id in added:
                 try:
                     ingestion.process_article(db, article_id)
+                    retrieval.embed_article(db, _uuid(article_id))
                 except Exception as exc:  # noqa: BLE001 - one bad article must not sink the run
                     poll_log[-1]["errors"] = poll_log[-1].get("errors", 0) + 1
-                    print(f"  process_article failed for {article_id}: {exc}")
+                    print(f"  ingest failed for {article_id}: {exc}")
 
         if not new_ids:
             raise SystemExit(
@@ -103,60 +167,40 @@ def collect() -> Path:
                 f"poll log: {poll_log}"
             )
 
-        # Pull every chunk of the new articles.
+        # Pre-filter pieces: the classifier's real input (see module docstring).
+        by_source: dict[str, list[dict]] = {}
         rows = db.execute(
-            select(ArticleChunk, Article, Source)
-            .join(Article, ArticleChunk.article_id == Article.id)
+            select(Article, Source)
             .join(Source, Article.source_id == Source.id)
             .where(Article.id.in_([_uuid(i) for i in new_ids]))
         ).all()
+        for article, source in rows:
+            pieces = _piece_candidates(article, source.name, chunk_text, estimate_tokens)
+            by_source.setdefault(source.name, []).extend(pieces)
 
-        by_source: dict[str, list[dict[str, Any]]] = {}
-        for chunk, article, source in rows:
-            by_source.setdefault(source.name, []).append(
-                {
-                    "chunk_id": str(chunk.id),
-                    "article_id": str(article.id),
-                    "source_name": source.name,
-                    "title": article.title,
-                    "extractor": article.extractor,
-                    "extraction_quality": article.extraction_quality,
-                    "text": chunk.chunk_text[:1500],
-                }
-            )
-
-        # Stratify: >=15 from each junk-heavy source first, then fill to target.
-        sample: list[dict[str, Any]] = []
-        for name, chunks in by_source.items():
-            if "techcrunch" in name.lower() or "bbc" in name.lower():
-                sample.extend(chunks[:JUNK_HEAVY_MIN])
-        remaining = TARGET_SIZE - len(sample)
-        if remaining > 0:
-            others = [
-                c
-                for name, chunks in by_source.items()
-                if "techcrunch" not in name.lower() and "bbc" not in name.lower()
-                for c in chunks
-            ]
-            sample.extend(others[:remaining])
-        sample = sample[:TARGET_SIZE]
-
-        tc = sum(1 for c in sample if "techcrunch" in c["source_name"].lower())
-        bbc = sum(1 for c in sample if "bbc" in c["source_name"].lower())
+        sample = _stratified_sample(by_source, random.Random(SAMPLE_SEED))
+        tc = sum(1 for piece in sample if "techcrunch" in piece["source_name"].lower())
+        bbc = sum(1 for piece in sample if "bbc" in piece["source_name"].lower())
         if tc < JUNK_HEAVY_MIN or bbc < JUNK_HEAVY_MIN:
             print(f"WARNING: stratification below target (techcrunch={tc}, bbc={bbc})")
 
         payload = {
             "created_at": dt.datetime.now(dt.UTC).isoformat(),
             "git_sha": _git_sha(),
+            "sample_seed": SAMPLE_SEED,
+            "sampling_unit": "pre-filter chunks (every piece the classifier sees)",
             "poll_log": poll_log,
             "n_new_articles": len(new_ids),
+            "n_candidate_chunks": sum(len(pieces) for pieces in by_source.values()),
             "sample": sample,
             "stratification": {"techcrunch": tc, "bbc": bbc, "total": len(sample)},
         }
         WORK_DIR.mkdir(parents=True, exist_ok=True)
         HELDOUT_PATH.write_text(json.dumps(payload, indent=1), encoding="utf-8")
-        print(f"held-out set : {HELDOUT_PATH} ({len(sample)} chunks; tc={tc}, bbc={bbc})")
+        print(
+            f"held-out set : {HELDOUT_PATH} ({len(sample)} chunks of "
+            f"{payload['n_candidate_chunks']} candidates; tc={tc}, bbc={bbc})"
+        )
         return HELDOUT_PATH
     finally:
         db.close()
@@ -164,49 +208,61 @@ def collect() -> Path:
 
 def score() -> dict[str, Any]:
     """Chunk-level precision/recall of the classifier vs final human labels."""
-    from backend.core.content_quality import boilerplate_score, is_boilerplate
-
     from eval.stats import precision_recall
 
     heldout = json.loads(HELDOUT_PATH.read_text(encoding="utf-8"))
     labels = json.loads(LABELS_PATH.read_text(encoding="utf-8"))
 
-    missing = [c["chunk_id"] for c in heldout["sample"] if c["chunk_id"] not in labels]
+    sample = heldout["sample"]
+    ids = [piece["sample_id"] for piece in sample]
+    missing = [sample_id for sample_id in ids if sample_id not in labels]
     if missing:
         raise SystemExit(f"{len(missing)} chunks unlabelled — run both labelling passes first")
     incomplete = [
-        cid
-        for cid, row in labels.items()
-        if row.get("pass1") is None or row.get("pass2") is None or row.get("final") is None
+        sample_id
+        for sample_id in ids
+        if labels[sample_id].get("pass1") is None
+        or labels[sample_id].get("pass2") is None
+        or labels[sample_id].get("final") is None
     ]
     if incomplete:
         raise SystemExit(f"{len(incomplete)} chunks missing a labelling pass")
 
+    # The classifier is the thing under test: import it here, not at module
+    # import, so the eval package stays importable without the backend stack.
+    from backend.core.content_quality import boilerplate_score, is_boilerplate
+
     predicted: list[bool] = []
     truth: list[bool] = []
     disagreements: list[str] = []
-    scores: list[float] = []
-    for chunk in heldout["sample"]:
-        row = labels[chunk["chunk_id"]]
+    for piece in sample:
+        row = labels[piece["sample_id"]]
         if row["pass1"] != row["pass2"]:
-            disagreements.append(chunk["chunk_id"])
-        predicted.append(is_boilerplate(chunk["text"]))
+            disagreements.append(piece["sample_id"])
+        predicted.append(bool(is_boilerplate(piece["text"])))
         truth.append(bool(row["final"]))
-        scores.append(boilerplate_score(chunk["text"]))
+        # kept for the operator: how close the raw score is to the threshold
+        piece["boilerplate_score"] = boilerplate_score(piece["text"])
 
     metrics = precision_recall(predicted, truth)
 
-    # Article-level view: extraction_quality=low vs any-boilerplate human call.
+    # Article-level view: the whole-body gate (extraction_quality=low) vs any
+    # boilerplate piece in that article.
     by_article: dict[str, dict[str, Any]] = {}
-    for chunk, is_truth in zip(heldout["sample"], truth, strict=True):
+    for piece, is_truth in zip(sample, truth, strict=True):
         entry = by_article.setdefault(
-            chunk["article_id"],
-            {"predicted_low": chunk["extraction_quality"] == "low", "any_boilerplate": False},
+            piece["article_id"],
+            {"predicted_low": False, "any_boilerplate": False, "n_chunks": 0},
         )
+        # extraction_quality is an article column; `or` keeps the rollup stable
+        # whichever piece of the article is seen first.
+        entry["predicted_low"] = entry["predicted_low"] or piece["extraction_quality"] == "low"
         entry["any_boilerplate"] = entry["any_boilerplate"] or is_truth
+        entry["n_chunks"] += 1
     article_rows = list(by_article.values())
     article_metrics = precision_recall(
-        [r["predicted_low"] for r in article_rows], [r["any_boilerplate"] for r in article_rows]
+        [row["predicted_low"] for row in article_rows],
+        [row["any_boilerplate"] for row in article_rows],
     )
 
     results = {
@@ -216,7 +272,9 @@ def score() -> dict[str, Any]:
         "heldout": {
             "file": "eval/work/heldout_set.json",
             "created_at": heldout["created_at"],
-            "n_chunks": len(heldout["sample"]),
+            "sampling_unit": heldout.get("sampling_unit"),
+            "n_chunks": len(sample),
+            "n_candidate_chunks": heldout.get("n_candidate_chunks"),
             "stratification": heldout["stratification"],
             "poll_log": heldout["poll_log"],
         },
@@ -229,7 +287,7 @@ def score() -> dict[str, Any]:
             "self-consistency check, not inter-annotator agreement",
         },
         "chunk_level": metrics,
-        "article_level": article_metrics,
+        "article_level": {**article_metrics, "n_articles": len(article_rows)},
         "trigger": {
             "rule": "revisit BOILERPLATE_THRESHOLD if held-out precision < 0.95",
             "fired": metrics["precision"] < 0.95,
@@ -259,9 +317,12 @@ def _render_md(results: dict[str, Any]) -> str:
         [
             f"# Content-quality suite (held-out) — {results['git_sha']}",
             "",
-            f"Held-out set: {held['n_chunks']} freshly ingested chunks "
+            f"Held-out set: {held['n_chunks']} freshly ingested chunks drawn from "
+            f"{held.get('n_candidate_chunks')} pre-filter candidates "
             f"(TechCrunch {held['stratification']['techcrunch']}, "
-            f"BBC {held['stratification']['bbc']}), new URLs from the existing four sources.",
+            f"BBC {held['stratification']['bbc']}), new URLs from the existing four "
+            "sources. Sampling unit: pre-filter pieces — the surviving database "
+            "chunks are filtered by construction and would measure nothing.",
             f"Labels: {labels['status']}; self-consistency disagreements: "
             f"{labels['self_consistency_disagreements']} "
             f"(same labeler, two passes — not inter-annotator agreement).",
@@ -273,7 +334,8 @@ def _render_md(results: dict[str, Any]) -> str:
             f"| {chunk['tp']}/{chunk['fp']}/{chunk['fn']} |",
             f"| article | {article['precision']:.3f} ({_fmt_ci(article['precision_ci95'])}) "
             f"| {article['recall']:.3f} ({_fmt_ci(article['recall_ci95'])}) "
-            f"| {article['tp']}/{article['fp']}/{article['fn']} |",
+            f"| {article['tp']}/{article['fp']}/{article['fn']} "
+            f"({article['n_articles']} articles) |",
             "",
             "Threshold trigger (precision < 0.95): "
             f"**{'FIRED' if results['trigger']['fired'] else 'not fired'}**.",
