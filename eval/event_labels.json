@@ -1,0 +1,59 @@
+{
+  "status": "agent_drafted_pending_20pct_review",
+  "labeler": "coding-agent",
+  "drafted_at": "2026-10-12",
+  "snapshot": "20261011_18b35cf",
+  "notes": "True-event grouping drafted by the coding agent from titles/published dates in the frozen snapshot; Yaswanth reviews a random 20% (7 of 29 articles) before this set is trusted. 5 events are cross-source by design (plan 2.3). Single-article events are intentional: ARI/NMI need negative space.",
+  "events": [
+    {
+      "label": "ai-watermarking",
+      "article_ids": ["3dbcd4f9", "9b74f391", "8b538144"],
+      "notes": "Claude/Anthropic text watermarking + Google watermark removal; TechCrunch + Guardian"
+    },
+    {
+      "label": "nvidia-datacenter-funding",
+      "article_ids": ["70370b34", "d585a13e"],
+      "notes": "Wall Street hand Nvidia $500bn (BBC) + Nvidia $1.5B SoftBank data center (TechCrunch)"
+    },
+    {
+      "label": "ai-image-abuse",
+      "article_ids": ["48cc93a3", "e4c44d2a"],
+      "notes": "Grok explicit-photo claim (TechCrunch) + deepfake Albanese scams (Guardian)"
+    },
+    {
+      "label": "amazon-ai-training-data",
+      "article_ids": ["a70516a1", "613ed62b", "dd493cb0"],
+      "notes": "Twitch training AI + user outrage (BBC x2) + Amazon destroying rare texts (TechCrunch)"
+    },
+    {
+      "label": "ai-account-scams",
+      "article_ids": ["7f61b235", "11dc8de8"],
+      "notes": "AI platform account hacks (TechCrunch) + AI holiday-photo scam (Guardian)"
+    },
+    {
+      "label": "meta-zuckerberg-ai",
+      "article_ids": ["fab6f0ba", "2cb6d150", "58daab41"],
+      "notes": "TechCrunch trio on Meta's open AI + $250M deal + Zuckerberg's AI future"
+    },
+    {
+      "label": "samsung-fold8",
+      "article_ids": ["e75e7584", "e2d226a8"],
+      "notes": "Galaxy Z Fold 8 + Fold 8 Ultra reviews (Guardian)"
+    },
+    {
+      "label": "ai-creativity-film",
+      "article_ids": ["3b16d30f", "9fb68f25"],
+      "notes": "AI + artists manifesto + AI film-shoot piece (Guardian)"
+    },
+    {"label": "nothing-phone-4a-pro", "article_ids": ["ac44dd91"], "notes": "review, singleton"},
+    {"label": "oura-ring-5", "article_ids": ["c05ae9b6"], "notes": "review, singleton"},
+    {"label": "surface-laptop-8", "article_ids": ["e41dae93"], "notes": "review, singleton"},
+    {"label": "honor-magic-v6", "article_ids": ["0c8f2644"], "notes": "review, singleton"},
+    {"label": "ring-doorbell-pro", "article_ids": ["1ee3260b"], "notes": "review, singleton"},
+    {"label": "sennheiser-momentum-5", "article_ids": ["d51f471c"], "notes": "review, singleton"},
+    {"label": "discord-brazil", "article_ids": ["665e8f92"], "notes": "news, singleton"},
+    {"label": "exam-protests-ai", "article_ids": ["f6e9ba5a"], "notes": "news, singleton"},
+    {"label": "zipline-drone-deliveries", "article_ids": ["934921f6"], "notes": "news, singleton"},
+    {"label": "openrouter-acquisition", "article_ids": ["9d4156e0"], "notes": "news, singleton"}
+  ]
+}

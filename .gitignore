@@ -143,3 +143,6 @@ storage/
 # ===== UV Lock Files (optional) =====
 # uv.lock
 
+
+# eval harness scratch space (pool texts, raw retrieval records)
+eval/work/

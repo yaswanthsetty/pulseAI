@@ -1,0 +1,25 @@
+# Deterministic refusal / hedge patterns for the RAG suite.
+# Committed BEFORE the first scored run (docs/plans/phase2_eval.md §2.2).
+# One Python regular expression per line; blank lines and # comments ignored.
+# Matching is case-insensitive over the final answer text.
+# Keep this list CONSERVATIVE: only patterns a human would call a refusal or
+# an explicit evidence-absence hedge. Anything borderline is routed to the
+# LLM judge (see eval/refusal.py: needs_judge) and counted, never silently
+# decided by this list.
+
+# --- explicit refusal to answer ---
+^i (?:do not|don't|cannot|can't) (?:have|find|answer|provide)
+^i (?:am|'m) (?:unable|not able) to
+^unfortunately,? i (?:cannot|can't|do not|don't)
+^(?:i am|i'm) sorry,? (?:but )?(?:i (?:cannot|can't|do not|don't)|this (?:question|cannot))
+
+# --- evidence absence (the corpus/context does not contain the answer) ---
+(?:the )?(?:provided|given|above|following|attached|supplied|current) (?:context|sources?|documents?|texts?|passages?|information|material|content) (?:does not|doesn't|do not|don't|is not|isn't|was not|wasn't|contains? no|lacks?|unfortunately) (?:contain|include|mention|state|specify|provide|answer|cover|discuss|say|provide any|mention any)
+(?:there (?:is|are|was|were) (?:no|not any)|no) (?:information|detail|details|mention|reference|coverage|data|evidence) (?:about|on|in|for|regarding|within|available)
+(?:not|isn't|is not|wasn't|was not) (?:mentioned|stated|specified|discussed|covered|addressed|included|provided|answered) (?:in|within|anywhere in|by) (?:the )?(?:context|sources?|documents?|texts?|passages?|provided)
+(?:does not|doesn't|do not|don't|did not|didn't) (?:mention|state|specify|contain|include|discuss|cover|address|provide|answer|say|identify|name|give)
+(?:cannot|can't|could not|couldn't) (?:find|locate|determine|identify|confirm|verify|answer|provide|say|give|extract)
+
+# --- cannot-answer hedging about the question itself ---
+(?:this )?question (?:cannot|can't|could not|couldn't) be (?:answered|determined|verified|confirmed)
+(?:too (?:vague|broad|general|ambiguous|unclear)|not (?:specific|clear|detailed) enough) to (?:answer|determine|provide)
