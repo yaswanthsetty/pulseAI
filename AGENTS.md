@@ -13,7 +13,9 @@ Authoritative phase list (order matters; do not renumber):
 - **Phase 1 — Ground every answer in real text:** DONE.
   - 1.1 grounding pipeline (context budgeting, citation sanitisation, evidence agreement): DONE.
   - 1.2 chunk-filter refit, trafilatura extraction, safe re-ingest CLI, corpus cleanup: DONE (CI green on `c3fc039`).
-- **Phase 2 — Evaluation harness:** PLAN WRITTEN, awaiting approval (`docs/plans/phase2_eval.md`). No code until approved.
+- **Phase 2 — Evaluation harness:** DONE (measured-only; see `docs/evidence/phase2_eval.md`).
+  - Four suites (`retrieval`, `rag`, `clustering`, `quality`), a unified runner (`python -m eval.run`), a committed baseline (`eval/results/*_baseline.json|md`), and a mocked 12-query CI gate that asserts **exact equality** with `eval/results/baseline_ci.json`.
+  - Still pending **human** gates (no agent can close them): Yaswanth's 20% review of `eval/queries.jsonl` (status is still `draft_unreviewed`, so the query set is not frozen), the held-out quality labels review, and the judge-agreement (κ) pass.
 - **Phase 3 — NLI verification:** Pending.
 - **Phase 4 — Real tool-using agent loop:** Pending.
 - **Phase 5 — Ranking/eval tuning:** Pending.
@@ -62,7 +64,7 @@ Authoritative phase list (order matters; do not renumber):
 **Testing**
 - Tests use `conftest.py` `_MUTABLE_TABLES` to truncate between tests. New tables must be added there.
 - Mock Ollama in tests - never hit the real model. Use `patch("backend.modules.agents.service.httpx.AsyncClient")` for streaming, `patch("backend.modules.agents.service._call_ollama_blocking")` for deep path.
-- **386 backend tests**, all need Docker (Postgres, Qdrant :6333, Redis :6379). Coverage **80.87%** against the enforced 80% gate — verified 2026-10-11 at `c3fc039` (`uv run pytest -q --cov=backend`). Rerun before quoting a test count; update this line when it changes.
+- **469 backend tests**, all need Docker (Postgres, Qdrant :6333, Redis :6379). Coverage **80.87%** against the enforced 80% gate — verified 2026-10-13 at `5aef4d3` (`uv run pytest -q --cov=backend --cov-fail-under=80`, 5:07). Rerun before quoting a test count; update this line when it changes.
 - `tests/conftest.py` honors `.env`'s `POSTGRES_PORT` (currently 5540): Hyper-V moves the usable host-port ranges across reboots, so the Postgres host port is not a fixed constant.
 
 **Common Issues**
@@ -73,10 +75,12 @@ Authoritative phase list (order matters; do not renumber):
 - **Context Budgeting**: Always compute Ollama token budgets dynamically. Use `chat_num_ctx` minus prompt size minus `chat_num_predict` minus 10% safety margin. Do not hardcode 3000 tokens.
 
 ## KNOWN LIMITATIONS
+- **The measured baseline is in `docs/evidence/phase2_eval.md`** (`eval/results/20261013_5aef4d3_baseline.md`). Quote numbers from there, not from memory: retrieval nDCG@10 0.565 chunk-level vs 0.974 article-level (production default, 60 queries), deep citation coverage 0.030, deep sub-question relevance 0.765 (n=238), deep refusal-when-evidence-exists 0.303 vs fast 0.091, fast-path clustering precision 0.357, held-out boilerplate recall 0.000. Every number is provisional: `eval/queries.jsonl` is still `draft_unreviewed` and the judge has no κ yet.
+- **Over half the deep path's refusals are correct behaviour.** 20 of 30 deep refusals happen on queries where no grade-2 chunk was retrieved. Never read the blended refusal rate as a defect rate — use `refusal_when_evidence_exists_rate`.
 - **Evidence agreement is not verification.** `_compute_agreement()` (agents/service.py) is title-token Jaccard >= 0.10 between cited sources. It measures lexical title overlap only; it does NOT check that any claim is entailed by the evidence. Phase 3 (NLI verification) addresses this.
 - **Deep planner can invent off-topic sub-questions.** In the Phase 1.2 smoke reruns, the planner emitted a sub-question about an entity that was not in the query; retrieval then faithfully matched it and the final answer went off-topic (T3-deep). Fix target: Phase 2 metric "sub-question relevance", Phase 4 planner redesign.
 - **Synthesizer can refuse despite strong evidence.** T1-deep refused even when clean, high-scoring article prose was retrieved — the refusal is a downstream reasoner/synthesizer behavior, not a corpus-quality problem.
-- **Classifier metrics are in-sample.** P=0.984 / R=0.969 are measured on the same 102 labels the weights and `STRONG_MARKERS` were fit on. Treat `tests/fixtures/boilerplate_labels.jsonl` + its test as a regression guard, NOT as validated accuracy. An honest held-out measurement (freshly labelled chunks from a new ingest) is Phase 2 work.
+- **The classifier's in-sample numbers did not survive held-out measurement.** P=0.984 / R=0.969 were measured on the same 102 labels the weights and `STRONG_MARKERS` were fit on (`tests/fixtures/boilerplate_labels.jsonl` + its test are a regression guard, NOT validated accuracy). On 50 freshly ingested, never-seen pre-filter chunks (21 TechCrunch / 15 BBC, two-pass labels, `eval/results/*_quality.json`) the classifier predicted **zero** boilerplate: precision undefined, recall **0.000** (0 TP / 6 FN) at chunk level. Threshold-revisit trigger fired. Phase 2 only *measures* this — retuning is Phase 5 work.
 - **5 articles are summary-only** (`extractor=summary`, `extraction_quality=low`): body-less listing/video pages where neither trafilatura nor the fallback finds prose. Their Qdrant vectors were pruned; they serve description text only.
 - **Dependency audit exceptions:** `accelerate` (PYSEC-2026-3804, no fix released, needed by BGE-M3) and `braces` (dev dependency) are ignored in `.github/workflows/ci.yml`. **Revisit 2027-01-15** — drop each ignore once a patched release exists.
 - **No deployment, no OTel.** Local Docker Compose only; no production deployment and no OpenTelemetry tracing exist yet (Phase 8).
@@ -89,7 +93,11 @@ Authoritative phase list (order matters; do not renumber):
 - `backend/workers/reingest.py`: Safe re-extraction CLI `pulseai-reingest` (Phase 1.2).
 - `tests/fixtures/boilerplate_labels.jsonl`: 102-row hand-labelled classifier regression fixture.
 - `tests/unit/test_grounding.py`: Unit tests for token calculations.
-- `docs/plans/phase2_eval.md`: Evaluation-harness plan (Phase 2, awaiting approval).
+- `eval/run.py`: unified suite runner (`--suite retrieval|rag|clustering|quality|all|ci`).
+- `eval/report.py`: assembles the committed baseline JSON+markdown from the per-suite results files.
+- `eval/judge.py` + `eval/prompts/judge.md`: local-Ollama judge and its frozen rubric (the sha256 of the prompt is the judge version). The RAG judge cache (`eval/work/<snapshot>_rag_judge.json`, untracked) makes re-scoring cost zero model calls — never delete it, and never re-judge to "fix" a number.
+- `docs/plans/phase2_eval.md`: the approved Phase 2 plan (build state noted at the top).
+- `docs/evidence/phase2_eval.md`: the measured Phase 2 baseline and its caveats.
 
 ## Git rules
 - **Never force-push `main`.** Fix forward with new commits.
@@ -97,4 +105,6 @@ Authoritative phase list (order matters; do not renumber):
 - The guards are version-controlled in **`.githooks/`**: `commit-msg` strips those trailer lines before the commit object exists, and `pre-push` rejects any non-fast-forward push to `main`. **One-time setup per clone:** `git config core.hooksPath .githooks` (already set in this working copy; git ignores `.git/hooks` once `core.hooksPath` is set).
 
 ## Next steps
-- Phase 2 (evaluation harness): get `docs/plans/phase2_eval.md` approved, then implement in the order given there. Do not start Phase 2 code before approval.
+- Phase 2 is built and measured; the open items are **human gates** (20% query review, held-out label review, judge κ in `eval/judge_agreement.jsonl`). Do not present the baseline as frozen until they land.
+- Phase 3 (NLI verification of claims against retrieved evidence) is the next code phase: it is the fix for the T1-deep refusal rate and for "evidence agreement is title-Jaccard only".
+- Phase 5 (ranking/eval tuning) is where the held-out boilerplate threshold and the retrieval ablation gaps get fixed — not before there is a baseline delta to prove the change helped.

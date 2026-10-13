@@ -4,6 +4,16 @@ Status: **APPROVED 2026-10-11** with the amendments recorded in §8 (pooling,
 labelling protocol, refusal detection, exact-equality CI gate, exit criteria).
 Date: 2026-10-11 — Baseline commit: `c3fc039` (plan amended on `5f6e91d`+).
 
+> **BUILT and MEASURED 2026-10-13** — the harness, the four suites and the
+> committed baseline exist; see `docs/evidence/phase2_eval.md` for the numbers
+> and for the human gates that are still open. This plan text is left as
+> approved and is not rewritten after the fact. Two implementation decisions
+> the plan left open and the build had to settle: the refusal metric is
+> reported split by whether grade-2 evidence was retrieved (§2.2's T1-deep is
+> the *with-evidence* half), and the judge falls back to `qwen2.5:7b` after a
+> transport failure as well as after a slow call, so an unreachable preferred
+> model cannot null every judgment.
+
 Goal: turn every claim about retrieval and answer quality into a number we can
 regress on. Before Phase 2 ships, "the answers are grounded" must be a metric,
 not an impression.

@@ -1,6 +1,6 @@
 # PulseAI — Project Status & Roadmap
 
-> Last updated: October 11, 2026 (verified against commit `c3fc039`)
+> Last updated: October 13, 2026 (verified against commit `5aef4d3`)
 
 ## Status — original build milestones
 
@@ -72,6 +72,9 @@ at the bottom of this document.
 
 | Task | Priority | Effort |
 |---|---|---|
+| Yaswanth's 20% review of `eval/queries.jsonl` (12 of 60 queries in `eval/review_sample.txt`) — the query set is not frozen until this lands, so every Phase 2 number is provisional | High | Low |
+| Blinded human labelling of the judge-agreement sample (`eval/judge_agreement.jsonl`, 52 items) → κ ≥ 0.70 gate | High | Low |
+| 20% review of the held-out quality and event label sets (agent-drafted, two passes) | Medium | Low |
 | TLS termination / reverse proxy in front of prod compose | High | Low |
 | WebSocket push for live event feed | Medium | Medium |
 | OWASP pentest pass on auth/ingestion | Medium | Medium |
@@ -123,7 +126,7 @@ the *upgrade* plan, not the build milestones above.)
 | Phase | Description | Status |
 |---|---|---|
 | 1 | Ground every answer in real text — incl. **1.1** grounding pipeline and **1.2** chunk-filter refit, trafilatura extraction, safe re-ingest CLI, corpus cleanup | **DONE** (1.1 and 1.2 complete; CI green on `c3fc039`) |
-| 2 | Evaluation harness (frozen dataset, retrieval/RAG/clustering/content-quality suites, CI regression gate) | Plan written — `docs/plans/phase2_eval.md`, awaiting approval; no code yet |
+| 2 | Evaluation harness (frozen dataset, retrieval/RAG/clustering/content-quality suites, CI regression gate) | **DONE, measured** — four suites + runner + committed baseline (`eval/results/20261013_5aef4d3_baseline.md`) + mocked exact-equality CI gate; numbers and open human gates in `docs/evidence/phase2_eval.md`. Query set still `draft_unreviewed` |
 | 3 | NLI verification of claims against retrieved evidence | Pending |
 | 4 | Real tool-using agent loop (replaces the fixed planner->retriever->reasoner->synthesizer pipeline) | Pending |
 | 5 | Ranking / eval tuning (driven by Phase 2 ablation numbers) | Pending |
