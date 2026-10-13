@@ -562,6 +562,14 @@ class _JudgeCache:
         self._since_save = 0
 
 
+def _fallback_note(judge: dict[str, Any]) -> str:
+    """ ", fell back (why)" for the summary line — the reason is a run artifact."""
+    if not judge.get("fallback_used"):
+        return ""
+    reason = judge.get("fallback_reason")
+    return f"; fell back ({reason})" if reason else "; fell back"
+
+
 def _refusal_breakdown(rows: list[dict[str, Any]]) -> dict[str, Any]:
     """Refusal split by whether grade-2 evidence was retrieved at all."""
     with_evidence = [row for row in rows if (row.get("n_grade2_retrieved") or 0) > 0]
@@ -576,9 +584,7 @@ def _refusal_breakdown(rows: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "n_without_evidence": len(without),
         "refusal_without_evidence_count": refused_without,
-        "refusal_without_evidence_rate": (
-            refused_without / len(without) if without else None
-        ),
+        "refusal_without_evidence_rate": (refused_without / len(without) if without else None),
     }
 
 
@@ -651,18 +657,8 @@ def _render_md(results: dict[str, Any]) -> str:
         f"Queries: {results['aggregates']['fast']['n_queries']} x 2 paths "
         f"(status: **{results['query_set_status']}**) · judge: "
         f"`{results['judge'].get('version')}` (requested "
-        f"`{results['judge'].get('model')}`"
-        + (
-            "; fell back"
-            + (
-                f" ({results['judge']['fallback_reason']})"
-                if results["judge"].get("fallback_reason")
-                else ""
-            )
-            if results["judge"].get("fallback_used")
-            else ""
-        )
-        + f"; cached judgments {results['judge'].get('cached_judgments')})"
+        f"`{results['judge'].get('model')}`{_fallback_note(results['judge'])}; "
+        f"cached judgments {results['judge'].get('cached_judgments')})"
         f" · mock={results['mock']}.",
         "",
         "| metric | fast | deep |",

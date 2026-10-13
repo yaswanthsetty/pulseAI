@@ -177,8 +177,8 @@ def _rag_section(payload: dict[str, Any]) -> list[str]:
     lines = [
         "## RAG fast vs deep",
         "",
-        f"Judge: `{judge.get('version')}` requested `{judge.get('model')}`{fallback} "
-        f"(errors: {judge.get('errors')}; cached judgments "
+        f"Judge: `{judge.get('version')}` (requested `{judge.get('model')}`{fallback}; "
+        f"errors: {judge.get('errors')}; cached judgments "
         f"{judge.get('cached_judgments')}) · refusal detection is deterministic regex "
         f"first, judge only for borderline cases.",
         "",
@@ -275,7 +275,8 @@ def _quality_section(payload: dict[str, Any]) -> list[str]:
         f"| {chunk.get('tp')}/{chunk.get('fp')}/{chunk.get('fn')} |",
         f"| article | {precision(article.get('precision'))} ({ci(article.get('precision_ci95'))}) "
         f"| {_fmt(article.get('recall'))} ({ci(article.get('recall_ci95'))}) "
-        f"| {article.get('tp')}/{article.get('fp')}/{article.get('fn')} |",
+        f"| {article.get('tp')}/{article.get('fp')}/{article.get('fn')} "
+        f"({article.get('n_articles')} articles) |",
         "",
         trigger_line + ".",
         "",
