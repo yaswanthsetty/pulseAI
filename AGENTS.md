@@ -15,7 +15,7 @@ Authoritative phase list (order matters; do not renumber):
   - 1.2 chunk-filter refit, trafilatura extraction, safe re-ingest CLI, corpus cleanup: DONE (CI green on `c3fc039`).
 - **Phase 2 — Evaluation harness:** DONE (measured-only; see `docs/evidence/phase2_eval.md`).
   - Four suites (`retrieval`, `rag`, `clustering`, `quality`), a unified runner (`python -m eval.run`), a committed baseline (`eval/results/*_baseline.json|md`), and a mocked 12-query CI gate that asserts **exact equality** with `eval/results/baseline_ci.json`.
-  - Still pending **human** gates (no agent can close them): Yaswanth's 20% review of `eval/queries.jsonl` (status is still `draft_unreviewed`, so the query set is not frozen), the held-out quality labels review, and the judge-agreement (κ) pass.
+  - Still pending **human** gates (no agent can close them): Yaswanth's 20% review of `eval/queries.jsonl` (status is still `draft_unreviewed`, so the query set is not frozen), the held-out quality labels review, and the judge-agreement (κ) pass. `eval/label.py` is the blinded, resumable CLI for all four (`--task queries|judge|events|quality`, then `--apply`), and the retrieval baseline now carries a paired bootstrap of every config against the production default (`delta`, 95% CI, and whether the CI excludes 0 — a gap that does not is not a difference).
 - **Phase 3 — NLI verification:** Pending.
 - **Phase 4 — Real tool-using agent loop:** Pending.
 - **Phase 5 — Ranking/eval tuning:** Pending.
@@ -94,7 +94,9 @@ Authoritative phase list (order matters; do not renumber):
 - `tests/fixtures/boilerplate_labels.jsonl`: 102-row hand-labelled classifier regression fixture.
 - `tests/unit/test_grounding.py`: Unit tests for token calculations.
 - `eval/run.py`: unified suite runner (`--suite retrieval|rag|clustering|quality|all|ci`).
-- `eval/report.py`: assembles the committed baseline JSON+markdown from the per-suite results files.
+- `eval/label.py`: the human-gate CLI. One item per screen, blinded (the judge's score, the draft junk/clean label and the drafted event grouping are never shown), saves after every answer to `eval/human_labels/<task>.jsonl`, and `--apply` is the only thing that writes a label file — it records reviewer + date, sets the sampled `queries.jsonl` rows to `reviewed` / `reviewed_fixed` / `rejected`, and (only when the whole sample is answered) marks the rest `reviewed_by_sample`; rejected queries leave every metric.
+- `eval/stats.py`: Wilson intervals and the paired bootstrap (`paired_bootstrap_delta`, 10k resamples, seed 20261013 — fixed so a committed interval cannot move).
+- `eval/report.py`: assembles the committed baseline JSON+markdown from the per-suite results files. The retrieval section marks configs whose nDCG@10 delta vs the production default excludes 0.
 - `eval/judge.py` + `eval/prompts/judge.md`: local-Ollama judge and its frozen rubric (the sha256 of the prompt is the judge version). The RAG judge cache (`eval/work/<snapshot>_rag_judge.json`, untracked) makes re-scoring cost zero model calls — never delete it, and never re-judge to "fix" a number.
 - `docs/plans/phase2_eval.md`: the approved Phase 2 plan (build state noted at the top).
 - `docs/evidence/phase2_eval.md`: the measured Phase 2 baseline and its caveats.

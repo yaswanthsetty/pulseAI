@@ -28,6 +28,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from eval.retrieval_suite import significance_lines
+
 EVAL_DIR = Path(__file__).resolve().parent
 RESULTS_DIR = EVAL_DIR / "results"
 QUERIES_PATH = EVAL_DIR / "queries.jsonl"
@@ -139,12 +141,21 @@ def _retrieval_section(payload: dict[str, Any]) -> list[str]:
     ]
     chunk_level = [key for key in sorted(per_config) if not key.endswith("__article_level")]
     article_level = [key for key in sorted(per_config) if key.endswith("__article_level")]
+    significant = (payload.get("significance") or {}).get("metrics", {}).get("ndcg@10", {})
+    marked = {config_id for config_id, entry in significant.items() if entry.get("excludes_zero")}
     for config_id in chunk_level:
         agg = per_config[config_id]
+        label = f"{config_id} +" if config_id in marked else config_id
         lines.append(
-            f"| {config_id} | {_fmt(agg.get('recall@5'))} | {_fmt(agg.get('recall@10'))} "
+            f"| {label} | {_fmt(agg.get('recall@5'))} | {_fmt(agg.get('recall@10'))} "
             f"| {_fmt(agg.get('mrr@10'))} | {_fmt(agg.get('ndcg@10'))} |"
         )
+    if marked:
+        lines += [
+            "",
+            "`+` = nDCG@10 delta vs the production default excludes 0 (paired bootstrap, "
+            "details below). No config is chosen from it.",
+        ]
     if article_level:
         lines += [
             "",
@@ -161,7 +172,7 @@ def _retrieval_section(payload: dict[str, Any]) -> list[str]:
                 f"| {_fmt(agg.get('recall@5'))} | {_fmt(agg.get('recall@10'))} "
                 f"| {_fmt(agg.get('mrr@10'))} | {_fmt(agg.get('ndcg@10'))} |"
             )
-    return lines + [""]
+    return lines + ["", *significance_lines(payload)]
 
 
 def _rag_section(payload: dict[str, Any]) -> list[str]:

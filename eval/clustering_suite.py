@@ -317,6 +317,11 @@ def _render_md(results: dict[str, Any]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # The report prints box-drawing separators; a cp1252 console cannot encode
+    # them, so emit UTF-8 (replacing what the console cannot show) instead.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snapshot", default=None)
     args = parser.parse_args(argv)

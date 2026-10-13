@@ -9,7 +9,9 @@ Two phases, deliberately separated so the human never sees the judge's score
 while labelling:
 
     uv run python -m eval.judge_agreement export    # blinded sample to label
-    uv run python -m eval.judge_agreement report    # raw agreement + kappa
+    uv run python -m eval.label --task judge       # label it (blinded, resumable)
+    uv run python -m eval.label --apply            # copy the scores into the sample
+    uv run python -m eval.judge_agreement --score  # raw agreement + kappa (report)
 
 ``export`` reads the judged items out of the RAG results file
 (``eval/results/*_rag.json``), samples 20% deterministically (seeded by the
@@ -150,12 +152,17 @@ def report(path: Path = SAMPLE_PATH) -> dict[str, Any]:
             [({"score": row["judge_score"]}, row["human_score"]) for row in subset]
         )
 
+    # The model that answered, taken from the judgments themselves: the run may
+    # have fallen back to a different model than the one it asked for, and a
+    # provenance field that reports the request rather than the answer lies.
+    models = sorted({row.get("judge_model") or "unknown" for row in rows})
     results = {
         "suite": "judge_agreement",
         "git_sha": _git_sha(),
         "created_at": dt.datetime.now(dt.UTC).isoformat(),
         "sample_file": _display_path(path),
         "judge": judge.version,
+        "judge_models_in_sample": models,
         "n_items": len(rows),
         "percent_of_judged_items": DEFAULT_PERCENT,
         "overall": overall,
@@ -176,7 +183,8 @@ def report(path: Path = SAMPLE_PATH) -> dict[str, Any]:
             f"# Judge human-agreement check — {results['git_sha']}",
             "",
             f"{results['n_items']} items ({results['percent_of_judged_items']}% of "
-            f"LLM-judged items) hand-labelled; judge `{results['judge']}`.",
+            f"LLM-judged items) hand-labelled; judge `{results['judge']}` "
+            f"(answered by {', '.join(results['judge_models_in_sample'])}).",
             "",
             "| scope | n | raw agreement | Cohen's κ |",
             "|---|---|---|---|",
@@ -207,16 +215,27 @@ def latest_rag_results() -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows consoles are cp1252 by default and kappa is not in that code page:
+    # emitting UTF-8 (replacing what the console cannot show) beats a crash here.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("phase", choices=["export", "report"])
+    parser.add_argument("phase", nargs="?", choices=["export", "report"], default=None)
+    parser.add_argument(
+        "--score", action="store_true", help="same as the report phase: raw agreement + kappa"
+    )
     parser.add_argument("--results", default=None, help="RAG results file (export phase)")
     parser.add_argument("--sample", default=str(SAMPLE_PATH))
     parser.add_argument("--percent", type=int, default=DEFAULT_PERCENT)
     args = parser.parse_args(argv)
-    if args.phase == "export":
+    phase = "report" if args.score else args.phase
+    if phase == "export":
         export(Path(args.results) if args.results else latest_rag_results(), percent=args.percent)
-    else:
+    elif phase == "report":
         report(Path(args.sample))
+    else:
+        parser.error("choose a phase: export | report | --score")
     return 0
 
 

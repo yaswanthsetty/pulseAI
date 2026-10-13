@@ -64,14 +64,24 @@ def _latest_snapshot_id() -> str:
     return snapshots[-1].stem
 
 
-def load_queries(snapshot_id: str) -> list[dict[str, Any]]:
+def load_queries(snapshot_id: str, *, include_rejected: bool = False) -> list[dict[str, Any]]:
+    """Queries for the snapshot; human-rejected queries are excluded by default.
+
+    ``status == "rejected"`` comes from Yaswanth's review (``eval.label --apply``):
+    a query the reviewer threw out must not cost model calls or enter a metric.
+    """
     queries = [
         json.loads(line) for line in QUERIES_PATH.read_text(encoding="utf-8").splitlines() if line
     ]
     mismatched = [q["id"] for q in queries if q.get("snapshot") != snapshot_id]
     if mismatched:
         raise SystemExit(f"queries not on snapshot {snapshot_id}: {mismatched}")
-    return queries
+    if include_rejected:
+        return queries
+    active = [q for q in queries if q.get("status") != "rejected"]
+    if not active:
+        raise SystemExit("every query in eval/queries.jsonl is rejected — nothing to score")
+    return active
 
 
 def load_labels() -> dict[str, dict[str, int]]:
@@ -352,10 +362,12 @@ def _metric_set(
 
 def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
     from eval import metrics as M
+    from eval.label import query_set_status
 
     suffix = "_mock" if mock else ""
     raw = json.loads((WORK_DIR / f"{snapshot_id}_rag_raw{suffix}.json").read_text(encoding="utf-8"))
-    queries = {q["id"]: q for q in load_queries(snapshot_id)}
+    all_queries = load_queries(snapshot_id, include_rejected=True)
+    queries = {q["id"]: q for q in all_queries if q.get("status") != "rejected"}
     labels = load_labels()
 
     judge = None
@@ -397,7 +409,9 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
         judge.judge = cache.wrap(judge.judge)  # type: ignore[method-assign]
 
     for record in raw["records"]:
-        query = queries[record["query_id"]]
+        query = queries.get(record["query_id"])
+        if query is None:
+            continue  # human-rejected query: excluded from every aggregate
         grades = labels.get(record["query_id"], {})
         facts = list(query["required_facts"])
         metrics_row = _metric_set(record, grades, facts, judge)
@@ -494,7 +508,8 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
         "created_at": dt.datetime.now(dt.UTC).isoformat(),
         "mock": mock,
         "queries_file": "eval/queries.jsonl",
-        "query_set_status": queries[sorted(queries)[0]]["status"],
+        "query_set_status": query_set_status(all_queries),
+        "n_queries_rejected": len(all_queries) - len(queries),
         "judge": judge_info,
         "sub_question_relevance": {
             "mean": subq_relevance,

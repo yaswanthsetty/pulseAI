@@ -86,14 +86,25 @@ def _latest_snapshot_id() -> str:
     return snapshots[-1].stem
 
 
-def load_queries(snapshot_id: str) -> list[dict[str, Any]]:
+def load_queries(snapshot_id: str, *, include_rejected: bool = False) -> list[dict[str, Any]]:
+    """Queries for the snapshot; human-rejected queries are excluded by default.
+
+    ``status == "rejected"`` is set by ``eval.label --apply`` from Yaswanth's
+    review: a query the reviewer threw out must not be scored. ``include_rejected``
+    exists so the reported set status can still describe the whole file.
+    """
     queries = [
         json.loads(line) for line in QUERIES_PATH.read_text(encoding="utf-8").splitlines() if line
     ]
     mismatched = [q["id"] for q in queries if q.get("snapshot") != snapshot_id]
     if mismatched:
         raise SystemExit(f"queries not on snapshot {snapshot_id}: {mismatched}")
-    return queries
+    if include_rejected:
+        return queries
+    active = [q for q in queries if q.get("status") != "rejected"]
+    if not active:
+        raise SystemExit("every query in eval/queries.jsonl is rejected — nothing to score")
+    return active
 
 
 def load_snapshot_articles(snapshot_id: str) -> dict[str, dict[str, Any]]:
@@ -385,9 +396,13 @@ def _article_ranking(records_results: list[dict[str, Any]], grades: dict[str, in
 
 def score(snapshot_id: str) -> tuple[Path, Path]:
     from eval import metrics
+    from eval.label import query_set_status
+    from eval.stats import BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED
 
     raw = json.loads((WORK_DIR / f"{snapshot_id}_retrieval_raw.json").read_text(encoding="utf-8"))
-    queries = {q["id"]: q for q in load_queries(snapshot_id)}
+    all_queries = load_queries(snapshot_id, include_rejected=True)
+    queries = {q["id"]: q for q in all_queries if q.get("status") != "rejected"}
+    rejected = {q["id"] for q in all_queries if q.get("status") == "rejected"}
     labels = [
         json.loads(line) for line in LABELS_PATH.read_text(encoding="utf-8").splitlines() if line
     ]
@@ -397,9 +412,12 @@ def score(snapshot_id: str) -> tuple[Path, Path]:
         grades_by_query.setdefault(row["query_id"], {})[row["chunk_id"]] = row["grade"]
 
     config_ids = [c["config_id"] for c in raw["configs"]]
+    # Rejected queries leave the raw file untouched: the same filter runs here,
+    # so every per-query list stays positionally aligned with active_entries.
+    active_entries = [entry for entry in raw["per_query"] if entry["query_id"] not in rejected]
     per_config: dict[str, list[dict[str, Any]]] = {cid: [] for cid in config_ids}
     per_config_articles: dict[str, list[dict[str, Any]]] = {cid: [] for cid in config_ids}
-    for entry in raw["per_query"]:
+    for entry in active_entries:
         grades = grades_by_query[entry["query_id"]]
         article_grades: dict[str, int] = {}
         for label_row in labels:
@@ -426,12 +444,14 @@ def score(snapshot_id: str) -> tuple[Path, Path]:
         for qtype in sorted(set(type_of.values())):
             subset = [
                 record
-                for record, entry in zip(per_config[cid], raw["per_query"], strict=True)
+                for record, entry in zip(per_config[cid], active_entries, strict=True)
                 if entry["type"] == qtype
             ]
             by_type[qtype] = metrics.aggregate(subset)
         breakdown[cid] = by_type
         aggregates[f"{cid}__article_level"] = metrics.aggregate(per_config_articles[cid])
+
+    significance = significance_vs_default(per_config)
 
     queries_sha = hashlib.sha256(QUERIES_PATH.read_bytes()).hexdigest()
     git_sha = _git_sha()
@@ -443,7 +463,8 @@ def score(snapshot_id: str) -> tuple[Path, Path]:
         "created_at": dt.datetime.now(dt.UTC).isoformat(),
         "queries_file": "eval/queries.jsonl",
         "queries_sha256": queries_sha,
-        "query_set_status": queries[sorted(queries)[0]]["status"],
+        "query_set_status": query_set_status(all_queries),
+        "n_queries_rejected": len(rejected),
         "pool": {
             "depth": raw["pool_depth"],
             "mean_pool_size": raw["pool_stats"]["mean_pool_size"],
@@ -462,12 +483,18 @@ def score(snapshot_id: str) -> tuple[Path, Path]:
         "per_query_metrics": {
             cid: [
                 {"query_id": entry["query_id"], **record}
-                for record, entry in zip(per_config[cid], raw["per_query"], strict=True)
+                for record, entry in zip(per_config[cid], active_entries, strict=True)
             ]
             for cid in config_ids
         },
         "pool_size_stats": raw["pool_stats"],
-        "n_queries": len(raw["per_query"]),
+        "significance": {
+            "baseline_config": PRODUCTION_CONFIG,
+            "resamples": BOOTSTRAP_RESAMPLES,
+            "seed": BOOTSTRAP_SEED,
+            "metrics": significance,
+        },
+        "n_queries": len(active_entries),
     }
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -479,6 +506,71 @@ def score(snapshot_id: str) -> tuple[Path, Path]:
     print(_render_md(results))
     print(f"written     : {json_path}\n              {md_path}")
     return json_path, md_path
+
+
+SIGNIFICANCE_METRICS = ("ndcg@10", "recall@10")
+
+
+def significance_vs_default(
+    per_config: dict[str, list[dict[str, Any]]],
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Paired bootstrap of each config's delta over the production default.
+
+    Describes this query set, nothing more: a CI excluding 0 says the gap is
+    unlikely to be noise on these 60 queries. No config is chosen from it.
+    """
+    from eval.stats import paired_bootstrap_delta
+
+    baseline = per_config.get(PRODUCTION_CONFIG)
+    if not baseline:
+        return {}
+    significance: dict[str, dict[str, dict[str, Any]]] = {}
+    for metric in SIGNIFICANCE_METRICS:
+        rows: dict[str, dict[str, Any]] = {}
+        for config_id, records in per_config.items():
+            if config_id == PRODUCTION_CONFIG:
+                continue
+            rows[config_id] = paired_bootstrap_delta(
+                [record[metric] for record in records],
+                [record[metric] for record in baseline],
+            )
+        significance[metric] = rows
+    return significance
+
+
+def significance_lines(payload: dict[str, Any]) -> list[str]:
+    """Markdown for the bootstrap table (shared by the suite and the baseline)."""
+    block = payload.get("significance") or {}
+    metrics = block.get("metrics") or {}
+    if not metrics:
+        return []
+
+    def cell(entry: dict[str, Any] | None) -> tuple[str, str]:
+        if not entry or entry.get("delta") is None:
+            return "\u2014", "\u2014"
+        low, high = entry["ci95"]
+        return f"{entry['delta']:+.3f} ({low:+.3f} to {high:+.3f})", "**yes**" if entry[
+            "excludes_zero"
+        ] else "no"
+
+    configs = sorted({cid for rows in metrics.values() for cid in rows})
+    lines = [
+        "### Paired bootstrap vs the production default "
+        f"(`{block.get('baseline_config')}`, {block.get('resamples')} resamples, "
+        f"seed {block.get('seed')})",
+        "",
+        "Per-query deltas over the queries both rankings define; a CI that excludes 0 is "
+        "marked **yes** and a `+` in the ablation table. Descriptive of this query set "
+        "only \u2014 no config is selected from it.",
+        "",
+        "| config | delta nDCG@10 (95% CI) | excludes 0 | delta recall@10 (95% CI) | excludes 0 |",
+        "|---|---|---|---|---|",
+    ]
+    for config_id in configs:
+        ndcg = cell(metrics.get("ndcg@10", {}).get(config_id))
+        recall = cell(metrics.get("recall@10", {}).get(config_id))
+        lines.append(f"| {config_id} | {ndcg[0]} | {ndcg[1]} | {recall[0]} | {recall[1]} |")
+    return lines + [""]
 
 
 def _settings_value(name: str) -> Any:
@@ -499,10 +591,11 @@ def _render_md(results: dict[str, Any]) -> str:
         "| config | " + " | ".join(metrics_cols) + " |",
         "|---|" + "---|" * len(metrics_cols),
     ]
+    marked = _significant_configs(results)
     for cid, agg in results["per_config"].items():
         if cid.endswith("__article_level"):
             continue
-        row = [cid]
+        row = [f"{cid} +" if cid in marked else cid]
         for col in metrics_cols:
             value = agg.get(col)
             row.append("—" if value is None else f"{value:.3f}")
@@ -510,7 +603,9 @@ def _render_md(results: dict[str, Any]) -> str:
     lines += [
         "",
         f"Production default path: `{_production_row(results)}`.",
+        ("A `+` marks a config whose nDCG@10 delta vs the default excludes 0." if marked else ""),
         "",
+        *significance_lines(results),
         "## Per-type breakdown (production default config, nDCG@10)",
         "",
         "| type | nDCG@10 | n queries |",
@@ -523,6 +618,11 @@ def _render_md(results: dict[str, Any]) -> str:
             f"| {qtype} | {'—' if value is None else f'{value:.3f}'} | {agg.get('ndcg@10_n', 0)} |"
         )
     return "\n".join(lines) + "\n"
+
+
+def _significant_configs(results: dict[str, Any]) -> set[str]:
+    rows = (results.get("significance") or {}).get("metrics", {}).get("ndcg@10", {})
+    return {config_id for config_id, entry in rows.items() if entry.get("excludes_zero")}
 
 
 def _production_row(results: dict[str, Any]) -> str:

@@ -188,6 +188,53 @@ def test_baseline_markdown_renders_undefined_precision_honestly(tmp_path):
     assert "precision is undefined" in md
 
 
+def test_retrieval_section_marks_deltas_that_exclude_zero(tmp_path):
+    """The bootstrap must be visible in the baseline a human reads."""
+    payload = {
+        **RETRIEVAL,
+        "significance": {
+            "baseline_config": "semantic-rerank-temporal",
+            "resamples": 10_000,
+            "seed": 20261013,
+            "metrics": {
+                "ndcg@10": {
+                    "hybrid-norank-notemporal": {
+                        "n": 60,
+                        "delta": 0.033,
+                        "ci95": [0.004, 0.061],
+                        "excludes_zero": True,
+                    }
+                },
+                "recall@10": {
+                    "hybrid-norank-notemporal": {
+                        "n": 55,
+                        "delta": 0.010,
+                        "ci95": [-0.021, 0.040],
+                        "excludes_zero": False,
+                    }
+                },
+            },
+        },
+    }
+    queries = tmp_path / "queries.jsonl"
+    queries.write_text('{"id": "q001"}\n', encoding="utf-8")
+    md = report.render_md(report.build_baseline({"retrieval": payload}, queries_path=queries))
+    assert "| hybrid-norank-notemporal + |" in md  # marked in the ablation table
+    assert "Paired bootstrap vs the production default" in md
+    assert "| hybrid-norank-notemporal | +0.033 (+0.004 to +0.061) | **yes** |" in md
+    assert "| +0.010 (-0.021 to +0.040) | no |" in md
+    # a config with no bootstrap entry is not silently marked
+    assert "| semantic-rerank-temporal |" in md
+
+
+def test_retrieval_section_without_significance_stays_readable(tmp_path):
+    queries = tmp_path / "queries.jsonl"
+    queries.write_text('{"id": "q001"}\n', encoding="utf-8")
+    md = report.render_md(report.build_baseline({"retrieval": RETRIEVAL}, queries_path=queries))
+    assert "Paired bootstrap" not in md
+    assert "| semantic-rerank-temporal | 0.600 | 0.700 | 0.800 | 0.565 |" in md
+
+
 def test_merge_with_existing_lets_this_run_win(tmp_path):
     _write_results(tmp_path)
     stale = {**CLUSTERING, "git_sha": "stale01"}

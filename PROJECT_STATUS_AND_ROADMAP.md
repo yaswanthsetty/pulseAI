@@ -70,11 +70,13 @@ at the bottom of this document.
 
 ## What's left (beyond the original spec)
 
+Tooling for the three label gates below is ready: `uv run python -m eval.label --task queries|judge|events|quality` walks one blinded item at a time (resumable, saved to `eval/human_labels/`), and `--apply` is the only step that writes a label file.
+
 | Task | Priority | Effort |
 |---|---|---|
-| Yaswanth's 20% review of `eval/queries.jsonl` (12 of 60 queries in `eval/review_sample.txt`) — the query set is not frozen until this lands, so every Phase 2 number is provisional | High | Low |
-| Blinded human labelling of the judge-agreement sample (`eval/judge_agreement.jsonl`, 52 items) → κ ≥ 0.70 gate | High | Low |
-| 20% review of the held-out quality and event label sets (agent-drafted, two passes) | Medium | Low |
+| Yaswanth's 20% review of `eval/queries.jsonl` (12 of 60 queries in `eval/review_sample.txt`) — the query set is not frozen until this lands, so every Phase 2 number is provisional (`uv run python -m eval.label --task queries`, then `--apply`) | High | Low |
+| Blinded human labelling of the judge-agreement sample (`eval/judge_agreement.jsonl`, 52 items) → κ ≥ 0.70 gate (`uv run python -m eval.label --task judge`, `--apply`, then `uv run python -m eval.judge_agreement --score`) | High | Low |
+| 20% review of the held-out quality and event label sets (agent-drafted, two passes): `--task quality`, `--task events` | Medium | Low |
 | TLS termination / reverse proxy in front of prod compose | High | Low |
 | WebSocket push for live event feed | Medium | Medium |
 | OWASP pentest pass on auth/ingestion | Medium | Medium |
