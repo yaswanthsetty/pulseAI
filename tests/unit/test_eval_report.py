@@ -166,6 +166,28 @@ def test_baseline_markdown_reports_every_suite(tmp_path):
     assert "| slow-path ARI / NMI / purity (labelled members) | — / — / — |" in md
 
 
+def test_baseline_markdown_renders_undefined_precision_honestly(tmp_path):
+    # A suite whose classifier never predicted positive: precision is not 0.000.
+    silent = {
+        **QUALITY,
+        "chunk_level": {
+            "precision": None,
+            "recall": 0.0,
+            "precision_ci95": [0.0, 1.0],
+            "recall_ci95": [0.0, 0.39],
+            "tp": 0,
+            "fp": 0,
+            "fn": 6,
+        },
+        "trigger": {**QUALITY["trigger"], "note": "precision is undefined"},
+    }
+    queries = tmp_path / "queries.jsonl"
+    queries.write_text('{"id": "q001"}\n', encoding="utf-8")
+    md = report.render_md(report.build_baseline({"quality": silent}, queries_path=queries))
+    assert "| chunk | undefined (0.000-1.000) | 0.000 (0.000-0.390) | 0/0/6 |" in md
+    assert "precision is undefined" in md
+
+
 def test_merge_with_existing_lets_this_run_win(tmp_path):
     _write_results(tmp_path)
     stale = {**CLUSTERING, "git_sha": "stale01"}

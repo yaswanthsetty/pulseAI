@@ -1,406 +1,412 @@
 {
  "_meta": {
-  "status": "agent_drafted_pass1",
+  "status": "agent_drafted_two_passes_pending_review",
   "labeller": "coding-agent",
   "pass1_at": "2026-10-12T19:13:07.556325+00:00",
-  "criteria": "boilerplate = not article prose: site chrome, promo/pricing copy, programme/episode metadata, credits, newsletter sign-off, listing fragments"
+  "criteria": "boilerplate = not article prose: site chrome, promo/pricing copy, programme/episode metadata, credits, newsletter sign-off, listing fragments",
+  "pass2_at": "2026-10-12T19:43:04.390207+00:00",
+  "pass2_presentation": "re-ordered by (source, article, chunk) and shortened; pass 1 not consulted",
+  "cool_off_minutes": 30,
+  "self_consistency_disagreements": 0,
+  "limitation": "both passes by the same agent in one session (no day-long cool-off); this is a weak self-consistency check, not inter-annotator agreement",
+  "review": "pending Yaswanth"
  },
  "e9a071bb-1f3a-48e2-84e4-5a0c3695c607#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "King warns malicious online actors are evolving tactics",
   "note": ""
  },
  "31629a45-61ee-4b00-ab40-061453e43165#0": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "Why are more roofs not made of solar tiles?",
   "note": ""
  },
  "31629a45-61ee-4b00-ab40-061453e43165#3": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "Why are more roofs not made of solar tiles?",
   "note": ""
  },
  "759ef624-1974-4a89-bab5-316dec6aa0b0#5": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "How drones are hunting fires hidden beneath the Cairngorms",
   "note": ""
  },
  "e9a071bb-1f3a-48e2-84e4-5a0c3695c607#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "King warns malicious online actors are evolving tactics",
   "note": ""
  },
  "cb94b65f-9b3b-4657-a47e-5def90d572f5#0": {
   "pass1": true,
-  "pass2": null,
-  "final": null,
+  "pass2": true,
+  "final": true,
   "source_name": "BBC Science & Tech",
   "title": "Tech Life",
   "note": "podcast/programme page blurb + credits + image caption + 'Programme Website' chrome"
  },
  "e851107d-ae6e-42c1-bee5-b8e42f330de5#3": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "AI minister warns 'likely' UK's cyber defences will be breached",
   "note": ""
  },
  "759ef624-1974-4a89-bab5-316dec6aa0b0#4": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "How drones are hunting fires hidden beneath the Cairngorms",
   "note": ""
  },
  "759ef624-1974-4a89-bab5-316dec6aa0b0#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "How drones are hunting fires hidden beneath the Cairngorms",
   "note": ""
  },
  "e851107d-ae6e-42c1-bee5-b8e42f330de5#4": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "AI minister warns 'likely' UK's cyber defences will be breached",
   "note": ""
  },
  "5310a1f9-152d-466e-b419-5305bd27f3a3#0": {
   "pass1": true,
-  "pass2": null,
-  "final": null,
+  "pass2": true,
+  "final": true,
   "source_name": "BBC Science & Tech",
   "title": "Tech Now",
   "note": "body-less programme page: extractor=summary fallback, one-sentence episode blurb"
  },
  "f6cb843c-b438-43b6-93a5-c703551eb4dc#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "Anthropic bans users from being 'cruel' to its AI systems",
   "note": ""
  },
  "287511bb-b29b-47ca-85ea-388cffc5ccca#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "White House blocks Microsoft from foreign worker hiring programme",
   "note": ""
  },
  "3bb18dc3-de73-4770-9f9b-69754324423d#0": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "Rogue Anthropic AI agent gave police fake tip in unsolved murder case",
   "note": ""
  },
  "e851107d-ae6e-42c1-bee5-b8e42f330de5#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "BBC Science & Tech",
   "title": "AI minister warns 'likely' UK's cyber defences will be breached",
   "note": ""
  },
  "e16da8a0-eae4-4cb7-8be6-cac2f401969d#1": {
   "pass1": true,
-  "pass2": null,
-  "final": null,
+  "pass2": true,
+  "final": true,
   "source_name": "TechCrunch AI",
   "title": "3 days to TechCrunch Disrupt 2026: Meet the startups before they hit mainstream",
   "note": "TechCrunch Disrupt ticket promo (prices, discounts, Expo+ pass)"
  },
  "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#9": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Here are the top AI agents that can live in your text messages",
   "note": ""
  },
  "a78531a7-1c56-49db-bf57-644d971795ec#0": {
   "pass1": true,
-  "pass2": null,
-  "final": null,
+  "pass2": true,
+  "final": true,
   "source_name": "TechCrunch AI",
   "title": "48 hours to TechCrunch Disrupt 2026 — hear directly from the people building wha",
   "note": "TechCrunch Disrupt ticket promo (prices, discounts, register now)"
  },
  "898e040f-7bb4-4889-8159-5af5071c8e5c#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "WindBorne wins a hefty US Air Force contract for its balloon data",
   "note": ""
  },
  "516c2feb-0652-458b-8d51-b32b34a30f32#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Meta releases its first frontier model, Muse Wonder",
   "note": ""
  },
  "98b118ec-84a4-4cb2-a25d-e4efe3db3bf4#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Apple discloses deal to hire team and license tech from personalized podcast sta",
   "note": ""
  },
  "acb96445-b0bf-400d-8e41-c24480933771#0": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "The maker of non-text AI model Jev valued at $7.5B just weeks after launch",
   "note": ""
  },
  "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#12": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Here are the top AI agents that can live in your text messages",
   "note": ""
  },
  "a78531a7-1c56-49db-bf57-644d971795ec#1": {
   "pass1": true,
-  "pass2": null,
-  "final": null,
+  "pass2": true,
+  "final": true,
   "source_name": "TechCrunch AI",
   "title": "48 hours to TechCrunch Disrupt 2026 — hear directly from the people building wha",
   "note": "TechCrunch Disrupt ticket promo (countdown, pass savings, speakers roster)"
  },
  "f6ba38cb-159f-400b-a6fb-9491904170fb#7": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Can the AI industry persuade data center opponents by getting rid of NDAs?",
   "note": ""
  },
  "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#3": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Here are the top AI agents that can live in your text messages",
   "note": ""
  },
  "e16da8a0-eae4-4cb7-8be6-cac2f401969d#0": {
   "pass1": true,
-  "pass2": null,
-  "final": null,
+  "pass2": true,
+  "final": true,
   "source_name": "TechCrunch AI",
   "title": "3 days to TechCrunch Disrupt 2026: Meet the startups before they hit mainstream",
   "note": "TechCrunch Disrupt ticket promo (pass savings, Startup Battlefield promo)"
  },
  "a0d7fd64-345a-4ab4-ba26-75e2f0106050#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "An Anthropic AI model sent a false homicide tip to Philadelphia police",
   "note": ""
  },
  "cbd6d8ba-8192-417e-b96e-209b5bde8e10#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "These execs think voice AI hasn’t reached its ChatGPT moment yet",
   "note": ""
  },
  "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#5": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Here are the top AI agents that can live in your text messages",
   "note": ""
  },
  "0d75f55c-faa0-4a48-a699-ac9d8ebba409#0": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "‘You have a meeting’: the calendar phishing scam growing exponentially",
   "note": ""
  },
  "2421afa1-3034-4a79-a1be-1367f881df2c#5": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "Pixel 11 Pro review: Google’s best pocket camera goes customisable",
   "note": ""
  },
  "bda6aedc-becc-4a76-8dde-0e2d897c3f46#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "This AI startup says it can generate permit-ready blueprints in minutes",
   "note": ""
  },
  "de3b5c01-ad60-484a-80dc-ea2bbd5ca658#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "End Of Abyss review – a creepy dollhouse take on Resident Evil and The Thing",
   "note": ""
  },
  "898e040f-7bb4-4889-8159-5af5071c8e5c#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "WindBorne wins a hefty US Air Force contract for its balloon data",
   "note": ""
  },
  "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#8": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Here are the top AI agents that can live in your text messages",
   "note": ""
  },
  "0e3abf95-9713-47a9-b4fe-86082a7e8e3b#4": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "Apple iPhone 18 Pro review: big changes for small differences",
   "note": ""
  },
  "2421afa1-3034-4a79-a1be-1367f881df2c#3": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "Pixel 11 Pro review: Google’s best pocket camera goes customisable",
   "note": ""
  },
  "898e040f-7bb4-4889-8159-5af5071c8e5c#3": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "WindBorne wins a hefty US Air Force contract for its balloon data",
   "note": ""
  },
  "43fd68c5-2f35-4a27-ab57-e86bd0056253#6": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "The Filter is two! 31 things we loved this year, from cloud-like duvets to the p",
   "note": ""
  },
  "e2243b11-e30e-439e-8a1a-56a20a5f4e11#2": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "AI surveillance startup Flock to cut several hundred jobs amid backlash, sources",
   "note": ""
  },
  "fc7faf98-aa69-4fca-923b-f174d5744dca#8": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "What the £350 Grand Theft Auto ‘collector’s box’ says about the escalating cost ",
   "note": ""
  },
  "57889737-e668-4253-9eea-3dcdf35da0aa#0": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "Microsoft’s Satya Nadella says AI models need an ‘emergency brake’",
   "note": ""
  },
  "8f2146ba-06ef-4bcd-968d-7dc845660eab#7": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Verge",
   "title": "Android is the best and worst thing about Googlebooks",
   "note": ""
  },
  "bc854617-a339-41ca-a314-f3cf4713e1ef#1": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "Parents fear YouTubers are bringing ‘brain rot’ to Netflix. But are kids wising ",
   "note": ""
  },
  "bc854617-a339-41ca-a314-f3cf4713e1ef#9": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "Parents fear YouTubers are bringing ‘brain rot’ to Netflix. But are kids wising ",
   "note": ""
  },
  "e1b595a1-2569-4b4a-8993-cd31994e6e3e#4": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "OpenAI’s Jason Kwon gave even-toned, reassuring answers to the Australian govern",
   "note": ""
  },
  "de3b5c01-ad60-484a-80dc-ea2bbd5ca658#0": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "End Of Abyss review – a creepy dollhouse take on Resident Evil and The Thing",
   "note": ""
  },
  "898e040f-7bb4-4889-8159-5af5071c8e5c#0": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "TechCrunch AI",
   "title": "WindBorne wins a hefty US Air Force contract for its balloon data",
   "note": ""
  },
  "cb4431f3-8470-416b-8076-7deb3c96a2ee#7": {
   "pass1": false,
-  "pass2": null,
-  "final": null,
+  "pass2": false,
+  "final": false,
   "source_name": "The Guardian Technology",
   "title": "‘I’ve become significantly more cautious’: six parents on limiting their kids’ s",
   "note": ""

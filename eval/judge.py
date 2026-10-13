@@ -96,6 +96,7 @@ class Judge:
     slow_seconds: float = SLOW_JUDGMENT_SECONDS
     calls: int = 0
     fallback_used: bool = False
+    fallback_reason: str | None = None
     errors: list[str] = field(default_factory=list)
     latencies_ms: list[int] = field(default_factory=list)
 
@@ -112,27 +113,33 @@ class Judge:
     def version(self) -> str:
         return f"{self.effective_model}@rubric:{judge_version()}"
 
+    def _fall_back(self, reason: str) -> None:
+        print(f"judge: {reason}; falling back to {self.fallback_model}")
+        self.fallback_used = True
+        self.fallback_reason = reason
+
     def judge(self, task: str, items: dict[str, str]) -> dict[str, Any]:
         """Score one item; returns {score, reason, model, latency_ms} or an error."""
         user_prompt = f"Task: {task}\n\n" + "\n".join(f"{k}: {v}" for k, v in items.items())
-        model = self.effective_model
         for attempt in (1, 2):
+            model = self.effective_model
             started = time.monotonic()
             try:
                 raw = self.transport(model, self._system_prompt, user_prompt)
             except Exception as exc:  # noqa: BLE001 - judge failures are recorded, not raised
                 self.errors.append(f"{task}: attempt {attempt}: {exc}")
+                # A preferred model that times out is exactly the case the
+                # fallback exists for: without this, every judgment would be
+                # counted as a judge error and the metrics would be built on
+                # nulls instead of on the fallback model's answers.
+                if not self.fallback_used:
+                    self._fall_back(f"{model} failed ({exc})")
                 continue
             latency_ms = int((time.monotonic() - started) * 1000)
             self.calls += 1
             self.latencies_ms.append(latency_ms)
             if latency_ms >= self.slow_seconds * 1000 and not self.fallback_used:
-                print(
-                    f"judge: {model} took {latency_ms / 1000:.1f}s > {self.slow_seconds:.0f}s; "
-                    f"falling back to {self.fallback_model}"
-                )
-                self.fallback_used = True
-                model = self.effective_model
+                self._fall_back(f"{model} took {latency_ms / 1000:.1f}s > {self.slow_seconds:.0f}s")
                 continue  # re-judge this item with the fallback model
             try:
                 parsed = parse_judgment(raw)

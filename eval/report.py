@@ -170,11 +170,17 @@ def _rag_section(payload: dict[str, Any]) -> list[str]:
     deep = aggregates.get("deep") or {}
     subq = payload.get("sub_question_relevance") or {}
     judge = payload.get("judge") or {}
+    fallback = ""
+    if judge.get("fallback_used"):
+        reason = judge.get("fallback_reason")
+        fallback = f"; fell back ({reason})" if reason else "; fell back"
     lines = [
         "## RAG fast vs deep",
         "",
-        f"Judge: `{judge.get('version')}` (errors: {judge.get('errors')}) · refusal "
-        f"detection is deterministic regex first, judge only for borderline cases.",
+        f"Judge: `{judge.get('version')}` requested `{judge.get('model')}`{fallback} "
+        f"(errors: {judge.get('errors')}; cached judgments "
+        f"{judge.get('cached_judgments')}) · refusal detection is deterministic regex "
+        f"first, judge only for borderline cases.",
         "",
         "| metric | fast | deep |",
         "|---|---|---|",
@@ -185,6 +191,8 @@ def _rag_section(payload: dict[str, Any]) -> list[str]:
         "required_fact_recall",
         "invalid_citation_rate",
         "refusal_rate",
+        "refusal_when_evidence_exists_rate",
+        "refusal_without_evidence_rate",
         "judge_routed_count",
     ):
         lines.append(f"| {key} | {_fmt(fast.get(key))} | {_fmt(deep.get(key))} |")
@@ -240,6 +248,17 @@ def _quality_section(payload: dict[str, Any]) -> list[str]:
     def ci(values: Any) -> str:
         return f"{values[0]:.3f}-{values[1]:.3f}" if values else "—"
 
+    def precision(value: Any) -> str:
+        """No positive predictions means undefined, which is not 0.000."""
+        return "undefined" if value is None else _fmt(value)
+
+    trigger = payload.get("trigger") or {}
+    trigger_line = (
+        "Threshold trigger (precision < 0.95): "
+        f"**{'FIRED' if trigger.get('fired') else 'not fired'}**"
+    )
+    if trigger.get("note"):
+        trigger_line += f" — {trigger['note']}"
     return [
         "## Content quality (held-out, freshly ingested chunks)",
         "",
@@ -251,15 +270,14 @@ def _quality_section(payload: dict[str, Any]) -> list[str]:
         "",
         "| level | precision (95% CI) | recall (95% CI) | TP/FP/FN |",
         "|---|---|---|---|",
-        f"| chunk | {_fmt(chunk.get('precision'))} ({ci(chunk.get('precision_ci95'))}) "
+        f"| chunk | {precision(chunk.get('precision'))} ({ci(chunk.get('precision_ci95'))}) "
         f"| {_fmt(chunk.get('recall'))} ({ci(chunk.get('recall_ci95'))}) "
         f"| {chunk.get('tp')}/{chunk.get('fp')}/{chunk.get('fn')} |",
-        f"| article | {_fmt(article.get('precision'))} ({ci(article.get('precision_ci95'))}) "
+        f"| article | {precision(article.get('precision'))} ({ci(article.get('precision_ci95'))}) "
         f"| {_fmt(article.get('recall'))} ({ci(article.get('recall_ci95'))}) "
         f"| {article.get('tp')}/{article.get('fp')}/{article.get('fn')} |",
         "",
-        f"Threshold trigger (precision < 0.95): "
-        f"**{'FIRED' if (payload.get('trigger') or {}).get('fired') else 'not fired'}**.",
+        trigger_line + ".",
         "",
     ]
 

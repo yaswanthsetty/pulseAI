@@ -23,8 +23,14 @@ def wilson_interval(successes: int, n: int, z: float = Z_95) -> tuple[float, flo
 
 def precision_recall(
     predicted_positive: list[bool], ground_truth: list[bool]
-) -> dict[str, float | int | tuple[float, float]]:
-    """Precision/recall with Wilson intervals (positive = boilerplate)."""
+) -> dict[str, float | int | tuple[float, float] | None]:
+    """Precision/recall with Wilson intervals (positive = boilerplate).
+
+    ``precision`` is ``None`` when nothing was predicted positive: with an
+    empty denominator precision is undefined, and reporting it as 0.000 would
+    read as "every prediction was wrong" when in fact there were no
+    predictions at all.
+    """
     if len(predicted_positive) != len(ground_truth):
         raise ValueError("length mismatch")
     tp = sum(
@@ -40,7 +46,7 @@ def precision_recall(
         for pred, truth in zip(predicted_positive, ground_truth, strict=True)
         if not pred and truth
     )
-    precision = tp / (tp + fp) if tp + fp else 0.0
+    precision = tp / (tp + fp) if tp + fp else None
     recall = tp / (tp + fn) if tp + fn else 0.0
     return {
         "tp": tp,

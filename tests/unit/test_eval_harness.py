@@ -134,6 +134,19 @@ def test_precision_recall_with_intervals():
     assert 0.0 <= low < 2 / 3 < high <= 1.0
 
 
+def test_precision_is_undefined_without_positive_predictions():
+    # A classifier that never fires has no precision to report: 0.000 would
+    # read as "every prediction was wrong" when there were no predictions.
+    result = precision_recall(
+        predicted_positive=[False, False, False],
+        ground_truth=[True, False, True],
+    )
+    assert result["precision"] is None
+    assert result["precision_ci95"] == (0.0, 1.0)
+    assert result["tp"] == 0 and result["fp"] == 0 and result["fn"] == 2
+    assert result["recall"] == 0.0
+
+
 # --- judge parsing ---------------------------------------------------------
 
 

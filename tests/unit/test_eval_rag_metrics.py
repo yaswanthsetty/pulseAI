@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from eval.rag_suite import _metric_set
+from eval.rag_suite import _metric_set, _refusal_breakdown
 
 GRADES = {"chunk-a": 2, "chunk-b": 0, "chunk-c": 2}
 
@@ -42,6 +42,30 @@ class _StubJudge:
     def judge(self, task: str, items: dict[str, str]) -> dict[str, Any]:
         self.calls.append((task, items))
         return {"score": self.score, "reason": "stub", "model": "stub", "latency_ms": 1}
+
+
+def test_refusal_breakdown_separates_missing_evidence_from_stubbornness():
+    # Refusing with no grade-2 evidence retrieved is correct; refusing with
+    # evidence retrieved is T1-deep. Blending them hides both.
+    rows = [
+        {"n_grade2_retrieved": 0, "refusal": True},
+        {"n_grade2_retrieved": 2, "refusal": True},
+        {"n_grade2_retrieved": 1, "refusal": False},
+        {"n_grade2_retrieved": 3, "refusal": False},
+        {"n_grade2_retrieved": 0, "refusal": False},
+    ]
+    breakdown = _refusal_breakdown(rows)
+    assert breakdown["n_with_evidence"] == 3
+    assert breakdown["refusal_when_evidence_exists_rate"] == 1 / 3
+    assert breakdown["n_without_evidence"] == 2
+    assert breakdown["refusal_without_evidence_rate"] == 0.5
+
+
+def test_refusal_breakdown_is_none_when_a_side_is_empty():
+    only_with = _refusal_breakdown([{"n_grade2_retrieved": 1, "refusal": False}])
+    assert only_with["refusal_when_evidence_exists_rate"] == 0.0
+    assert only_with["refusal_without_evidence_rate"] is None
+    assert _refusal_breakdown([])["refusal_when_evidence_exists_rate"] is None
 
 
 def test_citation_precision_over_resolved_citations_only():
@@ -134,6 +158,33 @@ def test_borderline_case_without_evidence_is_not_refusal_routed():
     assert metrics["refusal_verdict"] == "ok"
     assert metrics["judge_routed"] is False
     assert judge.calls == []
+
+
+def test_judge_cache_serves_repeats_from_memory_and_disk(tmp_path):
+    from eval.rag_suite import _JudgeCache
+
+    calls: list[str] = []
+
+    def judge(task: str, items: dict[str, str]) -> dict[str, Any]:
+        calls.append(task)
+        return {"score": 2, "reason": "x", "model": "m", "latency_ms": 1}
+
+    path = tmp_path / "cache.json"
+    cache = _JudgeCache(path)
+    wrapped = cache.wrap(judge)
+    first = wrapped("sub_question_relevance", {"A": "1", "B": "2"})
+    second = wrapped("sub_question_relevance", {"B": "2", "A": "1"})  # same key
+    assert first == second
+    assert calls == ["sub_question_relevance"]  # the model was asked once
+    assert cache.hits == 1
+
+    cache.save()
+    fresh = _JudgeCache(path)
+    assert fresh.wrap(judge)("sub_question_relevance", {"A": "1", "B": "2"}) == first
+    assert calls == ["sub_question_relevance"]  # served from disk after a restart
+
+    wrapped("implicit_refusal", {"A": "1", "B": "2"})
+    assert len(calls) == 2  # a different task is a different question
 
 
 def test_judge_error_is_recorded_as_no_refusal_not_as_a_crash():

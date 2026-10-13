@@ -350,7 +350,9 @@ def score() -> dict[str, Any]:
         "article_level": {**article_metrics, "n_articles": len(article_rows)},
         "trigger": {
             "rule": "revisit BOILERPLATE_THRESHOLD if held-out precision < 0.95",
-            "fired": metrics["precision"] < 0.95,
+            # Undefined precision cannot clear the bar: it fires the trigger too.
+            "fired": metrics["precision"] is None or metrics["precision"] < 0.95,
+            "note": _trigger_note(metrics),
         },
     }
 
@@ -366,6 +368,21 @@ def score() -> dict[str, Any]:
 
 def _fmt_ci(ci: tuple[float, float]) -> str:
     return f"{ci[0]:.3f}-{ci[1]:.3f}"
+
+
+def _fmt_precision(value: float | None) -> str:
+    """Precision with no positive predictions is undefined, not zero."""
+    return f"{value:.3f}" if value is not None else "undefined"
+
+
+def _trigger_note(metrics: dict[str, Any]) -> str:
+    if metrics["precision"] is None:
+        return (
+            "precision is undefined (the classifier predicted no boilerplate in this "
+            f"set: {metrics['tp']} true positives, {metrics['fn']} missed) — the "
+            "threshold trigger fires on recall, not on a fabricated precision"
+        )
+    return ""
 
 
 def _render_md(results: dict[str, Any]) -> str:
@@ -389,16 +406,18 @@ def _render_md(results: dict[str, Any]) -> str:
             "",
             "| level | precision (95% CI) | recall (95% CI) | TP/FP/FN |",
             "|---|---|---|---|",
-            f"| chunk | {chunk['precision']:.3f} ({_fmt_ci(chunk['precision_ci95'])}) "
+            f"| chunk | {_fmt_precision(chunk['precision'])} ({_fmt_ci(chunk['precision_ci95'])}) "
             f"| {chunk['recall']:.3f} ({_fmt_ci(chunk['recall_ci95'])}) "
             f"| {chunk['tp']}/{chunk['fp']}/{chunk['fn']} |",
-            f"| article | {article['precision']:.3f} ({_fmt_ci(article['precision_ci95'])}) "
+            f"| article | {_fmt_precision(article['precision'])} "
+            f"({_fmt_ci(article['precision_ci95'])}) "
             f"| {article['recall']:.3f} ({_fmt_ci(article['recall_ci95'])}) "
             f"| {article['tp']}/{article['fp']}/{article['fn']} "
             f"({article['n_articles']} articles) |",
             "",
             "Threshold trigger (precision < 0.95): "
-            f"**{'FIRED' if results['trigger']['fired'] else 'not fired'}**.",
+            f"**{'FIRED' if results['trigger']['fired'] else 'not fired'}**"
+            + (f" — {results['trigger']['note']}." if results["trigger"]["note"] else "."),
             "",
         ]
     )

@@ -24,11 +24,13 @@ from __future__ import annotations
 import argparse
 import asyncio
 import datetime as dt
+import hashlib
 import json
 import re
 import sys
 import time
 import uuid
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -390,6 +392,10 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
     refusal_counts = {"fast": 0, "deep": 0}
     judge_routed_counts = {"fast": 0, "deep": 0}
 
+    cache = _JudgeCache(WORK_DIR / f"{snapshot_id}_rag_judge{suffix}.json")
+    if judge is not None:
+        judge.judge = cache.wrap(judge.judge)  # type: ignore[method-assign]
+
     for record in raw["records"]:
         query = queries[record["query_id"]]
         grades = labels.get(record["query_id"], {})
@@ -426,10 +432,9 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
                         f"{sum(subq_scores) / len(subq_scores):.3f})",
                         flush=True,
                     )
-            judge_info["calls"] = getattr(judge, "calls", None)
-            judge_info["errors"] = len(getattr(judge, "errors", []))
-
-        per_path[record["path"]].append({"query_id": record["query_id"], **metrics_row})
+        per_path[record["path"]].append(
+            {"query_id": record["query_id"], "type": record["type"], **metrics_row}
+        )
         latencies[record["path"]].append(record["latency_ms"])
         if cold[record["path"]] is None:
             cold[record["path"]] = record["latency_ms"]
@@ -451,6 +456,11 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
         agg["n_queries"] = n
         agg["refusal_count"] = refusal_counts[path]
         agg["refusal_rate"] = refusal_counts[path] / n if n else None
+        # The plan's T1-deep metric is refusal *when evidence exists*: refusing
+        # on a query with no grade-2 chunk retrieved is correct behaviour, and
+        # blending the two would make a healthy path look broken (and vice
+        # versa). Both sides are reported; the overall rate stays for context.
+        agg.update(_refusal_breakdown(rows))
         agg["judge_routed_count"] = judge_routed_counts[path]
         warm = latencies[path][1:]
         agg["latency_ms"] = {
@@ -468,8 +478,13 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
             by_type[qtype]["refusal_rate"] = (
                 sum(1 for row in subset if row["refusal"]) / len(subset) if subset else None
             )
+            by_type[qtype].update(_refusal_breakdown(subset))
         agg["by_type"] = by_type
         aggregates[path] = agg
+
+    cache.save()
+    if judge is not None:
+        _record_judge_provenance(judge_info, judge, judge_items, cache)
 
     subq_relevance = M.macro_mean(subq_scores) if subq_scores else None
     results = {
@@ -502,6 +517,102 @@ def score(snapshot_id: str, mock: bool = False) -> tuple[Path, Path]:
     print(_render_md(results))
     print(f"written     : {json_path}\n              {md_path}")
     return json_path, md_path
+
+
+class _JudgeCache:
+    """Disk cache for judge decisions, keyed by (task, item text).
+
+    Judging the deep path costs tens of minutes; a crash in the aggregation
+    afterwards must not throw that away, and re-scoring to change a metric
+    must not re-ask the model. The cache is written incrementally, so an
+    interrupted run keeps every judgment it already paid for.
+    """
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.entries: dict[str, dict[str, Any]] = {}
+        if path.exists():
+            self.entries = json.loads(path.read_text(encoding="utf-8"))
+        self.hits = 0
+        self._since_save = 0
+
+    @staticmethod
+    def key(task: str, items: dict[str, str]) -> str:
+        payload = json.dumps([task, sorted(items.items())], ensure_ascii=False)
+        return hashlib.sha256(payload.encode()).hexdigest()
+
+    def wrap(self, judge) -> Any:
+        def cached(task: str, items: dict[str, str]) -> dict[str, Any]:
+            cache_key = self.key(task, items)
+            if cache_key in self.entries:
+                self.hits += 1
+                return self.entries[cache_key]
+            result = judge(task, items)
+            self.entries[cache_key] = result
+            self._since_save += 1
+            if self._since_save >= 5:
+                self.save()
+            return result
+
+        return cached
+
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self.entries), encoding="utf-8")
+        self._since_save = 0
+
+
+def _refusal_breakdown(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Refusal split by whether grade-2 evidence was retrieved at all."""
+    with_evidence = [row for row in rows if (row.get("n_grade2_retrieved") or 0) > 0]
+    without = [row for row in rows if not (row.get("n_grade2_retrieved") or 0)]
+    refused_with = sum(1 for row in with_evidence if row["refusal"])
+    refused_without = sum(1 for row in without if row["refusal"])
+    return {
+        "n_with_evidence": len(with_evidence),
+        "refusal_when_evidence_exists_count": refused_with,
+        "refusal_when_evidence_exists_rate": (
+            refused_with / len(with_evidence) if with_evidence else None
+        ),
+        "n_without_evidence": len(without),
+        "refusal_without_evidence_count": refused_without,
+        "refusal_without_evidence_rate": (
+            refused_without / len(without) if without else None
+        ),
+    }
+
+
+def _record_judge_provenance(
+    judge_info: dict[str, Any], judge: Any, judge_items: list[dict[str, Any]], cache: _JudgeCache
+) -> None:
+    """Record which judge model actually produced these numbers.
+
+    The preferred model can fall back mid-run, and a cache replay makes no
+    calls at all, so ``judge.effective_model`` and ``judge.calls`` cannot be
+    trusted for provenance. Every judgment carries the model that produced it,
+    so the judgments decide.
+    """
+    from eval.judge import judge_version
+
+    judge_info["cached_judgments"] = cache.hits
+    judge_info["calls"] = getattr(judge, "calls", None)
+    errors = list(getattr(judge, "errors", []))
+    judge_info["errors"] = len(errors)
+    judge_info["error_samples"] = errors[:5]
+    judge_info["fallback_reason"] = getattr(judge, "fallback_reason", None)
+
+    models = Counter(item["model"] for item in judge_items if item.get("model"))
+    judge_info["models_used"] = dict(models)
+    if models:
+        effective = models.most_common(1)[0][0]
+        judge_info["effective_model"] = effective
+        judge_info["fallback_used"] = effective != judge.model
+    else:
+        judge_info["effective_model"] = judge.effective_model
+        judge_info["fallback_used"] = judge.fallback_used
+    # The version string is the provenance a result is compared against, so it
+    # must name the model that answered, not the one that was requested.
+    judge_info["version"] = f"{judge_info['effective_model']}@rubric:{judge_version()}"
 
 
 def _judged_item(
@@ -539,7 +650,20 @@ def _render_md(results: dict[str, Any]) -> str:
         "",
         f"Queries: {results['aggregates']['fast']['n_queries']} x 2 paths "
         f"(status: **{results['query_set_status']}**) · judge: "
-        f"`{results['judge'].get('version')}` · mock={results['mock']}.",
+        f"`{results['judge'].get('version')}` (requested "
+        f"`{results['judge'].get('model')}`"
+        + (
+            "; fell back"
+            + (
+                f" ({results['judge']['fallback_reason']})"
+                if results["judge"].get("fallback_reason")
+                else ""
+            )
+            if results["judge"].get("fallback_used")
+            else ""
+        )
+        + f"; cached judgments {results['judge'].get('cached_judgments')})"
+        f" · mock={results['mock']}.",
         "",
         "| metric | fast | deep |",
         "|---|---|---|",
@@ -550,6 +674,8 @@ def _render_md(results: dict[str, Any]) -> str:
         "required_fact_recall",
         "invalid_citation_rate",
         "refusal_rate",
+        "refusal_when_evidence_exists_rate",
+        "refusal_without_evidence_rate",
         "judge_routed_count",
     ):
         lines.append(
@@ -572,16 +698,22 @@ def _render_md(results: dict[str, Any]) -> str:
             f"| {path} | {_fmt(lat['cold'])} | {_fmt(lat['warm_p50'])} "
             f"| {_fmt(lat['warm_p95'])} | {lat['warm_n']} |"
         )
-    lines += ["", "## Per-type (required_fact_recall / refusal_rate)", ""]
-    lines.append("| type | fast fact / refusal | deep fact / refusal |")
-    lines.append("|---|---|---|")
+    lines += [
+        "",
+        "## Per-type (required_fact_recall / refusal-when-evidence-exists)",
+        "",
+        "| type | fast fact / refusal | deep fact / refusal |",
+        "|---|---|---|",
+    ]
     types = sorted(results["aggregates"]["fast"]["by_type"])
     for qtype in types:
         f = results["aggregates"]["fast"]["by_type"][qtype]
         d = results["aggregates"]["deep"]["by_type"][qtype]
         lines.append(
-            f"| {qtype} | {_fmt(f['required_fact_recall'])} / {_fmt(f['refusal_rate'])} "
-            f"| {_fmt(d['required_fact_recall'])} / {_fmt(d['refusal_rate'])} |"
+            f"| {qtype} | {_fmt(f['required_fact_recall'])} / "
+            f"{_fmt(f['refusal_when_evidence_exists_rate'])} "
+            f"| {_fmt(d['required_fact_recall'])} / "
+            f"{_fmt(d['refusal_when_evidence_exists_rate'])} |"
         )
     return "\n".join(lines) + "\n"
 
