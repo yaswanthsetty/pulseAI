@@ -1,0 +1,134 @@
+{
+ "suite": "quality",
+ "git_sha": "5aef4d3",
+ "created_at": "2026-10-13T16:31:03.180802+00:00",
+ "heldout": {
+  "file": "eval/work/heldout_set.json",
+  "created_at": "2026-10-13T16:09:49.191480+00:00",
+  "sampling_unit": "pre-filter chunks (every piece the classifier sees)",
+  "n_chunks": 50,
+  "n_candidate_chunks": 357,
+  "stratification": {
+   "techcrunch": 21,
+   "bbc": 15,
+   "total": 50
+  },
+  "sample_ids": [
+   "e9a071bb-1f3a-48e2-84e4-5a0c3695c607#2",
+   "31629a45-61ee-4b00-ab40-061453e43165#0",
+   "31629a45-61ee-4b00-ab40-061453e43165#3",
+   "759ef624-1974-4a89-bab5-316dec6aa0b0#5",
+   "e9a071bb-1f3a-48e2-84e4-5a0c3695c607#1",
+   "cb94b65f-9b3b-4657-a47e-5def90d572f5#0",
+   "e851107d-ae6e-42c1-bee5-b8e42f330de5#3",
+   "759ef624-1974-4a89-bab5-316dec6aa0b0#4",
+   "759ef624-1974-4a89-bab5-316dec6aa0b0#1",
+   "e851107d-ae6e-42c1-bee5-b8e42f330de5#4",
+   "5310a1f9-152d-466e-b419-5305bd27f3a3#0",
+   "f6cb843c-b438-43b6-93a5-c703551eb4dc#2",
+   "287511bb-b29b-47ca-85ea-388cffc5ccca#2",
+   "3bb18dc3-de73-4770-9f9b-69754324423d#0",
+   "e851107d-ae6e-42c1-bee5-b8e42f330de5#1",
+   "e16da8a0-eae4-4cb7-8be6-cac2f401969d#1",
+   "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#9",
+   "a78531a7-1c56-49db-bf57-644d971795ec#0",
+   "898e040f-7bb4-4889-8159-5af5071c8e5c#1",
+   "516c2feb-0652-458b-8d51-b32b34a30f32#2",
+   "98b118ec-84a4-4cb2-a25d-e4efe3db3bf4#1",
+   "acb96445-b0bf-400d-8e41-c24480933771#0",
+   "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#12",
+   "a78531a7-1c56-49db-bf57-644d971795ec#1",
+   "f6ba38cb-159f-400b-a6fb-9491904170fb#7",
+   "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#3",
+   "e16da8a0-eae4-4cb7-8be6-cac2f401969d#0",
+   "a0d7fd64-345a-4ab4-ba26-75e2f0106050#1",
+   "cbd6d8ba-8192-417e-b96e-209b5bde8e10#2",
+   "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#5",
+   "0d75f55c-faa0-4a48-a699-ac9d8ebba409#0",
+   "2421afa1-3034-4a79-a1be-1367f881df2c#5",
+   "bda6aedc-becc-4a76-8dde-0e2d897c3f46#1",
+   "de3b5c01-ad60-484a-80dc-ea2bbd5ca658#2",
+   "898e040f-7bb4-4889-8159-5af5071c8e5c#2",
+   "6d7ce1b3-ad33-4704-aaa9-fd68805573c7#8",
+   "0e3abf95-9713-47a9-b4fe-86082a7e8e3b#4",
+   "2421afa1-3034-4a79-a1be-1367f881df2c#3",
+   "898e040f-7bb4-4889-8159-5af5071c8e5c#3",
+   "43fd68c5-2f35-4a27-ab57-e86bd0056253#6",
+   "e2243b11-e30e-439e-8a1a-56a20a5f4e11#2",
+   "fc7faf98-aa69-4fca-923b-f174d5744dca#8",
+   "57889737-e668-4253-9eea-3dcdf35da0aa#0",
+   "8f2146ba-06ef-4bcd-968d-7dc845660eab#7",
+   "bc854617-a339-41ca-a314-f3cf4713e1ef#1",
+   "bc854617-a339-41ca-a314-f3cf4713e1ef#9",
+   "e1b595a1-2569-4b4a-8993-cd31994e6e3e#4",
+   "de3b5c01-ad60-484a-80dc-ea2bbd5ca658#0",
+   "898e040f-7bb4-4889-8159-5af5071c8e5c#0",
+   "cb4431f3-8470-416b-8076-7deb3c96a2ee#7"
+  ],
+  "poll_log": [
+   {
+    "source": "TechCrunch AI",
+    "status": "ok",
+    "new_articles": 20
+   },
+   {
+    "source": "The Verge",
+    "status": "ok",
+    "new_articles": 10
+   },
+   {
+    "source": "The Guardian Technology",
+    "status": "ok",
+    "new_articles": 28
+   },
+   {
+    "source": "BBC Science & Tech",
+    "status": "ok",
+    "new_articles": 21
+   }
+  ]
+ },
+ "labels": {
+  "file": "eval/heldout_labels.json",
+  "status": "agent_drafted_two_passes_pending_review",
+  "self_consistency_disagreements": 0,
+  "disagreement_chunks": [],
+  "note": "two passes by the same labeler (coding agent); this is a self-consistency check, not inter-annotator agreement"
+ },
+ "chunk_level": {
+  "tp": 0,
+  "fp": 0,
+  "fn": 6,
+  "precision": null,
+  "precision_ci95": [
+   0.0,
+   1.0
+  ],
+  "recall": 0.0,
+  "recall_ci95": [
+   0.0,
+   0.3903430336530645
+  ]
+ },
+ "article_level": {
+  "tp": 1,
+  "fp": 0,
+  "fn": 3,
+  "precision": 1.0,
+  "precision_ci95": [
+   0.2065432914738929,
+   1.0
+  ],
+  "recall": 0.25,
+  "recall_ci95": [
+   0.045586062644636216,
+   0.6993639475573634
+  ],
+  "n_articles": 32
+ },
+ "trigger": {
+  "rule": "revisit BOILERPLATE_THRESHOLD if held-out precision < 0.95",
+  "fired": true,
+  "note": "precision is undefined (the classifier predicted no boilerplate in this set: 0 true positives, 6 missed) \u2014 the threshold trigger fires on recall, not on a fabricated precision"
+ }
+}
